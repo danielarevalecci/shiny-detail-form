@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>Shiny Detail — Vehicle Intake</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#f5f4f0;--white:#fff;--border:#e2e0db;--border-focus:#1a1a1a;
+  --text:#1a1a1a;--muted:#8a8680;--muted2:#b8b4ae;
+  --accent:#1a1a1a;--gold:#f0a500;
+  --green:#22c55e;--green-bg:#f0fdf4;--green-border:#86efac;
+  --radius:16px;--radius-sm:10px;
+  --shadow:0 2px 12px rgba(0,0,0,0.07);
+}
+html{background:var(--bg);}
+body{font-family:'Nunito',sans-serif;color:var(--text);min-height:100vh;padding-bottom:90px;}
+
+/* HEADER */
+.header{background:var(--white);border-bottom:1px solid var(--border);padding:13px 18px;display:flex;align-items:center;gap:11px;position:sticky;top:0;z-index:100;}
+.logo{width:34px;height:34px;border-radius:9px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
+.h-title{font-size:15px;font-weight:800;letter-spacing:-.3px;}
+.h-sub{font-size:10px;color:var(--muted);font-weight:600;}
+.cfg-btn{margin-left:auto;width:34px;height:34px;border-radius:9px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;flex-shrink:0;}
+
+/* PROGRESS */
+.prog-wrap{background:var(--white);padding:12px 18px 0;border-bottom:1px solid var(--border);}
+.prog-labels{display:flex;justify-content:space-between;margin-bottom:7px;}
+.prog-lbl{font-size:9px;font-weight:800;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px;transition:color .3s;}
+.prog-lbl.active{color:var(--accent);}
+.prog-bg{height:3px;background:var(--border);border-radius:3px;margin-bottom:0;}
+.prog-fill{height:3px;background:var(--accent);border-radius:3px;transition:width .4s cubic-bezier(.4,0,.2,1);}
+
+/* PAGES */
+.page{display:none;padding:18px;animation:si .28s ease;}
+.page.active{display:block;}
+@keyframes si{from{opacity:0;transform:translateX(14px);}to{opacity:1;transform:none;}}
+
+.step-num{font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;}
+.step-title{font-size:22px;font-weight:900;letter-spacing:-.5px;line-height:1.1;margin-bottom:5px;}
+.step-desc{font-size:13px;color:var(--muted);font-weight:600;line-height:1.4;margin-bottom:22px;}
+
+/* CARD */
+.card{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);padding:18px;margin-bottom:14px;box-shadow:var(--shadow);}
+.card-title{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px;}
+
+/* FIELD */
+.field{margin-bottom:14px;}
+.field:last-child{margin-bottom:0;}
+.flabel{font-size:13px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:5px;}
+.req{color:var(--gold);font-size:15px;line-height:1;}
+
+input[type=text],input[type=number],input[type=url],input[type=password],textarea,select{
+  width:100%;padding:13px 15px;background:var(--bg);border:2px solid var(--border);
+  border-radius:var(--radius-sm);font-size:15px;font-weight:600;color:var(--text);
+  font-family:'Nunito',sans-serif;transition:border-color .2s,background .2s;outline:none;-webkit-appearance:none;
+}
+input:focus,select:focus,textarea:focus{border-color:var(--border-focus);background:var(--white);}
+input.ai-filled{border-color:var(--green);background:var(--green-bg);}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='8' viewBox='0 0 13 8'%3E%3Cpath d='M1 1l5.5 5.5L12 1' stroke='%238a8680' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 15px center;padding-right:42px;}
+select option{background:var(--white);}
+
+/* EMPLOYEE SELECTOR — big tap targets */
+.emp-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.emp-card{
+  background:var(--bg);border:2px solid var(--border);border-radius:var(--radius-sm);
+  padding:14px 12px;cursor:pointer;transition:all .15s;text-align:center;
+}
+.emp-card.selected{border-color:var(--accent);background:var(--accent);}
+.emp-card.selected .emp-name{color:#fff;}
+.emp-card.selected .emp-icon{background:rgba(255,255,255,.18);}
+.emp-icon{width:38px;height:38px;border-radius:50%;background:var(--white);margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:18px;transition:background .15s;border:1px solid var(--border);}
+.emp-name{font-size:14px;font-weight:800;}
+.emp-card:active{transform:scale(.96);}
+
+/* REGION CHIPS */
+.region-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.r-chip{
+  background:var(--bg);border:2px solid var(--border);border-radius:var(--radius-sm);
+  padding:11px 10px;cursor:pointer;transition:all .15s;text-align:center;
+}
+.r-chip.selected{border-color:var(--accent);background:var(--accent);color:#fff;}
+.r-chip-label{font-size:12px;font-weight:800;}
+.r-chip-sub{font-size:10px;color:var(--muted);margin-top:1px;font-weight:600;}
+.r-chip.selected .r-chip-sub{color:rgba(255,255,255,.7);}
+.r-chip:active{transform:scale(.97);}
+
+/* PHOTO GUIDE */
+.photo-guide{margin-bottom:14px;}
+.photo-guide-title{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;}
+.photo-tip{
+  background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:13px;display:flex;align-items:center;gap:13px;margin-bottom:9px;
+}
+.photo-tip-img{
+  width:68px;height:52px;border-radius:8px;background:var(--bg);
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-size:28px;border:1px solid var(--border);position:relative;overflow:hidden;
+}
+.photo-tip-body{}
+.photo-tip-name{font-size:13px;font-weight:800;margin-bottom:2px;}
+.photo-tip-desc{font-size:11px;color:var(--muted);font-weight:600;line-height:1.4;}
+
+/* PHOTO ZONES */
+.photo-zone{
+  background:var(--bg);border:2px dashed var(--border);border-radius:var(--radius);
+  padding:18px 12px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;position:relative;overflow:hidden;min-height:120px;
+  transition:border-color .2s,background .2s;margin-bottom:10px;
+}
+.photo-zone.has-photo{border-style:solid;border-color:var(--green);background:var(--green-bg);}
+.photo-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.pz-prev{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;border-radius:calc(var(--radius) - 2px);}
+.pz-prev.show{display:block;}
+.pz-overlay{position:absolute;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;border-radius:calc(var(--radius) - 2px);}
+.pz-overlay.show{display:flex;}
+.pz-change{background:rgba(255,255,255,.9);color:#1a1a1a;font-size:11px;font-weight:700;padding:5px 12px;border-radius:20px;}
+.pz-done{position:absolute;top:8px;right:8px;width:22px;height:22px;background:var(--green);border-radius:50%;display:none;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:800;}
+.pz-done.show{display:flex;}
+.pz-icon{font-size:26px;margin-bottom:6px;}
+.pz-label{font-size:12px;font-weight:800;text-align:center;}
+.pz-sub{font-size:10px;color:var(--muted);font-weight:600;margin-top:2px;}
+
+/* SCAN BTN */
+.scan-cta{
+  width:100%;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);
+  padding:16px;font-size:15px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  transition:transform .15s,opacity .2s;margin-bottom:11px;
+}
+.scan-cta:disabled{opacity:.3;cursor:not-allowed;}
+.scan-cta:active:not(:disabled){transform:scale(.98);}
+
+/* SCAN ANIM */
+.scan-anim{display:none;background:var(--white);border-radius:var(--radius);padding:28px 18px;text-align:center;border:1px solid var(--border);margin-bottom:11px;}
+.scan-anim.show{display:block;}
+.scan-rings{width:56px;height:56px;margin:0 auto 14px;position:relative;}
+.ring{position:absolute;border-radius:50%;border:2px solid var(--accent);animation:rp 2s ease-in-out infinite;}
+.ring:nth-child(1){inset:0;animation-delay:0s;}
+.ring:nth-child(2){inset:-8px;opacity:.45;animation-delay:.3s;}
+.ring:nth-child(3){inset:-16px;opacity:.2;animation-delay:.6s;}
+@keyframes rp{0%,100%{transform:scale(.9);opacity:.8;}50%{transform:scale(1.1);opacity:1;}}
+.scan-dot{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:20px;}
+.scan-msg{font-size:14px;font-weight:700;}
+.scan-sub{font-size:11px;color:var(--muted);font-weight:600;margin-top:3px;}
+
+.ai-tag{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;background:#dcfce7;color:#15803d;padding:2px 8px;border-radius:20px;margin-left:6px;}
+
+/* SERVICE MULTI-SELECT */
+.svc-list{display:flex;flex-direction:column;gap:9px;}
+.svc-item{
+  background:var(--bg);border:2px solid var(--border);border-radius:var(--radius-sm);
+  padding:14px 16px;cursor:pointer;transition:all .15s;
+  display:flex;align-items:center;gap:14px;
+}
+.svc-item.selected{border-color:var(--accent);background:#f8f8f6;}
+.svc-check{
+  width:22px;height:22px;border-radius:6px;border:2px solid var(--border);
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-size:12px;transition:all .15s;background:var(--white);
+}
+.svc-item.selected .svc-check{background:var(--accent);border-color:var(--accent);color:#fff;}
+.svc-body{flex:1;}
+.svc-name{font-size:14px;font-weight:800;}
+.svc-desc{font-size:11px;color:var(--muted);font-weight:600;margin-top:1px;}
+.svc-price{font-size:15px;font-weight:900;color:var(--accent);flex-shrink:0;}
+.svc-item.selected .svc-price{color:var(--accent);}
+.svc-item:active{transform:scale(.98);}
+
+/* TOTAL BAR */
+.total-bar{
+  background:var(--accent);border-radius:var(--radius-sm);padding:14px 18px;
+  display:flex;justify-content:space-between;align-items:center;margin-top:12px;
+}
+.total-bar-label{font-size:13px;font-weight:700;color:rgba(255,255,255,.75);}
+.total-bar-val{font-size:24px;font-weight:900;color:#fff;}
+
+/* INVOICE / INCLUDE */
+.include-row{display:flex;align-items:center;gap:12px;margin-top:4px;}
+.toggle-wrap{position:relative;width:46px;height:26px;cursor:pointer;flex-shrink:0;}
+.toggle-bg{width:46px;height:26px;border-radius:13px;background:#e2e0db;transition:background .2s;}
+.toggle-knob{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.2);transition:left .2s;}
+
+/* REVIEW */
+.review-block{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;margin-bottom:12px;}
+.rv-section{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);padding:10px 15px 8px;background:var(--bg);border-bottom:1px solid var(--border);}
+.rv-row{display:flex;justify-content:space-between;align-items:flex-start;padding:11px 15px;border-bottom:1px solid var(--border);}
+.rv-row:last-child{border-bottom:none;}
+.rv-k{font-size:12px;font-weight:700;color:var(--muted);flex-shrink:0;}
+.rv-v{font-size:13px;font-weight:800;text-align:right;max-width:58%;}
+.rv-v.empty{color:var(--muted2);font-weight:600;font-style:italic;}
+
+.submit-btn{width:100%;padding:17px;background:var(--gold);color:#fff;border:none;border-radius:var(--radius);font-size:16px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;transition:transform .15s,opacity .2s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.submit-btn:disabled{opacity:.4;cursor:not-allowed;}
+.submit-btn:active:not(:disabled){transform:scale(.98);}
+
+/* SUCCESS */
+.suc-circle{width:72px;height:72px;border-radius:50%;background:var(--green-bg);border:3px solid var(--green);display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 18px;}
+.suc-title{font-size:24px;font-weight:900;letter-spacing:-.4px;text-align:center;margin-bottom:5px;}
+.suc-sub{font-size:13px;color:var(--muted);font-weight:600;text-align:center;line-height:1.5;margin-bottom:22px;}
+
+/* NAV */
+.nav-bar{position:fixed;bottom:0;left:0;right:0;background:var(--white);border-top:1px solid var(--border);padding:11px 18px;display:flex;gap:9px;z-index:100;}
+.nav-back{width:50px;height:50px;border-radius:var(--radius-sm);background:var(--bg);border:2px solid var(--border);font-size:19px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:border-color .2s;}
+.nav-back:hover{border-color:var(--accent);}
+.nav-fwd{flex:1;height:50px;border-radius:var(--radius-sm);background:var(--accent);color:#fff;border:none;font-size:15px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:transform .15s,opacity .2s;}
+.nav-fwd:disabled{opacity:.3;cursor:not-allowed;}
+.nav-fwd:active:not(:disabled){transform:scale(.98);}
+
+/* TOAST */
+.toast{position:fixed;bottom:72px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--accent);color:#fff;font-size:12px;font-weight:700;padding:9px 18px;border-radius:28px;opacity:0;transition:all .3s;white-space:nowrap;z-index:200;pointer-events:none;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.green{background:var(--green);}
+
+.spin{display:inline-block;width:17px;height:17px;border-radius:50%;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;animation:sp .7s linear infinite;}
+@keyframes sp{to{transform:rotate(360deg);}}
+
+/* CONFIG */
+.cfg-page{display:none;padding:18px;}
+.cfg-page.active{display:block;}
+.cfg-card{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);padding:18px;margin-bottom:13px;}
+.cfg-card-title{font-size:14px;font-weight:800;margin-bottom:4px;}
+.cfg-card-sub{font-size:11px;color:var(--muted);font-weight:600;margin-bottom:14px;line-height:1.5;}
+.code-blk{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:13px;font-family:monospace;font-size:10px;color:#2d6a4f;line-height:1.8;overflow-x:auto;white-space:pre;}
+.step-pill{display:inline-flex;align-items:center;gap:5px;background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;margin-bottom:6px;}
+.back-lnk{display:flex;align-items:center;gap:5px;font-size:14px;font-weight:700;color:var(--muted);cursor:pointer;padding:4px 0;margin-bottom:18px;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">✦</div>
+  <div>
+    <div class="h-title">Shiny Detail</div>
+    <div class="h-sub">Vehicle Intake</div>
+  </div>
+  <div class="cfg-btn" onclick="toggleCfg()">⚙️</div>
+</div>
+
+<div class="prog-wrap" id="progWrap">
+  <div class="prog-labels">
+    <span class="prog-lbl active" id="lbl0">Who</span>
+    <span class="prog-lbl" id="lbl1">Vehicle</span>
+    <span class="prog-lbl" id="lbl2">Service</span>
+    <span class="prog-lbl" id="lbl3">Review</span>
+  </div>
+  <div class="prog-bg"><div class="prog-fill" id="progFill" style="width:25%"></div></div>
+</div>
+
+<!-- ═══ PAGE 0: EMPLOYEE ═══ -->
+<div class="page active" id="page0">
+  <div class="step-num">Step 1 of 4</div>
+  <div class="step-title">Who's checking in?</div>
+  <div class="step-desc">Tap your name and fill in your branch info 👇</div>
+
+  <div class="card">
+    <div class="card-title">Select employee <span class="req">*</span></div>
+    <div class="emp-grid">
+      <div class="emp-card" data-name="José" onclick="pickEmp(this)">
+        <div class="emp-icon">👤</div>
+        <div class="emp-name">José</div>
+      </div>
+      <div class="emp-card" data-name="Jaime" onclick="pickEmp(this)">
+        <div class="emp-icon">👤</div>
+        <div class="emp-name">Jaime</div>
+      </div>
+      <div class="emp-card" data-name="Adrian" onclick="pickEmp(this)">
+        <div class="emp-icon">👤</div>
+        <div class="emp-name">Adrian</div>
+      </div>
+      <div class="emp-card" data-name="Noe" onclick="pickEmp(this)">
+        <div class="emp-icon">👤</div>
+        <div class="emp-name">Noe</div>
+      </div>
+      <div class="emp-card" data-name="Staff 5" onclick="pickEmp(this)">
+        <div class="emp-icon">👤</div>
+        <div class="emp-name">Staff 5</div>
+      </div>
+    </div>
+    <input type="hidden" id="fEmployee"/>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Branch info</div>
+    <div class="field">
+      <div class="flabel">Received by (Manager) <span class="req">*</span></div>
+      <input type="text" id="fManager" placeholder="Manager's name"/>
+    </div>
+    <div class="field">
+      <div class="flabel">Branch Number <span class="req">*</span></div>
+      <input type="text" id="fBranch" placeholder="e.g. 1212" inputmode="numeric"/>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Region <span class="req">*</span></div>
+    <div class="region-grid">
+      <div class="r-chip" data-val="North" onclick="pickRegion(this)">
+        <div class="r-chip-label">🔼 North</div>
+        <div class="r-chip-sub">Region 1</div>
+      </div>
+      <div class="r-chip" data-val="South" onclick="pickRegion(this)">
+        <div class="r-chip-label">🔽 South</div>
+        <div class="r-chip-sub">Region 2</div>
+      </div>
+      <div class="r-chip" data-val="East" onclick="pickRegion(this)">
+        <div class="r-chip-label">▶ East</div>
+        <div class="r-chip-sub">Region 3</div>
+      </div>
+      <div class="r-chip" data-val="West" onclick="pickRegion(this)">
+        <div class="r-chip-label">◀ West</div>
+        <div class="r-chip-sub">Region 4</div>
+      </div>
+      <div class="r-chip" data-val="Central" onclick="pickRegion(this)">
+        <div class="r-chip-label">⬛ Central</div>
+        <div class="r-chip-sub">Region 5</div>
+      </div>
+      <div class="r-chip" data-val="National" onclick="pickRegion(this)">
+        <div class="r-chip-label">🌎 National</div>
+        <div class="r-chip-sub">Region 6</div>
+      </div>
+      <div class="r-chip" data-val="Downtown" onclick="pickRegion(this)">
+        <div class="r-chip-label">🏙 Downtown</div>
+        <div class="r-chip-sub">Region 7</div>
+      </div>
+      <div class="r-chip" data-val="Airport" onclick="pickRegion(this)">
+        <div class="r-chip-label">✈ Airport</div>
+        <div class="r-chip-sub">Region 8</div>
+      </div>
+    </div>
+    <input type="hidden" id="fRegion"/>
+  </div>
+</div>
+
+<!-- ═══ PAGE 1: VEHICLE ═══ -->
+<div class="page" id="page1">
+  <div class="step-num">Step 2 of 4</div>
+  <div class="step-title">Scan the vehicle</div>
+  <div class="step-desc">Take the photos shown below — AI will fill in the details ✨</div>
+
+  <div class="photo-guide">
+    <div class="photo-guide-title">📸 Photo guide — how to take each shot</div>
+
+    <div class="photo-tip">
+      <div class="photo-tip-img">
+        <!-- Simple SVG: front of car showing plate -->
+        <svg width="68" height="52" viewBox="0 0 68 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="68" height="52" fill="#f0ede8" rx="7"/>
+          <!-- car body -->
+          <rect x="8" y="22" width="52" height="18" rx="4" fill="#1a1a1a"/>
+          <rect x="16" y="13" width="36" height="13" rx="3" fill="#333"/>
+          <!-- windows -->
+          <rect x="19" y="15" width="13" height="9" rx="2" fill="#7ec8e3"/>
+          <rect x="36" y="15" width="13" height="9" rx="2" fill="#7ec8e3"/>
+          <!-- plate -->
+          <rect x="24" y="31" width="20" height="7" rx="2" fill="#fff"/>
+          <text x="34" y="37" font-size="5" font-weight="700" fill="#1a1a1a" text-anchor="middle" font-family="monospace">ABC 123</text>
+          <!-- wheels -->
+          <circle cx="18" cy="40" r="5" fill="#555"/>
+          <circle cx="18" cy="40" r="2.5" fill="#888"/>
+          <circle cx="50" cy="40" r="5" fill="#555"/>
+          <circle cx="50" cy="40" r="2.5" fill="#888"/>
+          <!-- viewfinder corners -->
+          <path d="M3 8 L3 3 L8 3" stroke="#f0a500" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <path d="M65 8 L65 3 L60 3" stroke="#f0a500" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <path d="M3 44 L3 49 L8 49" stroke="#f0a500" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <path d="M65 44 L65 49 L60 49" stroke="#f0a500" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="photo-tip-body">
+        <div class="photo-tip-name">Front or rear of car</div>
+        <div class="photo-tip-desc">Capture the full plate + the car model visible. Stand 5–8 ft away.</div>
+      </div>
+    </div>
+
+    <div class="photo-tip">
+      <div class="photo-tip-img">
+        <!-- VIN on dashboard -->
+        <svg width="68" height="52" viewBox="0 0 68 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="68" height="52" fill="#f0ede8" rx="7"/>
+          <!-- windshield frame -->
+          <rect x="5" y="8" width="58" height="30" rx="5" fill="#333"/>
+          <rect x="9" y="11" width="50" height="24" rx="3" fill="#7ec8e3" opacity=".7"/>
+          <!-- dashboard strip -->
+          <rect x="5" y="35" width="58" height="12" rx="3" fill="#1a1a1a"/>
+          <!-- VIN label -->
+          <rect x="10" y="38" width="48" height="6" rx="2" fill="#fff"/>
+          <text x="34" y="43" font-size="4.5" font-weight="700" fill="#1a1a1a" text-anchor="middle" font-family="monospace">1HGBH41JXMN109186</text>
+          <!-- arrow pointing to VIN -->
+          <path d="M34 33 L34 37" stroke="#f0a500" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <path d="M31 35 L34 38 L37 35" stroke="#f0a500" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <!-- corners -->
+          <path d="M3 5 L3 2 L6 2" stroke="#f0a500" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+          <path d="M65 5 L65 2 L62 2" stroke="#f0a500" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+          <path d="M3 47 L3 50 L6 50" stroke="#f0a500" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+          <path d="M65 47 L65 50 L62 50" stroke="#f0a500" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="photo-tip-body">
+        <div class="photo-tip-name">VIN on dashboard</div>
+        <div class="photo-tip-desc">Shoot through the windshield at the bottom corner, driver side. Keep it sharp.</div>
+      </div>
+    </div>
+
+    <div class="photo-tip">
+      <div class="photo-tip-img">
+        <!-- VIN on door jamb -->
+        <svg width="68" height="52" viewBox="0 0 68 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="68" height="52" fill="#f0ede8" rx="7"/>
+          <!-- door frame -->
+          <rect x="12" y="5" width="44" height="42" rx="4" fill="#ccc"/>
+          <rect x="16" y="9" width="36" height="34" rx="3" fill="#888"/>
+          <!-- sticker label -->
+          <rect x="18" y="28" width="32" height="12" rx="2" fill="#fff"/>
+          <text x="34" y="36" font-size="4" fill="#1a1a1a" text-anchor="middle" font-family="monospace">VIN: 1HGBH41J...</text>
+          <!-- arrow -->
+          <path d="M34 23 L34 27" stroke="#f0a500" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <path d="M31 25.5 L34 28.5 L37 25.5" stroke="#f0a500" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <!-- corners -->
+          <path d="M3 5 L3 2 L6 2" stroke="#f0a500" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+          <path d="M65 5 L65 2 L62 2" stroke="#f0a500" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+          <path d="M3 47 L3 50 L6 50" stroke="#f0a500" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+          <path d="M65 47 L65 50 L62 50" stroke="#f0a500" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="photo-tip-body">
+        <div class="photo-tip-name">VIN on door jamb</div>
+        <div class="photo-tip-desc">Open the driver's door — look for the white sticker on the door frame.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHOTO ZONES -->
+  <div class="card">
+    <div class="card-title">Upload your photos</div>
+
+    <div class="photo-zone" id="carZone">
+      <input type="file" id="carInput" accept="image/*" capture="environment"/>
+      <img class="pz-prev" id="carPrev"/>
+      <div class="pz-overlay" id="carOvr"><div class="pz-change">Change photo</div></div>
+      <div class="pz-done" id="carDone">✓</div>
+      <div id="carPh"><div class="pz-icon">🚗</div><div class="pz-label">Car photo</div><div class="pz-sub">Front or rear — plate visible</div></div>
+    </div>
+
+    <div class="photo-zone" id="vinZone">
+      <input type="file" id="vinInput" accept="image/*" capture="environment"/>
+      <img class="pz-prev" id="vinPrev"/>
+      <div class="pz-overlay" id="vinOvr"><div class="pz-change">Change photo</div></div>
+      <div class="pz-done" id="vinDone">✓</div>
+      <div id="vinPh"><div class="pz-icon">🔢</div><div class="pz-label">VIN number</div><div class="pz-sub">Dashboard or door jamb sticker</div></div>
+    </div>
+
+    <button class="scan-cta" id="scanBtn" disabled onclick="runScan()">
+      <span id="scanBtnTxt">✦ &nbsp;Scan with AI</span>
+    </button>
+
+    <div class="scan-anim" id="scanAnim">
+      <div class="scan-rings"><div class="ring"></div><div class="ring"></div><div class="ring"></div><div class="scan-dot">✦</div></div>
+      <div class="scan-msg" id="scanMsg">Analyzing images...</div>
+      <div class="scan-sub" id="scanSub">This takes a few seconds</div>
+    </div>
+  </div>
+
+  <div class="card" id="vCard" style="display:none;">
+    <div class="card-title">Vehicle details <span class="ai-tag">✦ AI filled</span></div>
+    <div class="field">
+      <div class="flabel">License Plate</div>
+      <input type="text" id="fPlate" placeholder="e.g. XKX7590"/>
+    </div>
+    <div class="field">
+      <div class="flabel">VIN Number</div>
+      <input type="text" id="fVin" placeholder="17-character VIN" style="font-family:monospace;font-size:13px;letter-spacing:1px;"/>
+    </div>
+    <div class="field">
+      <div class="flabel">Model &amp; Year</div>
+      <input type="text" id="fModel" placeholder="e.g. Chevrolet Tahoe 2025"/>
+    </div>
+    <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:9px;padding:9px 13px;display:flex;align-items:center;gap:8px;margin-top:4px;">
+      <span style="font-size:16px;">✅</span>
+      <span style="font-size:12px;font-weight:700;color:#15803d;">Data extracted! Edit if needed.</span>
+    </div>
+  </div>
+
+  <div class="card" id="manualCard" style="display:none;">
+    <div class="card-title">Enter manually</div>
+    <div class="field"><div class="flabel">License Plate</div><input type="text" id="fPlate2" placeholder="e.g. XKX7590"/></div>
+    <div class="field"><div class="flabel">VIN Number</div><input type="text" id="fVin2" placeholder="17-character VIN" style="font-family:monospace;font-size:13px;"/></div>
+    <div class="field"><div class="flabel">Model &amp; Year</div><input type="text" id="fModel2" placeholder="e.g. Chevrolet Tahoe 2025"/></div>
+  </div>
+
+  <div id="noKeyNote" style="display:none;background:#fffbeb;border:1px solid #fcd34d;border-radius:12px;padding:11px 14px;font-size:12px;font-weight:700;color:#92400e;display:flex;align-items:center;gap:7px;margin-top:4px;">
+    <span>⚠️</span> No API key — enter details manually or add key in ⚙️
+  </div>
+</div>
+
+<!-- ═══ PAGE 2: SERVICE ═══ -->
+<div class="page" id="page2">
+  <div class="step-num">Step 3 of 4</div>
+  <div class="step-title">Services</div>
+  <div class="step-desc">Select one or more — total updates automatically 💰</div>
+
+  <div class="card">
+    <div class="card-title">Select services (tap to add)</div>
+    <div class="svc-list">
+      <div class="svc-item" data-svc="Interior Only" data-price="50" onclick="toggleSvc(this)">
+        <div class="svc-check"></div>
+        <div class="svc-body"><div class="svc-name">Interior Only</div><div class="svc-desc">Full interior cleaning</div></div>
+        <div class="svc-price">$50</div>
+      </div>
+      <div class="svc-item" data-svc="Exterior Wash" data-price="40" onclick="toggleSvc(this)">
+        <div class="svc-check"></div>
+        <div class="svc-body"><div class="svc-name">Exterior Wash</div><div class="svc-desc">Hand wash + dry</div></div>
+        <div class="svc-price">$40</div>
+      </div>
+      <div class="svc-item" data-svc="Full Detail" data-price="75" onclick="toggleSvc(this)">
+        <div class="svc-check"></div>
+        <div class="svc-body"><div class="svc-name">Full Detail</div><div class="svc-desc">Interior + exterior</div></div>
+        <div class="svc-price">$75</div>
+      </div>
+      <div class="svc-item" data-svc="Extra Charge" data-price="20" onclick="toggleSvc(this)">
+        <div class="svc-check"></div>
+        <div class="svc-body"><div class="svc-name">Extra Charge</div><div class="svc-desc">Heavy soil, rain, etc.</div></div>
+        <div class="svc-price">$20</div>
+      </div>
+      <div class="svc-item" data-svc="Polish" data-price="60" onclick="toggleSvc(this)">
+        <div class="svc-check"></div>
+        <div class="svc-body"><div class="svc-name">Polish</div><div class="svc-desc">Paint correction + shine</div></div>
+        <div class="svc-price">$60</div>
+      </div>
+    </div>
+
+    <div id="extraReasonWrap" style="display:none;margin-top:12px;">
+      <div class="flabel" style="font-size:12px;margin-bottom:6px;">Reason for extra charge</div>
+      <input type="text" id="fExtraReason" placeholder="e.g. rain, heavy soil, tornado..."/>
+    </div>
+
+    <div class="total-bar">
+      <div class="total-bar-label">Total</div>
+      <div class="total-bar-val" id="totalVal">$0</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Invoice &amp; options</div>
+    <div class="field">
+      <div class="flabel">Invoice URL <span style="font-size:11px;font-weight:600;color:var(--muted);">(optional)</span></div>
+      <input type="url" id="fInvoice" placeholder="https://drive.google.com/..."/>
+    </div>
+    <div class="include-row">
+      <div class="toggle-wrap" onclick="toggleInclude()">
+        <div class="toggle-bg" id="tBg"></div>
+        <div class="toggle-knob" id="tKnob"></div>
+      </div>
+      <span style="font-size:14px;font-weight:700;">Include ✓</span>
+      <input type="hidden" id="fInclude" value=""/>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PAGE 3: REVIEW ═══ -->
+<div class="page" id="page3">
+  <div class="step-num">Step 4 of 4</div>
+  <div class="step-title">Looks good?</div>
+  <div class="step-desc">Review everything before saving 📋</div>
+  <div id="rvContent"></div>
+  <button class="submit-btn" id="submitBtn" onclick="submitData()">
+    <span id="submitTxt">💾 &nbsp;Save to Google Sheets</span>
+  </button>
+  <div id="submitNote" style="text-align:center;font-size:11px;color:var(--muted);font-weight:600;margin-top:8px;"></div>
+</div>
+
+<!-- ═══ PAGE 4: SUCCESS ═══ -->
+<div class="page" id="page4">
+  <div style="padding-top:30px;">
+    <div class="suc-circle">✅</div>
+    <div class="suc-title">All done!</div>
+    <div class="suc-sub">Record saved to Google Sheets.<br/>Ready for the next vehicle?</div>
+    <div id="sucSummary"></div>
+    <button onclick="resetAll()" style="width:100%;padding:15px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-size:15px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;margin-top:20px;">
+      + New Vehicle
+    </button>
+  </div>
+</div>
+
+<!-- ═══ CONFIG ═══ -->
+<div class="cfg-page" id="cfgPage">
+  <div class="back-lnk" onclick="toggleCfg()">← Back to form</div>
+  <div class="step-title" style="margin-bottom:4px;">Settings</div>
+  <div class="step-desc">Connect AI and Google Sheets</div>
+
+  <div class="cfg-card">
+    <div class="cfg-card-title">🤖 Anthropic API Key</div>
+    <div class="cfg-card-sub">Needed for AI photo scanning. Get yours at console.anthropic.com → API Keys.</div>
+    <input type="password" id="cfgKey" placeholder="sk-ant-..." oninput="saveCfg()"/>
+  </div>
+
+  <div class="cfg-card">
+    <div class="cfg-card-title">📊 Google Sheets URL</div>
+    <div class="cfg-card-sub">Paste your deployed Apps Script web app URL here.</div>
+    <input type="url" id="cfgUrl" placeholder="https://script.google.com/macros/s/..." oninput="saveCfg()"/>
+  </div>
+
+  <div class="cfg-card">
+    <div class="cfg-card-title">📋 Apps Script — Setup</div>
+    <div style="margin-bottom:12px;"><div class="step-pill">1</div><div style="font-size:12px;font-weight:600;color:var(--muted);">Your Google Sheet → Extensions → Apps Script</div></div>
+    <div style="margin-bottom:12px;"><div class="step-pill">2</div><div style="font-size:12px;font-weight:600;color:var(--muted);">Replace all code with this:</div></div>
+    <div class="code-blk">function doPost(e) {
+  var d = JSON.parse(e.postData.contents);
+  var sheet = SpreadsheetApp
+    .getActiveSpreadsheet()
+    .getSheetByName('Form Responses 1');
+  sheet.appendRow([
+    d.timestamp, d.employee, d.branch,
+    d.manager,   d.region,   d.plate,
+    d.vin,       d.model,    d.serviceType,
+    d.subtotal,  d.total,    d.invoice,
+    d.include
+  ]);
+  return ContentService
+    .createTextOutput(JSON.stringify({ok:true}))
+    .setMimeType(ContentService.MimeType.JSON);
+}</div>
+    <div style="margin-top:12px;margin-bottom:8px;"><div class="step-pill">3</div><div style="font-size:12px;font-weight:600;color:var(--muted);">Deploy → New deployment → Web app</div></div>
+    <div style="margin-bottom:8px;"><div class="step-pill">4</div><div style="font-size:12px;font-weight:600;color:var(--muted);">Execute as: Me · Access: Anyone</div></div>
+    <div><div class="step-pill">5</div><div style="font-size:12px;font-weight:600;color:var(--muted);">Copy URL → paste above ⬆</div></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav-bar" id="navBar">
+  <div class="nav-back" id="navBack" onclick="goPrev()" style="display:none;">←</div>
+  <button class="nav-fwd" id="navFwd" onclick="goNext()">Continue →</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let cur=0, carB64=null, vinB64=null, aiDone=false, includeOn=false, cfgOpen=false;
+let selectedSvcs=new Set();
+
+// CONFIG
+function saveCfg(){localStorage.setItem('sd_k',document.getElementById('cfgKey').value);localStorage.setItem('sd_u',document.getElementById('cfgUrl').value);}
+function loadCfg(){document.getElementById('cfgKey').value=localStorage.getItem('sd_k')||'';document.getElementById('cfgUrl').value=localStorage.getItem('sd_u')||'';}
+function getKey(){return localStorage.getItem('sd_k')||'';}
+function getUrl(){return localStorage.getItem('sd_u')||'';}
+
+function toggleCfg(){
+  cfgOpen=!cfgOpen;
+  document.getElementById('cfgPage').classList.toggle('active',cfgOpen);
+  document.getElementById('navBar').style.display=cfgOpen?'none':'flex';
+  document.getElementById('progWrap').style.display=cfgOpen?'none':'block';
+  document.querySelectorAll('.page').forEach(p=>{if(cfgOpen)p.classList.remove('active');else if(p.id==='page'+cur)p.classList.add('active');});
+}
+
+// NAV
+function goTo(n){
+  cur=n;
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page'+n).classList.add('active');
+  updateProg();updateNav();
+  if(n===3)buildReview();
+  window.scrollTo(0,0);
+}
+function goNext(){if(validate(cur))goTo(cur+1);}
+function goPrev(){if(cur>0)goTo(cur-1);}
+function updateProg(){
+  const pct=[25,50,75,100];
+  document.getElementById('progFill').style.width=pct[cur]+'%';
+  for(let i=0;i<4;i++){const l=document.getElementById('lbl'+i);l.classList.toggle('active',i===cur);}
+}
+function updateNav(){
+  document.getElementById('navBack').style.display=cur>0&&cur<4?'flex':'none';
+  const fwd=document.getElementById('navFwd');
+  fwd.style.display=cur<4?'flex':'none';
+  fwd.textContent=cur===3?'Looks good ✓':'Continue →';
+  if(cur===4)document.getElementById('navBar').style.display='none';
+}
+
+function validate(n){
+  if(n===0){
+    if(!document.getElementById('fEmployee').value){toast('Tap your name 👆');return false;}
+    if(!document.getElementById('fManager').value.trim()){toast('Enter the manager name');return false;}
+    if(!document.getElementById('fBranch').value.trim()){toast('Enter the branch number');return false;}
+    if(!document.getElementById('fRegion').value){toast('Select your region');return false;}
+  }
+  if(n===1){
+    const p=document.getElementById('fPlate').value||document.getElementById('fPlate2').value;
+    if(!p){toast('Add the license plate number');return false;}
+  }
+  if(n===2){
+    if(selectedSvcs.size===0){toast('Select at least one service');return false;}
+  }
+  return true;
+}
+
+// EMPLOYEE
+function pickEmp(el){
+  document.querySelectorAll('.emp-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('fEmployee').value=el.dataset.name;
+}
+
+// REGION
+function pickRegion(el){
+  document.querySelectorAll('.r-chip').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('fRegion').value=el.dataset.val;
+}
+
+// PHOTOS
+function setupPhoto(inId,prevId,ovrId,doneId,phId,isVin){
+  document.getElementById(inId).addEventListener('change',async(e)=>{
+    const f=e.target.files[0];if(!f)return;
+    const url=URL.createObjectURL(f);
+    const prev=document.getElementById(prevId);
+    prev.src=url;prev.classList.add('show');
+    document.getElementById(ovrId).classList.add('show');
+    document.getElementById(doneId).classList.add('show');
+    document.getElementById(phId).style.display='none';
+    document.getElementById(isVin?'vinZone':'carZone').classList.add('has-photo');
+    const b64=await f2b64(f);
+    if(isVin)vinB64=b64;else carB64=b64;
+    checkScan();
+  });
+}
+setupPhoto('carInput','carPrev','carOvr','carDone','carPh',false);
+setupPhoto('vinInput','vinPrev','vinOvr','vinDone','vinPh',true);
+
+function f2b64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(file);});}
+
+function checkScan(){
+  const hasKey=getKey().startsWith('sk-ant-');
+  const hasPhoto=carB64||vinB64;
+  document.getElementById('scanBtn').disabled=!hasPhoto||!hasKey;
+  if(hasPhoto&&!hasKey){
+    document.getElementById('noKeyNote').style.display='flex';
+    document.getElementById('manualCard').style.display='block';
+  }
+}
+
+// AI SCAN
+async function runScan(){
+  const key=getKey();
+  document.getElementById('scanBtn').style.display='none';
+  const anim=document.getElementById('scanAnim');anim.classList.add('show');
+  const msg=document.getElementById('scanMsg'),sub=document.getElementById('scanSub');
+  const content=[];
+  if(carB64){msg.textContent='Analyzing car photo...';content.push({type:'image',source:{type:'base64',media_type:'image/jpeg',data:carB64}});content.push({type:'text',text:'Photo of a vehicle. Extract: make, model, year, license plate. Use null if not visible.'});}
+  if(vinB64){msg.textContent='Reading VIN...';content.push({type:'image',source:{type:'base64',media_type:'image/jpeg',data:vinB64}});content.push({type:'text',text:'Photo with a VIN number. Read the exact VIN. Use null if unreadable.'});}
+  content.push({type:'text',text:'Reply ONLY with JSON, no backticks:\n{"make":"...","model":"...","year":"...","plate":"...","vin":"...","confidence":"high|medium|low"}'});
+  try{
+    msg.textContent='Processing with AI...';sub.textContent='Almost there!';
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:400,messages:[{role:'user',content}]})});
+    const data=await res.json();
+    const text=data.content?.map(i=>i.text||'').join('').replace(/```json|```/g,'').trim();
+    const ai=JSON.parse(text);
+    if(ai.plate){const el=document.getElementById('fPlate');el.value=ai.plate;el.classList.add('ai-filled');}
+    if(ai.vin){const el=document.getElementById('fVin');el.value=ai.vin;el.classList.add('ai-filled');}
+    const ms=[ai.make,ai.model,ai.year].filter(Boolean).join(' ');
+    if(ms){const el=document.getElementById('fModel');el.value=ms;el.classList.add('ai-filled');}
+    aiDone=true;
+    anim.classList.remove('show');
+    document.getElementById('scanBtn').style.display='flex';
+    document.getElementById('vCard').style.display='block';
+    document.getElementById('noKeyNote').style.display='none';
+    toast('✦ Data extracted!',true);
+  }catch(err){
+    anim.classList.remove('show');
+    document.getElementById('scanBtn').style.display='flex';
+    document.getElementById('manualCard').style.display='block';
+    toast('Could not analyze — enter manually');
+    console.error(err);
+  }
+}
+
+// SERVICES
+function toggleSvc(el){
+  const svc=el.dataset.svc;const price=parseInt(el.dataset.price)||0;
+  if(selectedSvcs.has(svc)){selectedSvcs.delete(svc);el.classList.remove('selected');el.querySelector('.svc-check').textContent='';}
+  else{selectedSvcs.add(svc);el.classList.add('selected');el.querySelector('.svc-check').textContent='✓';}
+  // show extra reason if Extra Charge selected
+  document.getElementById('extraReasonWrap').style.display=selectedSvcs.has('Extra Charge')?'block':'none';
+  recalc();
+}
+function recalc(){
+  let total=0;
+  document.querySelectorAll('.svc-item.selected').forEach(el=>total+=parseInt(el.dataset.price)||0);
+  document.getElementById('totalVal').textContent='$'+total;
+}
+
+// INCLUDE TOGGLE
+function toggleInclude(){
+  includeOn=!includeOn;
+  document.getElementById('tBg').style.background=includeOn?'#1a1a1a':'#e2e0db';
+  document.getElementById('tKnob').style.left=includeOn?'23px':'3px';
+  document.getElementById('fInclude').value=includeOn?'✓':'';
+}
+
+// REVIEW
+function buildReview(){
+  const plate=document.getElementById('fPlate').value||document.getElementById('fPlate2').value;
+  const vin=document.getElementById('fVin').value||document.getElementById('fVin2').value;
+  const model=document.getElementById('fModel').value||document.getElementById('fModel2').value;
+  const svcs=[...selectedSvcs].join(' + ');
+  const extra=document.getElementById('fExtraReason').value;
+  const total=document.getElementById('totalVal').textContent;
+  const blocks=[
+    {s:'Employee',rows:[['Name',document.getElementById('fEmployee').value],['Manager',document.getElementById('fManager').value],['Branch',document.getElementById('fBranch').value],['Region',document.getElementById('fRegion').value]]},
+    {s:'Vehicle',rows:[['Plate',plate],['VIN',vin],['Model',model]]},
+    {s:'Service',rows:[['Services',svcs+(extra?' ('+extra+')':'')],['Total',total],['Include',document.getElementById('fInclude').value||'—']]},
+  ];
+  document.getElementById('rvContent').innerHTML=blocks.map(b=>`
+    <div class="review-block">
+      <div class="rv-section">${b.s}</div>
+      ${b.rows.map(([k,v])=>`<div class="rv-row"><span class="rv-k">${k}</span><span class="rv-v${!v?' empty':''}">${v||'—'}</span></div>`).join('')}
+    </div>`).join('');
+}
+
+// SUBMIT
+async function submitData(){
+  const url=getUrl();
+  const plate=document.getElementById('fPlate').value||document.getElementById('fPlate2').value;
+  const vin=document.getElementById('fVin').value||document.getElementById('fVin2').value;
+  const model=document.getElementById('fModel').value||document.getElementById('fModel2').value;
+  const svcs=[...selectedSvcs].join(' + ');
+  const extra=document.getElementById('fExtraReason').value;
+  let totalNum=0;
+  document.querySelectorAll('.svc-item.selected').forEach(el=>totalNum+=parseInt(el.dataset.price)||0);
+  const total=String(totalNum);
+  const payload={
+    timestamp:new Date().toLocaleString('en-US'),
+    employee:document.getElementById('fEmployee').value,
+    branch:document.getElementById('fBranch').value,
+    manager:document.getElementById('fManager').value,
+    region:document.getElementById('fRegion').value,
+    plate,vin,model,
+    serviceType:svcs+(extra?' ('+extra+')':''),
+    subtotal:total,total,
+    invoice:document.getElementById('fInvoice').value,
+    include:document.getElementById('fInclude').value,
+    carPhoto:carB64||'',
+    vinPhoto:vinB64||''
+  };
+  const btn=document.getElementById('submitBtn');
+  const note=document.getElementById('submitNote');
+  btn.disabled=true;
+  const hasPhotos=carB64||vinB64;
+  if(hasPhotos){
+    document.getElementById('submitTxt').innerHTML='<span class="spin"></span> &nbsp;Uploading photos...';
+    note.textContent='Saving photos to Drive - this may take a few seconds';
+  } else {
+    document.getElementById('submitTxt').innerHTML='<span class="spin"></span> &nbsp;Saving...';
+    note.textContent='';
+  }
+  if(!url){
+    const row=Object.values(payload).map(v=>`"${v}"`).join(',');
+    try{await navigator.clipboard.writeText(row);}catch(e){}
+    note.textContent='No Sheets URL configured. Add URL in Settings.';
+    btn.disabled=false;document.getElementById('submitTxt').innerHTML='Save to Google Sheets';
+    buildSuccess(payload);goTo(4);return;
+  }
+  try{
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),30000);
+    await fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:controller.signal});
+    clearTimeout(timer);
+    buildSuccess(payload);goTo(4);
+  }catch(err){
+    btn.disabled=false;document.getElementById('submitTxt').innerHTML='Save to Google Sheets';
+    note.textContent=err.name==='AbortError'
+      ?'Took too long - check your connection and try again.'
+      :'Connection error. Check the Apps Script URL in Settings.';
+  }
+}
+function buildSuccess(p){
+  document.getElementById('sucSummary').innerHTML=`
+    <div class="review-block">
+      <div class="rv-section">Saved record</div>
+      <div class="rv-row"><span class="rv-k">Employee</span><span class="rv-v">${p.employee}</span></div>
+      <div class="rv-row"><span class="rv-k">Plate</span><span class="rv-v">${p.plate||'—'}</span></div>
+      <div class="rv-row"><span class="rv-k">Model</span><span class="rv-v">${p.model||'—'}</span></div>
+      <div class="rv-row"><span class="rv-k">Services</span><span class="rv-v">${p.serviceType||'—'}</span></div>
+      <div class="rv-row"><span class="rv-k">Total</span><span class="rv-v">$${p.total||'0'}</span></div>
+    </div>`;
+}
+
+// RESET
+function resetAll(){
+  cur=0;carB64=null;vinB64=null;aiDone=false;includeOn=false;selectedSvcs=new Set();
+  document.querySelectorAll('input[type=text],input[type=number],input[type=url],textarea').forEach(i=>{i.value='';i.classList.remove('ai-filled');});
+  document.getElementById('fEmployee').value='';document.getElementById('fRegion').value='';document.getElementById('fInclude').value='';
+  document.getElementById('tBg').style.background='#e2e0db';document.getElementById('tKnob').style.left='3px';
+  document.querySelectorAll('.pz-prev').forEach(p=>{p.src='';p.classList.remove('show');});
+  document.querySelectorAll('.pz-overlay,.pz-done').forEach(e=>e.classList.remove('show'));
+  document.querySelectorAll('.photo-zone').forEach(z=>z.classList.remove('has-photo'));
+  document.querySelectorAll('#carPh,#vinPh').forEach(e=>e.style.display='');
+  document.getElementById('scanAnim').classList.remove('show');
+  document.getElementById('scanBtn').style.display='flex';document.getElementById('scanBtn').disabled=true;
+  document.getElementById('vCard').style.display='none';document.getElementById('manualCard').style.display='none';document.getElementById('noKeyNote').style.display='none';
+  document.querySelectorAll('.emp-card,.r-chip,.svc-item').forEach(c=>{c.classList.remove('selected');const ch=c.querySelector('.svc-check');if(ch)ch.textContent='';});
+  document.getElementById('totalVal').textContent='$0';
+  document.getElementById('extraReasonWrap').style.display='none';
+  document.getElementById('submitNote').textContent='';
+  document.getElementById('navBar').style.display='flex';
+  goTo(0);
+}
+
+function toast(msg,green=false){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(green?' green':'');setTimeout(()=>t.className='toast',2700);}
+
+loadCfg();updateNav();
+</script>
+</body>
+</html>
