@@ -23,8 +23,6 @@ body{font-family:'Nunito',sans-serif;color:var(--text);min-height:100vh;padding-
 .logo{width:34px;height:34px;border-radius:9px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
 .h-title{font-size:15px;font-weight:800;letter-spacing:-.3px;}
 .h-sub{font-size:10px;color:var(--muted);font-weight:600;}
-.cfg-btn{margin-left:auto;width:34px;height:34px;border-radius:9px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;flex-shrink:0;}
-
 /* PROGRESS */
 .prog-wrap{background:var(--white);padding:12px 18px 0;border-bottom:1px solid var(--border);}
 .prog-labels{display:flex;justify-content:space-between;margin-bottom:7px;}
@@ -236,7 +234,7 @@ select option{background:var(--white);}
     <div class="h-title">Shiny Detail</div>
     <div class="h-sub">Vehicle Intake</div>
   </div>
-  <div class="cfg-btn" onclick="toggleCfg()">⚙️</div>
+  
 </div>
 
 <div class="prog-wrap" id="progWrap">
@@ -490,10 +488,7 @@ select option{background:var(--white);}
     <div class="field"><div class="flabel">Model &amp; Year</div><input type="text" id="fModel2" placeholder="e.g. Chevrolet Tahoe 2025"/></div>
   </div>
 
-  <div id="noKeyNote" style="display:none;background:#fffbeb;border:1px solid #fcd34d;border-radius:12px;padding:11px 14px;font-size:12px;font-weight:700;color:#92400e;display:flex;align-items:center;gap:7px;margin-top:4px;">
-    <span>⚠️</span> No API key — enter details manually or add key in ⚙️
   </div>
-</div>
 
 <!-- ═══ PAGE 2: SERVICE ═══ -->
 <div class="page" id="page2">
@@ -584,12 +579,6 @@ select option{background:var(--white);}
   </div>
 </div>
 
-<!-- ═══ CONFIG ═══ -->
-<div class="cfg-page" id="cfgPage">
-  <div class="back-lnk" onclick="toggleCfg()">← Back to form</div>
-  <div class="step-title" style="margin-bottom:4px;">Settings</div>
-  <div class="step-desc">Connect AI and Google Sheets</div>
-
   <div class="cfg-card">
     <div class="cfg-card-title">🤖 Anthropic API Key</div>
     <div class="cfg-card-sub">Needed for AI photo scanning. Get yours at console.anthropic.com → API Keys.</div>
@@ -640,19 +629,9 @@ select option{background:var(--white);}
 let cur=0, carB64=null, vinB64=null, aiDone=false, includeOn=false, cfgOpen=false;
 let selectedSvcs=new Set();
 
-// CONFIG
-function saveCfg(){localStorage.setItem('sd_k',document.getElementById('cfgKey').value);localStorage.setItem('sd_u',document.getElementById('cfgUrl').value);}
-function loadCfg(){document.getElementById('cfgKey').value=localStorage.getItem('sd_k')||'';document.getElementById('cfgUrl').value=localStorage.getItem('sd_u')||'';}
-function getKey(){return localStorage.getItem('sd_k')||'';}
-function getUrl(){return localStorage.getItem('sd_u')||'';}
-
-function toggleCfg(){
-  cfgOpen=!cfgOpen;
-  document.getElementById('cfgPage').classList.toggle('active',cfgOpen);
-  document.getElementById('navBar').style.display=cfgOpen?'none':'flex';
-  document.getElementById('progWrap').style.display=cfgOpen?'none':'block';
-  document.querySelectorAll('.page').forEach(p=>{if(cfgOpen)p.classList.remove('active');else if(p.id==='page'+cur)p.classList.add('active');});
-}
+// CONFIG — hardcoded, no setup needed
+var SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxH7BpDZyNTYR3v7UmZxwymFjpHukMqkVqfvu7llKtWttQKN0i787cDUxEQUaBagq6d/exec';
+function getUrl(){return SHEETS_URL;}
 
 // NAV
 function goTo(n){
@@ -731,13 +710,8 @@ setupPhoto('vinInput','vinPrev','vinOvr','vinDone','vinPh',true);
 function f2b64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(file);});}
 
 function checkScan(){
-  const hasKey=getKey().startsWith('sk-ant-');
   const hasPhoto=carB64||vinB64;
-  document.getElementById('scanBtn').disabled=!hasPhoto||!hasKey;
-  if(hasPhoto&&!hasKey){
-    document.getElementById('noKeyNote').style.display='flex';
-    document.getElementById('manualCard').style.display='block';
-  }
+  document.getElementById('scanBtn').disabled=!hasPhoto;
 }
 
 // AI SCAN
@@ -909,7 +883,7 @@ function resetAll(){
 
 function toast(msg,green=false){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(green?' green':'');setTimeout(()=>t.className='toast',2700);}
 
-loadCfg();updateNav();
+updateNav();
 </script>
 </body>
 </html>
