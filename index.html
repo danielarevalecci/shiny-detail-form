@@ -216,14 +216,6 @@ select option{background:var(--white);}
 @keyframes sp{to{transform:rotate(360deg);}}
 
 /* CONFIG */
-.cfg-page{display:none;padding:18px;}
-.cfg-page.active{display:block;}
-.cfg-card{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);padding:18px;margin-bottom:13px;}
-.cfg-card-title{font-size:14px;font-weight:800;margin-bottom:4px;}
-.cfg-card-sub{font-size:11px;color:var(--muted);font-weight:600;margin-bottom:14px;line-height:1.5;}
-.code-blk{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:13px;font-family:monospace;font-size:10px;color:#2d6a4f;line-height:1.8;overflow-x:auto;white-space:pre;}
-.step-pill{display:inline-flex;align-items:center;gap:5px;background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;margin-bottom:6px;}
-.back-lnk{display:flex;align-items:center;gap:5px;font-size:14px;font-weight:700;color:var(--muted);cursor:pointer;padding:4px 0;margin-bottom:18px;}
 </style>
 </head>
 <body>
@@ -579,43 +571,6 @@ select option{background:var(--white);}
   </div>
 </div>
 
-  <div class="cfg-card">
-    <div class="cfg-card-title">🤖 Anthropic API Key</div>
-    <div class="cfg-card-sub">Needed for AI photo scanning. Get yours at console.anthropic.com → API Keys.</div>
-    <input type="password" id="cfgKey" placeholder="sk-ant-..." oninput="saveCfg()"/>
-  </div>
-
-  <div class="cfg-card">
-    <div class="cfg-card-title">📊 Google Sheets URL</div>
-    <div class="cfg-card-sub">Paste your deployed Apps Script web app URL here.</div>
-    <input type="url" id="cfgUrl" placeholder="https://script.google.com/macros/s/..." oninput="saveCfg()"/>
-  </div>
-
-  <div class="cfg-card">
-    <div class="cfg-card-title">📋 Apps Script — Setup</div>
-    <div style="margin-bottom:12px;"><div class="step-pill">1</div><div style="font-size:12px;font-weight:600;color:var(--muted);">Your Google Sheet → Extensions → Apps Script</div></div>
-    <div style="margin-bottom:12px;"><div class="step-pill">2</div><div style="font-size:12px;font-weight:600;color:var(--muted);">Replace all code with this:</div></div>
-    <div class="code-blk">function doPost(e) {
-  var d = JSON.parse(e.postData.contents);
-  var sheet = SpreadsheetApp
-    .getActiveSpreadsheet()
-    .getSheetByName('Form Responses 1');
-  sheet.appendRow([
-    d.timestamp, d.employee, d.branch,
-    d.manager,   d.region,   d.plate,
-    d.vin,       d.model,    d.serviceType,
-    d.subtotal,  d.total,    d.invoice,
-    d.include
-  ]);
-  return ContentService
-    .createTextOutput(JSON.stringify({ok:true}))
-    .setMimeType(ContentService.MimeType.JSON);
-}</div>
-    <div style="margin-top:12px;margin-bottom:8px;"><div class="step-pill">3</div><div style="font-size:12px;font-weight:600;color:var(--muted);">Deploy → New deployment → Web app</div></div>
-    <div style="margin-bottom:8px;"><div class="step-pill">4</div><div style="font-size:12px;font-weight:600;color:var(--muted);">Execute as: Me · Access: Anyone</div></div>
-    <div><div class="step-pill">5</div><div style="font-size:12px;font-weight:600;color:var(--muted);">Copy URL → paste above ⬆</div></div>
-  </div>
-</div>
 
 <!-- NAV -->
 <div class="nav-bar" id="navBar">
@@ -845,7 +800,7 @@ async function submitData(){
     btn.disabled=false;document.getElementById('submitTxt').innerHTML='Save to Google Sheets';
     note.textContent=err.name==='AbortError'
       ?'Took too long - check your connection and try again.'
-      :'Connection error. Check the Apps Script URL in Settings.';
+      :'Connection error. Check your internet and try again.';
   }
 }
 function buildSuccess(p){
