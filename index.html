@@ -357,7 +357,7 @@ select option{background:var(--white);}
 // ============================================================
 // ✅ FIX: API KEY hardcodeada aquí — reemplaza con la tuya
 // ============================================================
-const ANTHROPIC_KEY = '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';
+const ANTHROPIC_KEY = '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';
 // ============================================================
 
 let cur=0, carB64=null, vinB64=null, aiDone=false, includeOn=false;
@@ -439,7 +439,7 @@ function checkScan(){
 // ✅ FIX PRINCIPAL: runScan usa ANTHROPIC_KEY directamente
 // ============================================================
 async function runScan(){
-  if(!ANTHROPIC_KEY||ANTHROPIC_KEY==='PEGA_TU_API_KEY_AQUI'){
+  if(!ANTHROPIC_KEY||ANTHROPIC_KEY==='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'){
     // Sin key: mostrar entrada manual
     document.getElementById('manualCard').style.display='block';
     toast('No API key — enter details manually');
