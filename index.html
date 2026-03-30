@@ -357,7 +357,7 @@ select option{background:var(--white);}
 // ============================================================
 // ✅ FIX: API KEY hardcodeada aquí — reemplaza con la tuya
 // ============================================================
-const ANTHROPIC_KEY = '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';
+const ANTHROPIC_KEY = 'via-netlify-function';
 // ============================================================
 
 let cur=0, carB64=null, vinB64=null, aiDone=false, includeOn=false;
@@ -439,7 +439,7 @@ function checkScan(){
 // ✅ FIX PRINCIPAL: runScan usa ANTHROPIC_KEY directamente
 // ============================================================
 async function runScan(){
-  if(!ANTHROPIC_KEY||ANTHROPIC_KEY===''||ANTHROPIC_KEY.length<10){
+  if(false){
     // Sin key: mostrar entrada manual
     document.getElementById('manualCard').style.display='block';
     toast('No API key — enter details manually');
@@ -462,10 +462,10 @@ async function runScan(){
   content.push({type:'text',text:'Reply ONLY with valid JSON, no backticks, no extra text:\n{"make":"...","model":"...","year":"...","plate":"...","vin":"...","confidence":"high|medium|low"}'});
   try{
     msg.textContent='Processing with AI...';sub.textContent='Almost there!';
-    const res=await fetch('https://api.anthropic.com/v1/messages',{
+    const res=await fetch('/.netlify/functions/scan',{
       method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':ANTHROPIC_KEY,'anthropic-version':'2023-06-01'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:400,messages:[{role:'user',content}]})
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({content})
     });
     if(!res.ok){
       const err=await res.json().catch(()=>({}));
