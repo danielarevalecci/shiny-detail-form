@@ -56,8 +56,8 @@ select option{background:var(--white);}
 .emp-icon{width:38px;height:38px;border-radius:50%;background:var(--white);margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:18px;transition:background .15s;border:1px solid var(--border);}
 .emp-name{font-size:14px;font-weight:800;}
 .emp-card:active{transform:scale(.96);}
-.region-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-.r-chip{background:var(--bg);border:2px solid var(--border);border-radius:var(--radius-sm);padding:11px 10px;cursor:pointer;transition:all .15s;text-align:center;}
+.region-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.r-chip{background:var(--bg);border:2px solid var(--border);border-radius:var(--radius-sm);padding:18px 10px;cursor:pointer;transition:all .15s;text-align:center;}
 .r-chip.selected{border-color:var(--accent);background:var(--accent);color:#fff;}
 .r-chip-label{font-size:12px;font-weight:800;}
 .r-chip-sub{font-size:10px;color:var(--muted);margin-top:1px;font-weight:600;}
@@ -121,7 +121,7 @@ select option{background:var(--white);}
 .rv-k{font-size:12px;font-weight:700;color:var(--muted);flex-shrink:0;}
 .rv-v{font-size:13px;font-weight:800;text-align:right;max-width:58%;}
 .rv-v.empty{color:var(--muted2);font-weight:600;font-style:italic;}
-.submit-btn{width:100%;padding:17px;background:var(--gold);color:#fff;border:none;border-radius:var(--radius);font-size:16px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;transition:transform .15s,opacity .2s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.submit-btn{width:100%;padding:22px;background:var(--gold);font-size:18px;letter-spacing:-.3px;box-shadow:0 4px 18px rgba(240,165,0,0.45);color:#fff;border:none;border-radius:var(--radius);font-size:16px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;transition:transform .15s,opacity .2s;display:flex;align-items:center;justify-content:center;gap:8px;}
 .submit-btn:disabled{opacity:.4;cursor:not-allowed;}
 .submit-btn:active:not(:disabled){transform:scale(.98);}
 .suc-circle{width:72px;height:72px;border-radius:50%;background:var(--green-bg);border:3px solid var(--green);display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 18px;}
@@ -179,19 +179,13 @@ select option{background:var(--white);}
   <div class="card">
     <div class="card-title">Branch info</div>
     <div class="field"><div class="flabel">Received by (Manager) <span class="req">*</span></div><input type="text" id="fManager" placeholder="Manager's name"/></div>
-    <div class="field"><div class="flabel">Branch Number <span class="req">*</span></div><input type="text" id="fBranch" placeholder="e.g. 1212" inputmode="numeric"/></div>
+    <div class="field"><div class="flabel">Branch Number <span class="req">*</span></div><input type="text" id="fBranch" placeholder="e.g. 1212 or A-12"/></div>
   </div>
   <div class="card">
     <div class="card-title">Region <span class="req">*</span></div>
     <div class="region-grid">
-      <div class="r-chip" data-val="North" onclick="pickRegion(this)"><div class="r-chip-label">🔼 North</div><div class="r-chip-sub">Region 1</div></div>
-      <div class="r-chip" data-val="South" onclick="pickRegion(this)"><div class="r-chip-label">🔽 South</div><div class="r-chip-sub">Region 2</div></div>
-      <div class="r-chip" data-val="East" onclick="pickRegion(this)"><div class="r-chip-label">▶ East</div><div class="r-chip-sub">Region 3</div></div>
-      <div class="r-chip" data-val="West" onclick="pickRegion(this)"><div class="r-chip-label">◀ West</div><div class="r-chip-sub">Region 4</div></div>
-      <div class="r-chip" data-val="Central" onclick="pickRegion(this)"><div class="r-chip-label">⬛ Central</div><div class="r-chip-sub">Region 5</div></div>
-      <div class="r-chip" data-val="National" onclick="pickRegion(this)"><div class="r-chip-label">🌎 National</div><div class="r-chip-sub">Region 6</div></div>
-      <div class="r-chip" data-val="Downtown" onclick="pickRegion(this)"><div class="r-chip-label">🏙 Downtown</div><div class="r-chip-sub">Region 7</div></div>
-      <div class="r-chip" data-val="Airport" onclick="pickRegion(this)"><div class="r-chip-label">✈ Airport</div><div class="r-chip-sub">Region 8</div></div>
+      <div class="r-chip" data-val="National" onclick="pickRegion(this)"><div class="r-chip-label">🌎 National</div><div class="r-chip-sub">Precio especial $70</div></div>
+      <div class="r-chip" data-val="Branch Externa" onclick="pickRegion(this)"><div class="r-chip-label">🏢 Branch Externa</div><div class="r-chip-sub">Precio estándar $75</div></div>
     </div>
     <input type="hidden" id="fRegion"/>
   </div>
@@ -297,16 +291,20 @@ select option{background:var(--white);}
   <div class="step-desc">Select one or more — total updates automatically 💰</div>
   <div class="card">
     <div class="card-title">Select services (tap to add)</div>
-    <div class="svc-list">
-      <div class="svc-item" data-svc="Interior Only" data-price="50" onclick="toggleSvc(this)"><div class="svc-check"></div><div class="svc-body"><div class="svc-name">Interior Only</div><div class="svc-desc">Full interior cleaning</div></div><div class="svc-price">$50</div></div>
-      <div class="svc-item" data-svc="Exterior Wash" data-price="40" onclick="toggleSvc(this)"><div class="svc-check"></div><div class="svc-body"><div class="svc-name">Exterior Wash</div><div class="svc-desc">Hand wash + dry</div></div><div class="svc-price">$40</div></div>
-      <div class="svc-item" data-svc="Full Detail" data-price="75" onclick="toggleSvc(this)"><div class="svc-check"></div><div class="svc-body"><div class="svc-name">Full Detail</div><div class="svc-desc">Interior + exterior</div></div><div class="svc-price">$75</div></div>
-      <div class="svc-item" data-svc="Extra Charge" data-price="20" onclick="toggleSvc(this)"><div class="svc-check"></div><div class="svc-body"><div class="svc-name">Extra Charge</div><div class="svc-desc">Heavy soil, rain, etc.</div></div><div class="svc-price">$20</div></div>
-      <div class="svc-item" data-svc="Polish" data-price="60" onclick="toggleSvc(this)"><div class="svc-check"></div><div class="svc-body"><div class="svc-name">Polish</div><div class="svc-desc">Paint correction + shine</div></div><div class="svc-price">$60</div></div>
+    <div style="background:#fff3cd;border:1px solid #f0a500;border-radius:10px;padding:9px 13px;margin-bottom:12px;font-size:12px;font-weight:700;color:#7c3d00;" id="priceNote">
+      ⚠️ Prices are based on your region. Select your region in Step 1 first.
     </div>
-    <div id="extraReasonWrap" style="display:none;margin-top:12px;">
-      <div class="flabel" style="font-size:12px;margin-bottom:6px;">Reason for extra charge</div>
-      <input type="text" id="fExtraReason" placeholder="e.g. rain, heavy soil, tornado..."/>
+    <div class="svc-list" id="svcList">
+      <div class="svc-item" id="svc-detail" data-svc="Full Detail" data-price="75" onclick="toggleSvc(this)">
+        <div class="svc-check"></div>
+        <div class="svc-body"><div class="svc-name">Full Detail</div><div class="svc-desc">Interior + exterior complete cleaning</div></div>
+        <div class="svc-price" id="price-detail">$75</div>
+      </div>
+      <div class="svc-item" id="svc-van" data-svc="15-Seat Van" data-price="115" onclick="toggleSvc(this)">
+        <div class="svc-check"></div>
+        <div class="svc-body"><div class="svc-name">🚐 15-Seat Van</div><div class="svc-desc">Full detail — large van</div></div>
+        <div class="svc-price">$115</div>
+      </div>
     </div>
     <div class="total-bar">
       <div class="total-bar-label">Total</div>
@@ -328,10 +326,10 @@ select option{background:var(--white);}
 <div class="page" id="page3">
   <div class="step-num">Step 4 of 4</div>
   <div class="step-title">Looks good?</div>
-  <div class="step-desc">Review everything before saving 📋</div>
+  <div class="step-desc">Revisa tu información — luego presiona el <strong>botón amarillo</strong> de abajo para guardar 👇</div>
   <div id="rvContent"></div>
   <button class="submit-btn" id="submitBtn" onclick="submitData()">
-    <span id="submitTxt">💾  Save to Google Sheets</span>
+    <span id="submitTxt">✅  Confirm & Save — Tap here to finish</span>
   </button>
   <div id="submitNote" style="text-align:center;font-size:11px;color:var(--muted);font-weight:600;margin-top:8px;"></div>
 </div>
@@ -384,7 +382,7 @@ function updateNav(){
   document.getElementById('navBack').style.display=cur>0&&cur<4?'flex':'none';
   const fwd=document.getElementById('navFwd');
   fwd.style.display=cur<4?'flex':'none';
-  fwd.textContent=cur===3?'Looks good ✓':'Continue →';
+  fwd.textContent=cur===3?'Review & Save →':'Continue →';
   if(cur===4)document.getElementById('navBar').style.display='none';
 }
 function validate(n){
@@ -399,6 +397,7 @@ function validate(n){
     if(!p){toast('Add the license plate number');return false;}
   }
   if(n===2){
+    if(!document.getElementById('fRegion').value){toast('Go back and select your region first');return false;}
     if(selectedSvcs.size===0){toast('Select at least one service');return false;}
   }
   return true;
@@ -411,7 +410,31 @@ function pickEmp(el){
 function pickRegion(el){
   document.querySelectorAll('.r-chip').forEach(c=>c.classList.remove('selected'));
   el.classList.add('selected');
-  document.getElementById('fRegion').value=el.dataset.val;
+  const region=el.dataset.val;
+  document.getElementById('fRegion').value=region;
+  updatePrices(region);
+}
+function updatePrices(region){
+  const isNational=region==='National';
+  const detailPrice=isNational?70:75;
+  const detailEl=document.getElementById('svc-detail');
+  if(detailEl){
+    detailEl.dataset.price=String(detailPrice);
+    document.getElementById('price-detail').textContent='$'+detailPrice;
+  }
+  const note=document.getElementById('priceNote');
+  if(note){
+    note.textContent=isNational
+      ?'✅ National region selected — Full Detail price is $70'
+      :'✅ Region selected — Full Detail price is $75';
+    note.style.background='#d4edda';
+    note.style.borderColor='#28a745';
+    note.style.color='#155724';
+  }
+  // Deselect all and recalc in case user already selected
+  selectedSvcs.clear();
+  document.querySelectorAll('.svc-item').forEach(i=>{i.classList.remove('selected');const ch=i.querySelector('.svc-check');if(ch)ch.textContent='';});
+  recalc();
 }
 function setupPhoto(inId,prevId,ovrId,doneId,phId,isVin){
   document.getElementById(inId).addEventListener('change',async(e)=>{
@@ -496,7 +519,6 @@ function toggleSvc(el){
   const svc=el.dataset.svc;
   if(selectedSvcs.has(svc)){selectedSvcs.delete(svc);el.classList.remove('selected');el.querySelector('.svc-check').textContent='';}
   else{selectedSvcs.add(svc);el.classList.add('selected');el.querySelector('.svc-check').textContent='✓';}
-  document.getElementById('extraReasonWrap').style.display=selectedSvcs.has('Extra Charge')?'block':'none';
   recalc();
 }
 function recalc(){
@@ -515,12 +537,11 @@ function buildReview(){
   const vin=document.getElementById('fVin').value||document.getElementById('fVin2').value;
   const model=document.getElementById('fModel').value||document.getElementById('fModel2').value;
   const svcs=[...selectedSvcs].join(' + ');
-  const extra=document.getElementById('fExtraReason').value;
   const total=document.getElementById('totalVal').textContent;
   const blocks=[
     {s:'Employee',rows:[['Name',document.getElementById('fEmployee').value],['Manager',document.getElementById('fManager').value],['Branch',document.getElementById('fBranch').value],['Region',document.getElementById('fRegion').value]]},
     {s:'Vehicle',rows:[['Plate',plate],['VIN',vin],['Model',model]]},
-    {s:'Service',rows:[['Services',svcs+(extra?' ('+extra+')':'')],['Total',total],['Include',document.getElementById('fInclude').value||'—']]},
+    {s:'Service',rows:[['Services',svcs],['Total',total],['Include',document.getElementById('fInclude').value||'—']]},
   ];
   document.getElementById('rvContent').innerHTML=blocks.map(b=>`
     <div class="review-block">
@@ -533,7 +554,6 @@ async function submitData(){
   const vin=document.getElementById('fVin').value||document.getElementById('fVin2').value;
   const model=document.getElementById('fModel').value||document.getElementById('fModel2').value;
   const svcs=[...selectedSvcs].join(' + ');
-  const extra=document.getElementById('fExtraReason').value;
   let totalNum=0;
   document.querySelectorAll('.svc-item.selected').forEach(el=>totalNum+=parseInt(el.dataset.price)||0);
   const payload={
@@ -543,7 +563,7 @@ async function submitData(){
     manager:document.getElementById('fManager').value,
     region:document.getElementById('fRegion').value,
     plate,vin,model,
-    serviceType:svcs+(extra?' ('+extra+')':''),
+    serviceType:svcs,
     subtotal:String(totalNum),total:String(totalNum),
     invoice:document.getElementById('fInvoice').value,
     include:document.getElementById('fInclude').value,
@@ -563,7 +583,7 @@ async function submitData(){
     buildSuccess(payload);goTo(4);
   }catch(err){
     btn.disabled=false;
-    document.getElementById('submitTxt').innerHTML='💾  Save to Google Sheets';
+    document.getElementById('submitTxt').innerHTML='✅  Confirm & Save — Tap here to finish';
     note.textContent=err.name==='AbortError'?'Took too long — check your connection.':'Connection error. Try again.';
   }
 }
@@ -592,7 +612,7 @@ function resetAll(){
   document.getElementById('vCard').style.display='none';document.getElementById('manualCard').style.display='none';
   document.querySelectorAll('.emp-card,.r-chip,.svc-item').forEach(c=>{c.classList.remove('selected');const ch=c.querySelector('.svc-check');if(ch)ch.textContent='';});
   document.getElementById('totalVal').textContent='$0';
-  document.getElementById('extraReasonWrap').style.display='none';
+  const pn=document.getElementById('priceNote');if(pn){pn.textContent='⚠️ Prices are based on your region. Select your region in Step 1 first.';pn.style.background='#fff3cd';pn.style.borderColor='#f0a500';pn.style.color='#7c3d00';}
   document.getElementById('submitNote').textContent='';
   document.getElementById('navBar').style.display='flex';
   goTo(0);
