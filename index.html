@@ -324,7 +324,10 @@ select option{background:var(--white);}
 
 <!-- PAGE 3: REVIEW -->
 <div class="page" id="page3">
-  <div class="step-num">Step 4 of 4</div>
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+    <button onclick="goPrev()" style="background:var(--bg);border:2px solid var(--border);border-radius:var(--radius-sm);padding:8px 14px;font-size:13px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;color:var(--text);">← Regresar</button>
+    <span style="font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Step 4 of 4</span>
+  </div>
   <div class="step-title">Looks good?</div>
   <div class="step-desc">Revisa tu información — luego presiona el <strong>botón amarillo</strong> de abajo para guardar 👇</div>
   <div id="rvContent"></div>
@@ -379,11 +382,13 @@ function updateProg(){
   for(let i=0;i<4;i++){document.getElementById('lbl'+i).classList.toggle('active',i===cur);}
 }
 function updateNav(){
-  document.getElementById('navBack').style.display=cur>0&&cur<4?'flex':'none';
+  const navBar=document.getElementById('navBar');
+  if(cur===3||cur===4){navBar.style.display='none';return;}
+  navBar.style.display='flex';
+  document.getElementById('navBack').style.display=cur>0?'flex':'none';
   const fwd=document.getElementById('navFwd');
-  fwd.style.display=cur<4?'flex':'none';
-  fwd.textContent=cur===3?'Review & Save →':'Continue →';
-  if(cur===4)document.getElementById('navBar').style.display='none';
+  fwd.style.display='flex';
+  fwd.textContent='Continue →';
 }
 function validate(n){
   if(n===0){
