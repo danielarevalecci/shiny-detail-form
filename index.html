@@ -311,14 +311,10 @@ select option{background:var(--white);}
       <div class="total-bar-val" id="totalVal">$0</div>
     </div>
   </div>
-  <div class="card">
-    <div class="card-title">Invoice &amp; options</div>
-    <div class="field"><div class="flabel">Invoice URL <span style="font-size:11px;font-weight:600;color:var(--muted);">(optional)</span></div><input type="url" id="fInvoice" placeholder="https://drive.google.com/..."/></div>
-    <div class="include-row">
-      <div class="toggle-wrap" onclick="toggleInclude()"><div class="toggle-bg" id="tBg"></div><div class="toggle-knob" id="tKnob"></div></div>
-      <span style="font-size:14px;font-weight:700;">Include ✓</span>
-      <input type="hidden" id="fInclude" value=""/>
-    </div>
+  <div style="background:var(--accent);border-radius:var(--radius);padding:20px 18px;margin-bottom:14px;text-align:center;">
+    <div style="font-size:28px;margin-bottom:6px;">💪</div>
+    <div style="font-size:17px;font-weight:900;color:#fff;letter-spacing:-.3px;">Great work today!</div>
+    <div style="font-size:13px;font-weight:600;color:rgba(255,255,255,.7);margin-top:4px;">Keep it shiny.</div>
   </div>
 </div>
 
@@ -361,7 +357,7 @@ select option{background:var(--white);}
 const ANTHROPIC_KEY = 'via-netlify-function';
 // ============================================================
 
-let cur=0, carB64=null, vinB64=null, aiDone=false, includeOn=false;
+let cur=0, carB64=null, vinB64=null, aiDone=false;
 let selectedSvcs=new Set();
 
 var SHEETS_URL='https://script.google.com/macros/s/AKfycbyeWpF1xhLM4JrZNrYGhV4cLS47AFDJNdCUUaMib4IZFPVYUBmW9CuIBqlOVkzPTp21/exec';
@@ -417,6 +413,21 @@ function pickRegion(el){
   el.classList.add('selected');
   const region=el.dataset.val;
   document.getElementById('fRegion').value=region;
+  const branchEl=document.getElementById('fBranch');
+  if(region==='National'){
+    branchEl.value='National';
+    branchEl.readOnly=true;
+    branchEl.style.background='#f0fdf4';
+    branchEl.style.borderColor='#22c55e';
+    branchEl.style.color='#15803d';
+  } else {
+    branchEl.value='';
+    branchEl.readOnly=false;
+    branchEl.style.background='';
+    branchEl.style.borderColor='';
+    branchEl.style.color='';
+    branchEl.focus();
+  }
   updatePrices(region);
 }
 function updatePrices(region){
@@ -531,12 +542,7 @@ function recalc(){
   document.querySelectorAll('.svc-item.selected').forEach(el=>total+=parseInt(el.dataset.price)||0);
   document.getElementById('totalVal').textContent='$'+total;
 }
-function toggleInclude(){
-  includeOn=!includeOn;
-  document.getElementById('tBg').style.background=includeOn?'#1a1a1a':'#e2e0db';
-  document.getElementById('tKnob').style.left=includeOn?'23px':'3px';
-  document.getElementById('fInclude').value=includeOn?'✓':'';
-}
+
 function buildReview(){
   const plate=document.getElementById('fPlate').value||document.getElementById('fPlate2').value;
   const vin=document.getElementById('fVin').value||document.getElementById('fVin2').value;
@@ -546,7 +552,7 @@ function buildReview(){
   const blocks=[
     {s:'Employee',rows:[['Name',document.getElementById('fEmployee').value],['Manager',document.getElementById('fManager').value],['Branch',document.getElementById('fBranch').value],['Region',document.getElementById('fRegion').value]]},
     {s:'Vehicle',rows:[['Plate',plate],['VIN',vin],['Model',model]]},
-    {s:'Service',rows:[['Services',svcs],['Total',total],['Include',document.getElementById('fInclude').value||'—']]},
+    {s:'Service',rows:[['Services',svcs],['Total',total],['Total',total]]},
   ];
   document.getElementById('rvContent').innerHTML=blocks.map(b=>`
     <div class="review-block">
@@ -570,8 +576,6 @@ async function submitData(){
     plate,vin,model,
     serviceType:svcs,
     subtotal:String(totalNum),total:String(totalNum),
-    invoice:document.getElementById('fInvoice').value,
-    include:document.getElementById('fInclude').value,
     carPhoto:carB64||'',
     vinPhoto:vinB64||''
   };
@@ -606,8 +610,8 @@ function buildSuccess(p){
 function resetAll(){
   cur=0;carB64=null;vinB64=null;aiDone=false;includeOn=false;selectedSvcs=new Set();
   document.querySelectorAll('input[type=text],input[type=number],input[type=url]').forEach(i=>{i.value='';i.classList.remove('ai-filled');});
-  document.getElementById('fEmployee').value='';document.getElementById('fRegion').value='';document.getElementById('fInclude').value='';
-  document.getElementById('tBg').style.background='#e2e0db';document.getElementById('tKnob').style.left='3px';
+  document.getElementById('fEmployee').value='';document.getElementById('fRegion').value='';const br=document.getElementById('fBranch');if(br){br.readOnly=false;br.style.background='';br.style.borderColor='';br.style.color='';}
+  
   document.querySelectorAll('.pz-prev').forEach(p=>{p.src='';p.classList.remove('show');});
   document.querySelectorAll('.pz-overlay,.pz-done').forEach(e=>e.classList.remove('show'));
   document.querySelectorAll('.photo-zone').forEach(z=>z.classList.remove('has-photo'));
