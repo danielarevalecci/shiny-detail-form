@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
-<title>Shiny Detail — Vehicle Intake</title>
+<title>Shiny Detail — Ingreso de Vehículos</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
@@ -110,10 +110,6 @@ select option{background:var(--white);}
 .total-bar{background:var(--accent);border-radius:var(--radius-sm);padding:14px 18px;display:flex;justify-content:space-between;align-items:center;margin-top:12px;}
 .total-bar-label{font-size:13px;font-weight:700;color:rgba(255,255,255,.75);}
 .total-bar-val{font-size:24px;font-weight:900;color:#fff;}
-.include-row{display:flex;align-items:center;gap:12px;margin-top:4px;}
-.toggle-wrap{position:relative;width:46px;height:26px;cursor:pointer;flex-shrink:0;}
-.toggle-bg{width:46px;height:26px;border-radius:13px;background:#e2e0db;transition:background .2s;}
-.toggle-knob{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.2);transition:left .2s;}
 .review-block{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;margin-bottom:12px;}
 .rv-section{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);padding:10px 15px 8px;background:var(--bg);border-bottom:1px solid var(--border);}
 .rv-row{display:flex;justify-content:space-between;align-items:flex-start;padding:11px 15px;border-bottom:1px solid var(--border);}
@@ -146,59 +142,51 @@ select option{background:var(--white);}
   <div class="logo">✦</div>
   <div>
     <div class="h-title">Shiny Detail</div>
-    <div class="h-sub">Vehicle Intake</div>
+    <div class="h-sub">Ingreso de Vehículos</div>
   </div>
+  <div onclick="openHistory()" style="margin-left:auto;font-size:11px;font-weight:800;color:var(--muted);cursor:pointer;text-decoration:underline;">📋 Historial</div>
 </div>
 
 <div class="prog-wrap" id="progWrap">
   <div class="prog-labels">
-    <span class="prog-lbl active" id="lbl0">Who</span>
-    <span class="prog-lbl" id="lbl1">Vehicle</span>
-    <span class="prog-lbl" id="lbl2">Service</span>
-    <span class="prog-lbl" id="lbl3">Review</span>
+    <span class="prog-lbl active" id="lbl0">Quién</span>
+    <span class="prog-lbl" id="lbl1">Vehículo</span>
+    <span class="prog-lbl" id="lbl2">Servicio</span>
+    <span class="prog-lbl" id="lbl3">Revisión</span>
   </div>
   <div class="prog-bg"><div class="prog-fill" id="progFill" style="width:25%"></div></div>
 </div>
 
-<!-- PAGE 0: EMPLOYEE -->
+<!-- PAGE 0: EMPLEADO -->
 <div class="page active" id="page0">
-  <div class="step-num">Step 1 of 4</div>
-  <div class="step-title">Who's checking in?</div>
-  <div class="step-desc">Tap your name and fill in your branch info 👇</div>
+  <div class="step-num">Paso 1 de 4</div>
+  <div class="step-title">¿Quién está registrando?</div>
+  <div class="step-desc">Toca tu nombre y llena los datos de tu sucursal 👇</div>
   <div class="card">
-    <div class="card-title">Select employee <span class="req">*</span></div>
-    <div class="emp-grid">
-      <div class="emp-card" data-name="José" onclick="pickEmp(this)"><div class="emp-icon">👤</div><div class="emp-name">José</div></div>
-      <div class="emp-card" data-name="Jaime" onclick="pickEmp(this)"><div class="emp-icon">👤</div><div class="emp-name">Jaime</div></div>
-      <div class="emp-card" data-name="Adrian" onclick="pickEmp(this)"><div class="emp-icon">👤</div><div class="emp-name">Adrian</div></div>
-      <div class="emp-card" data-name="Noe" onclick="pickEmp(this)"><div class="emp-icon">👤</div><div class="emp-name">Noe</div></div>
-      <div class="emp-card" data-name="Staff 5" onclick="pickEmp(this)"><div class="emp-icon">👤</div><div class="emp-name">Staff 5</div></div>
-    </div>
+    <div class="card-title">Selecciona tu nombre <span class="req">*</span></div>
+    <div class="emp-grid" id="empGrid"></div>
     <input type="hidden" id="fEmployee"/>
   </div>
   <div class="card">
-    <div class="card-title">Branch info</div>
-    <div class="field"><div class="flabel">Received by (Manager) <span class="req">*</span></div><input type="text" id="fManager" placeholder="Manager's name"/></div>
-    <div class="field"><div class="flabel">Branch Number <span class="req">*</span></div><input type="text" id="fBranch" placeholder="e.g. 1212 or A-12"/></div>
+    <div class="card-title">Datos de la sucursal</div>
+    <div class="field"><div class="flabel">Recibido por (Manager) <span class="req">*</span></div><input type="text" id="fManager" placeholder="Nombre del manager"/></div>
+    <div class="field"><div class="flabel">Número de sucursal <span class="req">*</span></div><input type="text" id="fBranch" placeholder="ej. 1212 o A-12"/></div>
   </div>
   <div class="card">
-    <div class="card-title">Region <span class="req">*</span></div>
-    <div class="region-grid">
-      <div class="r-chip" data-val="National" onclick="pickRegion(this)"><div class="r-chip-label">🌎 National</div><div class="r-chip-sub">Precio especial $70</div></div>
-      <div class="r-chip" data-val="Branch Externa" onclick="pickRegion(this)"><div class="r-chip-label">🏢 Branch Externa</div><div class="r-chip-sub">Precio estándar $75</div></div>
-    </div>
+    <div class="card-title">Región <span class="req">*</span></div>
+    <div class="region-grid" id="regionGrid"></div>
     <input type="hidden" id="fRegion"/>
   </div>
 </div>
 
-<!-- PAGE 1: VEHICLE -->
+<!-- PAGE 1: VEHÍCULO -->
 <div class="page" id="page1">
-  <div class="step-num">Step 2 of 4</div>
-  <div class="step-title">Scan the vehicle</div>
-  <div class="step-desc">Take the photos below — AI fills in the details ✨</div>
+  <div class="step-num">Paso 2 de 4</div>
+  <div class="step-title">Escanea el vehículo</div>
+  <div class="step-desc">Toma las fotos de abajo — la IA llena los datos ✨</div>
 
   <div class="photo-guide">
-    <div class="photo-guide-title">📸 Photo guide</div>
+    <div class="photo-guide-title">📸 Guía de fotos</div>
     <div class="photo-tip">
       <div class="photo-tip-img">
         <svg width="68" height="52" viewBox="0 0 68 52" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -217,7 +205,7 @@ select option{background:var(--white);}
           <path d="M65 44 L65 49 L60 49" stroke="#f0a500" stroke-width="1.5" fill="none" stroke-linecap="round"/>
         </svg>
       </div>
-      <div class="photo-tip-body"><div class="photo-tip-name">Front or rear of car</div><div class="photo-tip-desc">Capture the full plate + car model. Stand 5–8 ft away.</div></div>
+      <div class="photo-tip-body"><div class="photo-tip-name">Frente o parte trasera del carro</div><div class="photo-tip-desc">Captura la placa completa + el modelo del carro. Párate a 1.5–2.5 m de distancia.</div></div>
     </div>
     <div class="photo-tip">
       <div class="photo-tip-img">
@@ -235,77 +223,70 @@ select option{background:var(--white);}
           <path d="M65 47 L65 50 L62 50" stroke="#f0a500" stroke-width="1.2" fill="none" stroke-linecap="round"/>
         </svg>
       </div>
-      <div class="photo-tip-body"><div class="photo-tip-name">VIN on door jamb</div><div class="photo-tip-desc">Open the driver's door — look for the white sticker on the door frame.</div></div>
+      <div class="photo-tip-body"><div class="photo-tip-name">VIN en el marco de la puerta</div><div class="photo-tip-desc">Abre la puerta del conductor — busca la calcomanía blanca en el marco.</div></div>
+    </div>
+    <div style="background:#fff3cd;border:1px solid #f0a500;border-radius:10px;padding:11px 13px;font-size:11px;font-weight:700;color:#7c3d00;line-height:1.6;">
+      ✅ Buena luz · foto derecha (no inclinada) · texto completo y enfocado<br/>
+      ❌ Evita fotos borrosas, muy oscuras, con reflejos, o cortadas
     </div>
   </div>
 
   <div class="card">
-    <div class="card-title">Upload your photos</div>
+    <div class="card-title">Sube tus fotos</div>
     <div class="photo-zone" id="carZone">
       <input type="file" id="carInput" accept="image/*" capture="environment"/>
       <img class="pz-prev" id="carPrev"/>
-      <div class="pz-overlay" id="carOvr"><div class="pz-change">Change photo</div></div>
+      <div class="pz-overlay" id="carOvr"><div class="pz-change">Cambiar foto</div></div>
       <div class="pz-done" id="carDone">✓</div>
-      <div id="carPh"><div class="pz-icon">🚗</div><div class="pz-label">Car photo</div><div class="pz-sub">Front or rear — plate visible</div></div>
+      <div id="carPh"><div class="pz-icon">🚗</div><div class="pz-label">Foto del carro</div><div class="pz-sub">Frente o trasera — placa visible</div></div>
     </div>
     <div class="photo-zone" id="vinZone">
       <input type="file" id="vinInput" accept="image/*" capture="environment"/>
       <img class="pz-prev" id="vinPrev"/>
-      <div class="pz-overlay" id="vinOvr"><div class="pz-change">Change photo</div></div>
+      <div class="pz-overlay" id="vinOvr"><div class="pz-change">Cambiar foto</div></div>
       <div class="pz-done" id="vinDone">✓</div>
-      <div id="vinPh"><div class="pz-icon">🔢</div><div class="pz-label">VIN number</div><div class="pz-sub">Dashboard or door jamb sticker</div></div>
+      <div id="vinPh"><div class="pz-icon">🔢</div><div class="pz-label">Número VIN</div><div class="pz-sub">Tablero o calcomanía del marco</div></div>
     </div>
     <button class="scan-cta" id="scanBtn" disabled onclick="runScan()">
-      <span id="scanBtnTxt">✦  Scan with AI</span>
+      <span id="scanBtnTxt">✦  Escanear con IA</span>
     </button>
     <div class="scan-anim" id="scanAnim">
       <div class="scan-rings"><div class="ring"></div><div class="ring"></div><div class="ring"></div><div class="scan-dot">✦</div></div>
-      <div class="scan-msg" id="scanMsg">Analyzing images...</div>
-      <div class="scan-sub" id="scanSub">This takes a few seconds</div>
+      <div class="scan-msg" id="scanMsg">Analizando imágenes...</div>
+      <div class="scan-sub" id="scanSub">Esto toma unos segundos</div>
     </div>
   </div>
 
   <div class="card" id="vCard" style="display:none;">
-    <div class="card-title">Vehicle details <span class="ai-tag">✦ AI filled</span></div>
-    <div class="field"><div class="flabel">License Plate</div><input type="text" id="fPlate" placeholder="e.g. XKX7590"/></div>
-    <div class="field"><div class="flabel">VIN Number</div><input type="text" id="fVin" placeholder="17-character VIN" style="font-family:monospace;font-size:13px;letter-spacing:1px;"/></div>
-    <div class="field"><div class="flabel">Model &amp; Year</div><input type="text" id="fModel" placeholder="e.g. Chevrolet Tahoe 2025"/></div>
+    <div class="card-title">Datos del vehículo <span class="ai-tag">✦ Llenado por IA</span></div>
+    <div class="field"><div class="flabel">Placa</div><input type="text" id="fPlate" placeholder="ej. XKX7590"/></div>
+    <div class="field"><div class="flabel">Número VIN</div><input type="text" id="fVin" placeholder="VIN de 17 caracteres" style="font-family:monospace;font-size:13px;letter-spacing:1px;"/></div>
+    <div class="field"><div class="flabel">Modelo y Año</div><input type="text" id="fModel" placeholder="ej. Chevrolet Tahoe 2025"/></div>
     <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:9px;padding:9px 13px;display:flex;align-items:center;gap:8px;margin-top:4px;">
       <span style="font-size:16px;">✅</span>
-      <span style="font-size:12px;font-weight:700;color:#15803d;">Data extracted! Edit if needed.</span>
+      <span style="font-size:12px;font-weight:700;color:#15803d;">¡Datos extraídos! Edita si es necesario.</span>
     </div>
   </div>
 
   <div class="card" id="manualCard" style="display:none;">
-    <div class="card-title">Enter manually</div>
-    <div class="field"><div class="flabel">License Plate</div><input type="text" id="fPlate2" placeholder="e.g. XKX7590"/></div>
-    <div class="field"><div class="flabel">VIN Number</div><input type="text" id="fVin2" placeholder="17-character VIN" style="font-family:monospace;font-size:13px;"/></div>
-    <div class="field"><div class="flabel">Model &amp; Year</div><input type="text" id="fModel2" placeholder="e.g. Chevrolet Tahoe 2025"/></div>
+    <div class="card-title">Ingresar manualmente</div>
+    <div class="field"><div class="flabel">Placa</div><input type="text" id="fPlate2" placeholder="ej. XKX7590"/></div>
+    <div class="field"><div class="flabel">Número VIN</div><input type="text" id="fVin2" placeholder="VIN de 17 caracteres" style="font-family:monospace;font-size:13px;"/></div>
+    <div class="field"><div class="flabel">Modelo y Año</div><input type="text" id="fModel2" placeholder="ej. Chevrolet Tahoe 2025"/></div>
   </div>
 </div>
 
-<!-- PAGE 2: SERVICE -->
+<!-- PAGE 2: SERVICIO -->
 <div class="page" id="page2">
-  <div class="step-num">Step 3 of 4</div>
-  <div class="step-title">Services</div>
-  <div class="step-desc">Select one or more — total updates automatically 💰</div>
+  <div class="step-num">Paso 3 de 4</div>
+  <div class="step-title">Servicios</div>
+  <div class="step-desc">Selecciona uno o más — el total se actualiza automático 💰</div>
   <div class="card">
-    <div class="card-title">Select services (tap to add)</div>
+    <div class="card-title">Selecciona servicios (toca para agregar)</div>
     <div style="background:#fff3cd;border:1px solid #f0a500;border-radius:10px;padding:9px 13px;margin-bottom:12px;font-size:12px;font-weight:700;color:#7c3d00;" id="priceNote">
-      ⚠️ Prices are based on your region. Select your region in Step 1 first.
+      ⚠️ Los precios dependen de tu región. Selecciona tu región en el Paso 1.
     </div>
-    <div class="svc-list" id="svcList">
-      <div class="svc-item" id="svc-detail" data-svc="Full Detail" data-price="75" onclick="toggleSvc(this)">
-        <div class="svc-check"></div>
-        <div class="svc-body"><div class="svc-name">Full Detail</div><div class="svc-desc">Interior + exterior complete cleaning</div></div>
-        <div class="svc-price" id="price-detail">$75</div>
-      </div>
-      <div class="svc-item" id="svc-van" data-svc="15-Seat Van" data-price="115" onclick="toggleSvc(this)">
-        <div class="svc-check"></div>
-        <div class="svc-body"><div class="svc-name">🚐 15-Seat Van</div><div class="svc-desc">Full detail — large van</div></div>
-        <div class="svc-price">$115</div>
-      </div>
-    </div>
+    <div class="svc-list" id="svcList"></div>
     <div class="total-bar">
       <div class="total-bar-label">Total</div>
       <div class="total-bar-val" id="totalVal">$0</div>
@@ -313,54 +294,180 @@ select option{background:var(--white);}
   </div>
   <div style="background:var(--accent);border-radius:var(--radius);padding:20px 18px;margin-bottom:14px;text-align:center;">
     <div style="font-size:28px;margin-bottom:6px;">💪</div>
-    <div style="font-size:17px;font-weight:900;color:#fff;letter-spacing:-.3px;">Great work today!</div>
-    <div style="font-size:13px;font-weight:600;color:rgba(255,255,255,.7);margin-top:4px;">Keep it shiny.</div>
+    <div style="font-size:17px;font-weight:900;color:#fff;letter-spacing:-.3px;">¡Buen trabajo hoy!</div>
+    <div style="font-size:13px;font-weight:600;color:rgba(255,255,255,.7);margin-top:4px;">Que siga brillando.</div>
   </div>
 </div>
 
-<!-- PAGE 3: REVIEW -->
+<!-- PAGE 3: REVISIÓN -->
 <div class="page" id="page3">
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
     <button onclick="goPrev()" style="background:var(--bg);border:2px solid var(--border);border-radius:var(--radius-sm);padding:8px 14px;font-size:13px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;color:var(--text);">← Regresar</button>
-    <span style="font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Step 4 of 4</span>
+    <span style="font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Paso 4 de 4</span>
   </div>
-  <div class="step-title">Looks good?</div>
+  <div class="step-title">¿Todo se ve bien?</div>
   <div class="step-desc">Revisa tu información — luego presiona el <strong>botón amarillo</strong> de abajo para guardar 👇</div>
   <div id="rvContent"></div>
   <button class="submit-btn" id="submitBtn" onclick="submitData()">
-    <span id="submitTxt">✅  Confirm & Save — Tap here to finish</span>
+    <span id="submitTxt">✅  Confirmar y Guardar — Toca aquí para terminar</span>
   </button>
   <div id="submitNote" style="text-align:center;font-size:11px;color:var(--muted);font-weight:600;margin-top:8px;"></div>
 </div>
 
-<!-- PAGE 4: SUCCESS -->
+<!-- PAGE 4: ÉXITO -->
 <div class="page" id="page4">
   <div style="padding-top:30px;">
     <div class="suc-circle">✅</div>
-    <div class="suc-title">All done!</div>
-    <div class="suc-sub">Record saved to Google Sheets.<br/>Ready for the next vehicle?</div>
+    <div class="suc-title">¡Listo!</div>
+    <div class="suc-sub">Registro guardado en Google Sheets.<br/>¿Listo para el siguiente vehículo?</div>
     <div id="sucSummary"></div>
-    <button onclick="resetAll()" style="width:100%;padding:15px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-size:15px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;margin-top:20px;">+ New Vehicle</button>
+    <button onclick="resetAll()" style="width:100%;padding:15px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-size:15px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;margin-top:20px;">+ Nuevo Vehículo</button>
   </div>
 </div>
 
+<!-- PAGE HISTORIAL -->
+<div class="page" id="pageHistory"></div>
+
 <div class="nav-bar" id="navBar">
   <div class="nav-back" id="navBack" onclick="goPrev()" style="display:none;">←</div>
-  <button class="nav-fwd" id="navFwd" onclick="goNext()">Continue →</button>
+  <button class="nav-fwd" id="navFwd" onclick="goNext()">Continuar →</button>
 </div>
 <div class="toast" id="toast"></div>
 
 <script>
-// ============================================================
-// ✅ FIX: API KEY hardcodeada aquí — reemplaza con la tuya
-// ============================================================
-const ANTHROPIC_KEY = 'via-netlify-function';
-// ============================================================
-
 let cur=0, carB64=null, vinB64=null, aiDone=false;
 let selectedSvcs=new Set();
 
-var SHEETS_URL='https://script.google.com/macros/s/AKfycbyeWpF1xhLM4JrZNrYGhV4cLS47AFDJNdCUUaMib4IZFPVYUBmW9CuIBqlOVkzPTp21/exec';
+var SHEETS_URL='https://script.google.com/macros/s/AKfycbwE9v3w5n_CjRu9E0FshcIjf_c5RfCJrklg4UTye-AvnWj2pN9SImjOq_3V94vMvj4L/exec';
+
+let REGIONS=[
+  {key:'National',label:'🌎 Nacional',sub:'Precio especial',price:70,autoFillBranch:true},
+  {key:'Branch Externa',label:'🏢 Sucursal Externa',sub:'Precio estándar',price:75,autoFillBranch:false}
+];
+let SERVICES=[
+  {key:'15-Seat Van',label:'🚐 Van de 15 Asientos',sub:'Detallado completo — van grande',price:115}
+];
+let EMPLOYEES=[
+  {key:'José',label:'José'},{key:'Jaime',label:'Jaime'},{key:'Adrian',label:'Adrian'},
+  {key:'Noe',label:'Noe'},{key:'Personal 5',label:'Personal 5'}
+];
+let historyRecords=[];
+
+async function loadConfig(){
+  try{
+    const res=await fetch(SHEETS_URL+'?action=config');
+    const data=await res.json();
+    if(data.regions && data.regions.length) REGIONS=data.regions;
+    if(data.services && data.services.length) SERVICES=data.services;
+    if(data.employees && data.employees.length) EMPLOYEES=data.employees;
+  }catch(e){
+    console.warn('No se pudo cargar Config, usando valores por defecto:',e);
+  }
+  renderRegions();
+  renderServices();
+  renderEmployees();
+}
+
+function renderEmployees(){
+  const grid=document.getElementById('empGrid');
+  grid.innerHTML=EMPLOYEES.map(emp=>`
+    <div class="emp-card" data-name="${emp.key}" onclick="pickEmp(this)">
+      <div class="emp-icon">👤</div><div class="emp-name">${emp.label}</div>
+    </div>`).join('');
+}
+
+async function openHistory(){
+  document.getElementById('progWrap').style.display='none';
+  document.getElementById('navBar').style.display='none';
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  const hp=document.getElementById('pageHistory');
+  hp.classList.add('active');
+  hp.innerHTML='<div class="step-title">Cargando historial...</div>';
+  window.scrollTo(0,0);
+  try{
+    const res=await fetch(SHEETS_URL+'?action=history');
+    const data=await res.json();
+    historyRecords=data.records||[];
+    renderHistory('__all__');
+  }catch(e){
+    hp.innerHTML='<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;"><button onclick="closeHistory()" style="background:var(--bg);border:2px solid var(--border);border-radius:var(--radius-sm);padding:8px 14px;font-size:13px;font-weight:800;font-family:\'Nunito\',sans-serif;cursor:pointer;">← Regresar</button></div><div class="step-title">No se pudo cargar</div><div class="step-desc">Revisa tu conexión e intenta de nuevo.</div>';
+  }
+}
+function renderHistory(filterEmp){
+  const groups={};
+  historyRecords.forEach(r=>{
+    if(filterEmp && filterEmp!=='__all__' && r.employee!==filterEmp) return;
+    const day=(r.timestamp||'').split(',')[0]||'Sin fecha';
+    if(!groups[day])groups[day]=[];
+    groups[day].push(r);
+  });
+  const empNames=[...new Set(historyRecords.map(r=>r.employee).filter(Boolean))];
+  const empOptions='<option value="__all__">Todos los empleados</option>'+
+    empNames.map(e=>`<option value="${e}">${e}</option>`).join('');
+  let html=`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+      <button onclick="closeHistory()" style="background:var(--bg);border:2px solid var(--border);border-radius:var(--radius-sm);padding:8px 14px;font-size:13px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;">← Regresar</button>
+    </div>
+    <div class="step-title">Historial</div>
+    <div class="step-desc">Carros registrados por día</div>
+    <select id="histFilter" onchange="renderHistory(this.value)" style="margin-bottom:16px;">${empOptions}</select>`;
+  const days=Object.keys(groups);
+  if(days.length===0){
+    html+='<div class="card"><div style="text-align:center;color:var(--muted);font-weight:600;padding:20px 0;">Sin registros todavía.</div></div>';
+  }
+  days.forEach(day=>{
+    const items=groups[day];
+    const dayTotal=items.reduce((s,r)=>s+(parseFloat(r.total)||0),0);
+    html+=`<div class="card"><div class="card-title">${day} — ${items.length} carro${items.length===1?'':'s'} · $${dayTotal}</div>`;
+    items.forEach(r=>{
+      html+=`<div class="rv-row"><span class="rv-k">${r.plate||'—'} · ${r.model||''}</span><span class="rv-v">${r.employee||''} · $${r.total||0}</span></div>`;
+    });
+    html+='</div>';
+  });
+  document.getElementById('pageHistory').innerHTML=html;
+  const sel=document.getElementById('histFilter');
+  if(sel)sel.value=filterEmp;
+}
+function closeHistory(){
+  document.getElementById('pageHistory').classList.remove('active');
+  document.getElementById('progWrap').style.display='block';
+  goTo(0);
+}
+
+function renderRegions(){
+  const grid=document.getElementById('regionGrid');
+  grid.innerHTML=REGIONS.map(r=>`
+    <div class="r-chip" data-key="${r.key}" onclick="pickRegion(this)">
+      <div class="r-chip-label">${r.label}</div>
+      <div class="r-chip-sub">${r.sub} $${r.price}</div>
+    </div>`).join('');
+}
+
+function renderServices(){
+  const list=document.getElementById('svcList');
+  const region=REGIONS.find(r=>r.key===document.getElementById('fRegion').value);
+  let html='';
+  if(region){
+    const isSel=selectedSvcs.has('Detallado Completo');
+    html+=`
+      <div class="svc-item${isSel?' selected':''}" data-svc="Detallado Completo" data-price="${region.price}" onclick="toggleSvc(this)">
+        <div class="svc-check">${isSel?'✓':''}</div>
+        <div class="svc-body"><div class="svc-name">Detallado Completo</div><div class="svc-desc">Limpieza interior y exterior completa</div></div>
+        <div class="svc-price">$${region.price}</div>
+      </div>`;
+  }
+  SERVICES.forEach(s=>{
+    const isSel=selectedSvcs.has(s.key);
+    html+=`
+      <div class="svc-item${isSel?' selected':''}" data-svc="${s.key}" data-price="${s.price}" onclick="toggleSvc(this)">
+        <div class="svc-check">${isSel?'✓':''}</div>
+        <div class="svc-body"><div class="svc-name">${s.label}</div><div class="svc-desc">${s.sub}</div></div>
+        <div class="svc-price">$${s.price}</div>
+      </div>`;
+  });
+  list.innerHTML=html;
+  recalc();
+}
 
 function goTo(n){
   cur=n;
@@ -384,22 +491,22 @@ function updateNav(){
   document.getElementById('navBack').style.display=cur>0?'flex':'none';
   const fwd=document.getElementById('navFwd');
   fwd.style.display='flex';
-  fwd.textContent='Continue →';
+  fwd.textContent='Continuar →';
 }
 function validate(n){
   if(n===0){
-    if(!document.getElementById('fEmployee').value){toast('Tap your name 👆');return false;}
-    if(!document.getElementById('fManager').value.trim()){toast('Enter the manager name');return false;}
-    if(!document.getElementById('fBranch').value.trim()){toast('Enter the branch number');return false;}
-    if(!document.getElementById('fRegion').value){toast('Select your region');return false;}
+    if(!document.getElementById('fEmployee').value){toast('Toca tu nombre 👆');return false;}
+    if(!document.getElementById('fManager').value.trim()){toast('Ingresa el nombre del manager');return false;}
+    if(!document.getElementById('fBranch').value.trim()){toast('Ingresa el número de sucursal');return false;}
+    if(!document.getElementById('fRegion').value){toast('Selecciona tu región');return false;}
   }
   if(n===1){
     const p=document.getElementById('fPlate').value||document.getElementById('fPlate2').value;
-    if(!p){toast('Add the license plate number');return false;}
+    if(!p){toast('Agrega el número de placa');return false;}
   }
   if(n===2){
-    if(!document.getElementById('fRegion').value){toast('Go back and select your region first');return false;}
-    if(selectedSvcs.size===0){toast('Select at least one service');return false;}
+    if(!document.getElementById('fRegion').value){toast('Regresa y selecciona tu región primero');return false;}
+    if(selectedSvcs.size===0){toast('Selecciona al menos un servicio');return false;}
   }
   return true;
 }
@@ -411,11 +518,12 @@ function pickEmp(el){
 function pickRegion(el){
   document.querySelectorAll('.r-chip').forEach(c=>c.classList.remove('selected'));
   el.classList.add('selected');
-  const region=el.dataset.val;
-  document.getElementById('fRegion').value=region;
+  const key=el.dataset.key;
+  document.getElementById('fRegion').value=key;
+  const region=REGIONS.find(r=>r.key===key);
   const branchEl=document.getElementById('fBranch');
-  if(region==='National'){
-    branchEl.value='National';
+  if(region && region.autoFillBranch){
+    branchEl.value=region.key;
     branchEl.readOnly=true;
     branchEl.style.background='#f0fdf4';
     branchEl.style.borderColor='#22c55e';
@@ -428,29 +536,15 @@ function pickRegion(el){
     branchEl.style.color='';
     branchEl.focus();
   }
-  updatePrices(region);
-}
-function updatePrices(region){
-  const isNational=region==='National';
-  const detailPrice=isNational?70:75;
-  const detailEl=document.getElementById('svc-detail');
-  if(detailEl){
-    detailEl.dataset.price=String(detailPrice);
-    document.getElementById('price-detail').textContent='$'+detailPrice;
-  }
   const note=document.getElementById('priceNote');
-  if(note){
-    note.textContent=isNational
-      ?'✅ National region selected — Full Detail price is $70'
-      :'✅ Region selected — Full Detail price is $75';
+  if(note && region){
+    note.textContent=`✅ Región "${region.label}" seleccionada — Detallado Completo: $${region.price}`;
     note.style.background='#d4edda';
     note.style.borderColor='#28a745';
     note.style.color='#155724';
   }
-  // Deselect all and recalc in case user already selected
   selectedSvcs.clear();
-  document.querySelectorAll('.svc-item').forEach(i=>{i.classList.remove('selected');const ch=i.querySelector('.svc-check');if(ch)ch.textContent='';});
-  recalc();
+  renderServices();
 }
 function setupPhoto(inId,prevId,ovrId,doneId,phId,isVin){
   document.getElementById(inId).addEventListener('change',async(e)=>{
@@ -474,33 +568,24 @@ function checkScan(){
   document.getElementById('scanBtn').disabled=!(carB64||vinB64);
 }
 
-// ============================================================
-// ✅ FIX PRINCIPAL: runScan usa ANTHROPIC_KEY directamente
-// ============================================================
 async function runScan(){
-  if(false){
-    // Sin key: mostrar entrada manual
-    document.getElementById('manualCard').style.display='block';
-    toast('No API key — enter details manually');
-    return;
-  }
   document.getElementById('scanBtn').style.display='none';
   const anim=document.getElementById('scanAnim');anim.classList.add('show');
   const msg=document.getElementById('scanMsg'),sub=document.getElementById('scanSub');
   const content=[];
   if(carB64){
-    msg.textContent='Analyzing car photo...';
+    msg.textContent='Analizando foto del carro...';
     content.push({type:'image',source:{type:'base64',media_type:'image/jpeg',data:carB64}});
     content.push({type:'text',text:'Photo of a vehicle. Extract: make, model, year, license plate number. Use null if not visible.'});
   }
   if(vinB64){
-    msg.textContent='Reading VIN...';
+    msg.textContent='Leyendo el VIN...';
     content.push({type:'image',source:{type:'base64',media_type:'image/jpeg',data:vinB64}});
     content.push({type:'text',text:'Photo with a VIN number. Read the exact VIN string. Use null if unreadable.'});
   }
   content.push({type:'text',text:'Reply ONLY with valid JSON, no backticks, no extra text:\n{"make":"...","model":"...","year":"...","plate":"...","vin":"...","confidence":"high|medium|low"}'});
   try{
-    msg.textContent='Processing with AI...';sub.textContent='Almost there!';
+    msg.textContent='Procesando con IA...';sub.textContent='¡Ya casi!';
     const res=await fetch('/.netlify/functions/scan',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -521,13 +606,13 @@ async function runScan(){
     anim.classList.remove('show');
     document.getElementById('scanBtn').style.display='flex';
     document.getElementById('vCard').style.display='block';
-    toast('✦ Data extracted!',true);
+    toast('✦ ¡Datos extraídos!',true);
   }catch(err){
     console.error('Scan error:',err);
     anim.classList.remove('show');
     document.getElementById('scanBtn').style.display='flex';
     document.getElementById('manualCard').style.display='block';
-    toast('Could not analyze — enter manually');
+    toast('No se pudo analizar — ingresa manualmente');
   }
 }
 
@@ -550,9 +635,9 @@ function buildReview(){
   const svcs=[...selectedSvcs].join(' + ');
   const total=document.getElementById('totalVal').textContent;
   const blocks=[
-    {s:'Employee',rows:[['Name',document.getElementById('fEmployee').value],['Manager',document.getElementById('fManager').value],['Branch',document.getElementById('fBranch').value],['Region',document.getElementById('fRegion').value]]},
-    {s:'Vehicle',rows:[['Plate',plate],['VIN',vin],['Model',model]]},
-    {s:'Service',rows:[['Services',svcs],['Total',total],['Total',total]]},
+    {s:'Empleado',rows:[['Nombre',document.getElementById('fEmployee').value],['Manager',document.getElementById('fManager').value],['Sucursal',document.getElementById('fBranch').value],['Región',document.getElementById('fRegion').value]]},
+    {s:'Vehículo',rows:[['Placa',plate],['VIN',vin],['Modelo',model]]},
+    {s:'Servicio',rows:[['Servicios',svcs],['Total',total]]},
   ];
   document.getElementById('rvContent').innerHTML=blocks.map(b=>`
     <div class="review-block">
@@ -582,8 +667,8 @@ async function submitData(){
   const btn=document.getElementById('submitBtn');
   const note=document.getElementById('submitNote');
   btn.disabled=true;
-  document.getElementById('submitTxt').innerHTML='<span class="spin"></span>  Saving...';
-  note.textContent='Saving to Google Sheets...';
+  document.getElementById('submitTxt').innerHTML='<span class="spin"></span>  Guardando...';
+  note.textContent='Guardando en Google Sheets...';
   try{
     const controller=new AbortController();
     const timer=setTimeout(()=>controller.abort(),30000);
@@ -592,26 +677,26 @@ async function submitData(){
     buildSuccess(payload);goTo(4);
   }catch(err){
     btn.disabled=false;
-    document.getElementById('submitTxt').innerHTML='✅  Confirm & Save — Tap here to finish';
-    note.textContent=err.name==='AbortError'?'Took too long — check your connection.':'Connection error. Try again.';
+    document.getElementById('submitTxt').innerHTML='✅  Confirmar y Guardar — Toca aquí para terminar';
+    note.textContent=err.name==='AbortError'?'Tardó demasiado — revisa tu conexión.':'Error de conexión. Intenta de nuevo.';
   }
 }
 function buildSuccess(p){
   document.getElementById('sucSummary').innerHTML=`
     <div class="review-block">
-      <div class="rv-section">Saved record</div>
-      <div class="rv-row"><span class="rv-k">Employee</span><span class="rv-v">${p.employee}</span></div>
-      <div class="rv-row"><span class="rv-k">Plate</span><span class="rv-v">${p.plate||'—'}</span></div>
-      <div class="rv-row"><span class="rv-k">Model</span><span class="rv-v">${p.model||'—'}</span></div>
-      <div class="rv-row"><span class="rv-k">Services</span><span class="rv-v">${p.serviceType||'—'}</span></div>
+      <div class="rv-section">Registro guardado</div>
+      <div class="rv-row"><span class="rv-k">Empleado</span><span class="rv-v">${p.employee}</span></div>
+      <div class="rv-row"><span class="rv-k">Placa</span><span class="rv-v">${p.plate||'—'}</span></div>
+      <div class="rv-row"><span class="rv-k">Modelo</span><span class="rv-v">${p.model||'—'}</span></div>
+      <div class="rv-row"><span class="rv-k">Servicios</span><span class="rv-v">${p.serviceType||'—'}</span></div>
       <div class="rv-row"><span class="rv-k">Total</span><span class="rv-v">$${p.total||'0'}</span></div>
     </div>`;
 }
 function resetAll(){
-  cur=0;carB64=null;vinB64=null;aiDone=false;includeOn=false;selectedSvcs=new Set();
+  cur=0;carB64=null;vinB64=null;aiDone=false;selectedSvcs=new Set();
   document.querySelectorAll('input[type=text],input[type=number],input[type=url]').forEach(i=>{i.value='';i.classList.remove('ai-filled');});
-  document.getElementById('fEmployee').value='';document.getElementById('fRegion').value='';const br=document.getElementById('fBranch');if(br){br.readOnly=false;br.style.background='';br.style.borderColor='';br.style.color='';}
-  
+  document.getElementById('fEmployee').value='';document.getElementById('fRegion').value='';
+  const br=document.getElementById('fBranch');if(br){br.readOnly=false;br.style.background='';br.style.borderColor='';br.style.color='';}
   document.querySelectorAll('.pz-prev').forEach(p=>{p.src='';p.classList.remove('show');});
   document.querySelectorAll('.pz-overlay,.pz-done').forEach(e=>e.classList.remove('show'));
   document.querySelectorAll('.photo-zone').forEach(z=>z.classList.remove('has-photo'));
@@ -619,15 +704,17 @@ function resetAll(){
   document.getElementById('scanAnim').classList.remove('show');
   document.getElementById('scanBtn').style.display='flex';document.getElementById('scanBtn').disabled=true;
   document.getElementById('vCard').style.display='none';document.getElementById('manualCard').style.display='none';
-  document.querySelectorAll('.emp-card,.r-chip,.svc-item').forEach(c=>{c.classList.remove('selected');const ch=c.querySelector('.svc-check');if(ch)ch.textContent='';});
-  document.getElementById('totalVal').textContent='$0';
-  const pn=document.getElementById('priceNote');if(pn){pn.textContent='⚠️ Prices are based on your region. Select your region in Step 1 first.';pn.style.background='#fff3cd';pn.style.borderColor='#f0a500';pn.style.color='#7c3d00';}
+  document.querySelectorAll('.emp-card').forEach(c=>c.classList.remove('selected'));
+  renderRegions();
+  renderServices();
+  const pn=document.getElementById('priceNote');if(pn){pn.textContent='⚠️ Los precios dependen de tu región. Selecciona tu región en el Paso 1.';pn.style.background='#fff3cd';pn.style.borderColor='#f0a500';pn.style.color='#7c3d00';}
   document.getElementById('submitNote').textContent='';
   document.getElementById('navBar').style.display='flex';
   goTo(0);
 }
 function toast(msg,green=false){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(green?' green':'');setTimeout(()=>t.className='toast',2700);}
 updateNav();
+loadConfig();
 </script>
 </body>
 </html>
