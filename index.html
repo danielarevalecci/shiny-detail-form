@@ -72,12 +72,12 @@ select option{background:var(--white);}
 .photo-zone{background:var(--bg);border:2px dashed var(--border);border-radius:var(--radius);padding:18px 12px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden;min-height:120px;transition:border-color .2s,background .2s;margin-bottom:10px;}
 .photo-zone.has-photo{border-style:solid;border-color:var(--green);background:var(--green-bg);}
 .photo-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
-.pz-prev{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;border-radius:calc(var(--radius) - 2px);}
+.pz-prev{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;border-radius:calc(var(--radius) - 2px);pointer-events:none;}
 .pz-prev.show{display:block;}
-.pz-overlay{position:absolute;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;border-radius:calc(var(--radius) - 2px);}
+.pz-overlay{position:absolute;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;border-radius:calc(var(--radius) - 2px);pointer-events:none;}
 .pz-overlay.show{display:flex;}
 .pz-change{background:rgba(255,255,255,.9);color:#1a1a1a;font-size:11px;font-weight:700;padding:5px 12px;border-radius:20px;}
-.pz-done{position:absolute;top:8px;right:8px;width:22px;height:22px;background:var(--green);border-radius:50%;display:none;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:800;}
+.pz-done{position:absolute;top:8px;right:8px;width:22px;height:22px;background:var(--green);border-radius:50%;display:none;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:800;pointer-events:none;}
 .pz-done.show{display:flex;}
 .pz-icon{font-size:26px;margin-bottom:6px;}
 .pz-label{font-size:12px;font-weight:800;text-align:center;}
@@ -144,7 +144,10 @@ select option{background:var(--white);}
     <div class="h-title">Shiny Detail</div>
     <div class="h-sub">Ingreso de Vehículos</div>
   </div>
-  <div onclick="openHistory()" style="margin-left:auto;font-size:11px;font-weight:800;color:var(--muted);cursor:pointer;text-decoration:underline;">📋 Historial</div>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+    <span id="pendingBadge" style="display:none;font-size:10px;font-weight:800;color:#b45309;background:#fff3cd;padding:3px 8px;border-radius:10px;"></span>
+    <span onclick="openHistory()" style="font-size:11px;font-weight:800;color:var(--muted);cursor:pointer;text-decoration:underline;">📋 Historial</span>
+  </div>
 </div>
 
 <div class="prog-wrap" id="progWrap">
@@ -262,9 +265,13 @@ select option{background:var(--white);}
     <div class="field"><div class="flabel">Placa</div><input type="text" id="fPlate" placeholder="ej. XKX7590"/></div>
     <div class="field"><div class="flabel">Número VIN</div><input type="text" id="fVin" placeholder="VIN de 17 caracteres" style="font-family:monospace;font-size:13px;letter-spacing:1px;"/></div>
     <div class="field"><div class="flabel">Modelo y Año</div><input type="text" id="fModel" placeholder="ej. Chevrolet Tahoe 2025"/></div>
-    <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:9px;padding:9px 13px;display:flex;align-items:center;gap:8px;margin-top:4px;">
+    <div id="vCardOk" style="background:#f0fdf4;border:1px solid #86efac;border-radius:9px;padding:9px 13px;display:flex;align-items:center;gap:8px;margin-top:4px;">
       <span style="font-size:16px;">✅</span>
       <span style="font-size:12px;font-weight:700;color:#15803d;">¡Datos extraídos! Edita si es necesario.</span>
+    </div>
+    <div id="vCardWarn" style="display:none;background:#fff3cd;border:1px solid #f0a500;border-radius:9px;padding:9px 13px;margin-top:4px;font-size:12px;font-weight:700;color:#7c3d00;line-height:1.5;">
+      ⚠️ No se leyó muy bien — revisa los datos abajo o
+      <span onclick="retakePhotos()" style="text-decoration:underline;cursor:pointer;">vuelve a tomar las fotos</span>.
     </div>
   </div>
 
@@ -606,7 +613,10 @@ async function runScan(){
     anim.classList.remove('show');
     document.getElementById('scanBtn').style.display='flex';
     document.getElementById('vCard').style.display='block';
-    toast('✦ ¡Datos extraídos!',true);
+    const lowConfidence=ai.confidence==='low'||(!ai.plate&&!ai.vin);
+    document.getElementById('vCardOk').style.display=lowConfidence?'none':'flex';
+    document.getElementById('vCardWarn').style.display=lowConfidence?'block':'none';
+    toast(lowConfidence?'⚠️ No se leyó muy bien':'✦ ¡Datos extraídos!',!lowConfidence);
   }catch(err){
     console.error('Scan error:',err);
     anim.classList.remove('show');
@@ -614,6 +624,19 @@ async function runScan(){
     document.getElementById('manualCard').style.display='block';
     toast('No se pudo analizar — ingresa manualmente');
   }
+}
+
+function retakePhotos(){
+  carB64=null;vinB64=null;aiDone=false;
+  document.querySelectorAll('.pz-prev').forEach(p=>{p.src='';p.classList.remove('show');});
+  document.querySelectorAll('.pz-overlay,.pz-done').forEach(e=>e.classList.remove('show'));
+  document.querySelectorAll('.photo-zone').forEach(z=>z.classList.remove('has-photo'));
+  document.querySelectorAll('#carPh,#vinPh').forEach(e=>e.style.display='');
+  document.getElementById('vCard').style.display='none';
+  document.getElementById('manualCard').style.display='none';
+  document.getElementById('scanBtn').disabled=true;
+  document.getElementById('scanBtn').style.display='flex';
+  window.scrollTo(0,0);
 }
 
 function toggleSvc(el){
@@ -672,17 +695,26 @@ async function submitData(){
   try{
     const controller=new AbortController();
     const timer=setTimeout(()=>controller.abort(),30000);
-    await fetch(SHEETS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:controller.signal});
+    const res=await fetch(SHEETS_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:controller.signal});
     clearTimeout(timer);
-    buildSuccess(payload);goTo(4);
+    const data=await res.json();
+    if(!data.success){ throw new Error(data.error||'El servidor no pudo guardar el registro.'); }
+    buildSuccess(payload,false);goTo(4);
   }catch(err){
+    console.error('Submit error:',err);
+    queuePending(payload);
     btn.disabled=false;
     document.getElementById('submitTxt').innerHTML='✅  Confirmar y Guardar — Toca aquí para terminar';
-    note.textContent=err.name==='AbortError'?'Tardó demasiado — revisa tu conexión.':'Error de conexión. Intenta de nuevo.';
+    note.textContent='';
+    buildSuccess(payload,true);goTo(4);
   }
 }
-function buildSuccess(p){
+function buildSuccess(p,pending){
+  const banner=pending
+    ? `<div style="background:#fff3cd;border:1px solid #f0a500;border-radius:9px;padding:9px 13px;margin-bottom:10px;font-size:12px;font-weight:700;color:#7c3d00;">⏳ Guardado en este celular — se subirá solo cuando regrese la conexión.</div>`
+    : '';
   document.getElementById('sucSummary').innerHTML=`
+    ${banner}
     <div class="review-block">
       <div class="rv-section">Registro guardado</div>
       <div class="rv-row"><span class="rv-k">Empleado</span><span class="rv-v">${p.employee}</span></div>
@@ -692,6 +724,45 @@ function buildSuccess(p){
       <div class="rv-row"><span class="rv-k">Total</span><span class="rv-v">$${p.total||'0'}</span></div>
     </div>`;
 }
+
+// ── Modo sin conexión — cola local en el celular ─────────────
+const QUEUE_KEY='shinyDetailPendingQueue';
+function getQueue(){ try{ return JSON.parse(localStorage.getItem(QUEUE_KEY)||'[]'); }catch(e){ return []; } }
+function queuePending(payload){
+  const q=getQueue();
+  q.push(payload);
+  localStorage.setItem(QUEUE_KEY,JSON.stringify(q));
+  updatePendingBadge();
+}
+async function syncPending(){
+  let q=getQueue();
+  if(q.length===0)return;
+  const stillPending=[];
+  for(const item of q){
+    try{
+      const res=await fetch(SHEETS_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(item)});
+      const data=await res.json();
+      if(!data.success)throw new Error('fail');
+    }catch(e){ stillPending.push(item); }
+  }
+  localStorage.setItem(QUEUE_KEY,JSON.stringify(stillPending));
+  updatePendingBadge();
+  if(stillPending.length<q.length && stillPending.length===0){
+    toast('✦ Registros pendientes ya se subieron',true);
+  }
+}
+function updatePendingBadge(){
+  const q=getQueue();
+  const badge=document.getElementById('pendingBadge');
+  if(!badge)return;
+  if(q.length>0){
+    badge.style.display='inline-flex';
+    badge.textContent=`⏳ ${q.length} pendiente${q.length===1?'':'s'}`;
+  }else{
+    badge.style.display='none';
+  }
+}
+window.addEventListener('online',syncPending);
 function resetAll(){
   cur=0;carB64=null;vinB64=null;aiDone=false;selectedSvcs=new Set();
   document.querySelectorAll('input[type=text],input[type=number],input[type=url]').forEach(i=>{i.value='';i.classList.remove('ai-filled');});
@@ -715,6 +786,8 @@ function resetAll(){
 function toast(msg,green=false){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(green?' green':'');setTimeout(()=>t.className='toast',2700);}
 updateNav();
 loadConfig();
+updatePendingBadge();
+syncPending();
 </script>
 </body>
 </html>
