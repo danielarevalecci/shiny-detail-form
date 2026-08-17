@@ -145,7 +145,7 @@ select option{background:var(--white);}
     <div class="h-sub">Ingreso de Vehículos</div>
   </div>
   <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
-    <span id="pendingBadge" style="display:none;font-size:10px;font-weight:800;color:#b45309;background:#fff3cd;padding:3px 8px;border-radius:10px;"></span>
+    <span id="pendingBadge" onclick="syncPending()" style="display:none;font-size:10px;font-weight:800;color:#b45309;background:#fff3cd;padding:3px 8px;border-radius:10px;cursor:pointer;"></span>
     <span onclick="openHistory()" style="font-size:11px;font-weight:800;color:var(--muted);cursor:pointer;text-decoration:underline;">📋 Historial</span>
   </div>
 </div>
@@ -763,6 +763,7 @@ function updatePendingBadge(){
   }
 }
 window.addEventListener('online',syncPending);
+setInterval(syncPending,20000);
 function resetAll(){
   cur=0;carB64=null;vinB64=null;aiDone=false;selectedSvcs=new Set();
   document.querySelectorAll('input[type=text],input[type=number],input[type=url]').forEach(i=>{i.value='';i.classList.remove('ai-filled');});
