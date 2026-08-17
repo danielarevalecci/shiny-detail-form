@@ -727,6 +727,7 @@ function buildSuccess(p,pending){
 
 // ── Modo sin conexión — cola local en el celular ─────────────
 const QUEUE_KEY='shinyDetailPendingQueue';
+let isSyncing=false;
 function getQueue(){ try{ return JSON.parse(localStorage.getItem(QUEUE_KEY)||'[]'); }catch(e){ return []; } }
 function queuePending(payload){
   const q=getQueue();
@@ -735,20 +736,33 @@ function queuePending(payload){
   updatePendingBadge();
 }
 async function syncPending(){
-  let q=getQueue();
+  if(isSyncing)return; // ya hay un reintento en curso — no lo dupliques
+  const q=getQueue();
   if(q.length===0)return;
-  const stillPending=[];
-  for(const item of q){
-    try{
-      const res=await fetch(SHEETS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(item)});
-      const data=await res.json();
-      if(!data.success)throw new Error('fail');
-    }catch(e){ stillPending.push(item); }
-  }
-  localStorage.setItem(QUEUE_KEY,JSON.stringify(stillPending));
-  updatePendingBadge();
-  if(stillPending.length<q.length && stillPending.length===0){
-    toast('✦ Registros pendientes ya se subieron',true);
+  isSyncing=true;
+  try{
+    while(true){
+      const current=getQueue();
+      if(current.length===0)break;
+      const item=current[0];
+      try{
+        item.timestamp=new Date().toLocaleString('en-US'); // hora real del reintento
+        const res=await fetch(SHEETS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(item)});
+        const data=await res.json();
+        if(!data.success)throw new Error('fail');
+        // Éxito confirmado — lo quitamos de la cola AHORA MISMO, antes de
+        // intentar el siguiente. Así, si otro reintento arranca en paralelo,
+        // ya no encuentra este registro para volver a mandarlo.
+        const remaining=getQueue().slice(1);
+        localStorage.setItem(QUEUE_KEY,JSON.stringify(remaining));
+        updatePendingBadge();
+        toast('✦ Registro pendiente ya se subió',true);
+      }catch(e){
+        break; // probablemente sigue sin señal — reintenta en el próximo ciclo
+      }
+    }
+  }finally{
+    isSyncing=false;
   }
 }
 function updatePendingBadge(){
