@@ -27,13 +27,21 @@ main{max-width:760px;margin:0 auto;padding:20px;}
 .kpi-val{font-size:30px;font-weight:900;line-height:1;}
 .kpi-label{font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:6px;}
 .section-title{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin:22px 0 10px;}
-.emp-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:10px;box-shadow:var(--shadow);}
+.emp-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:10px;box-shadow:var(--shadow);cursor:pointer;}
 .emp-card-top{display:flex;justify-content:space-between;align-items:baseline;}
 .emp-name{font-size:16px;font-weight:800;}
+.emp-name .arrow{font-size:11px;color:var(--muted);margin-left:6px;display:inline-block;transition:transform .2s;}
+.emp-name .arrow.open{transform:rotate(90deg);}
 .emp-count{font-size:24px;font-weight:900;color:var(--accent);}
 .emp-count span{font-size:11px;font-weight:700;color:var(--muted);}
 .emp-last{font-size:12px;color:var(--muted);font-weight:600;margin-top:8px;}
 .emp-week{display:inline-block;margin-top:8px;font-size:11px;font-weight:800;background:var(--bg);padding:4px 10px;border-radius:20px;color:var(--muted);}
+.emp-detail{display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);}
+.emp-detail.open{display:block;}
+.emp-detail-day{font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:10px 0 5px;}
+.emp-detail-day:first-child{margin-top:0;}
+.emp-detail-row{font-size:12px;font-weight:600;color:var(--text);padding:4px 0;display:flex;justify-content:space-between;}
+.emp-detail-row span{color:var(--muted);}
 .chart-wrap{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);display:flex;align-items:flex-end;justify-content:space-between;gap:8px;height:140px;}
 .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;}
 .bar-count{font-size:11px;font-weight:800;margin-bottom:4px;color:var(--muted);}
@@ -172,29 +180,39 @@ function timeAgo(date){
   return `hace ${Math.floor(hrs/24)}d`;
 }
 
+function dayKeyOf(date){
+  // Clave de día consistente, siempre a partir de un objeto Date real
+  // (nunca cortando el texto crudo — ese fue el bug).
+  return date.toLocaleDateString('en-US');
+}
+
 function render(employees,records){
   const now=new Date();
-  const todayKey=now.toLocaleDateString('en-US');
+  const todayKey=dayKeyOf(now);
   const weekAgo=new Date(now.getTime()-7*24*60*60*1000);
   const twoWeeksAgo=new Date(now.getTime()-14*24*60*60*1000);
 
   const byEmp={};
-  employees.forEach(e=>{ byEmp[e.key]={label:e.label,today:0,week:0,last:null}; });
+  employees.forEach(e=>{ byEmp[e.key]={label:e.label,today:0,week:0,last:null,weekRecords:[]}; });
 
   let thisWeekTotal=0, lastWeekTotal=0;
 
   records.forEach(r=>{
     const empKey=r.employee||'Sin nombre';
-    if(!byEmp[empKey])byEmp[empKey]={label:empKey,today:0,week:0,last:null};
+    if(!byEmp[empKey])byEmp[empKey]={label:empKey,today:0,week:0,last:null,weekRecords:[]};
     const d=new Date(r.timestamp);
-    if(!isNaN(d)){
-      if(!byEmp[empKey].last||d>byEmp[empKey].last.date){
-        byEmp[empKey].last={date:d,plate:r.plate,model:r.model};
-      }
-      if(d>=weekAgo){ byEmp[empKey].week++; thisWeekTotal++; }
-      else if(d>=twoWeeksAgo){ lastWeekTotal++; }
+    if(isNaN(d))return;
+    if(!byEmp[empKey].last||d>byEmp[empKey].last.date){
+      byEmp[empKey].last={date:d,plate:r.plate,model:r.model};
     }
-    if((r.timestamp||'').split(',')[0]===todayKey)byEmp[empKey].today++;
+    if(d>=weekAgo){
+      byEmp[empKey].week++;
+      byEmp[empKey].weekRecords.push({date:d,plate:r.plate,model:r.model});
+      thisWeekTotal++;
+    } else if(d>=twoWeeksAgo){
+      lastWeekTotal++;
+    }
+    if(dayKeyOf(d)===todayKey)byEmp[empKey].today++;
   });
 
   // ── Meta semanal: superar la semana pasada ──
@@ -221,17 +239,33 @@ function render(employees,records){
   const sorted=Object.entries(byEmp).sort((a,b)=>b[1].today-a[1].today);
   document.getElementById('empCards').innerHTML=sorted.length===0
     ? '<div class="empty-state">Sin empleados configurados.</div>'
-    : sorted.map(([key,e])=>{
+    : sorted.map(([key,e],idx)=>{
         const lastText=e.last
           ? `${timeAgo(e.last.date)} · ${e.last.plate||'—'} ${e.last.model||''}`
           : 'Sin registros aún';
-        return `<div class="emp-card">
+
+        // Agrupa los carros de la semana de este empleado por día
+        const byDay={};
+        e.weekRecords.slice().sort((a,b)=>b.date-a.date).forEach(rec=>{
+          const label=rec.date.toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'short'});
+          if(!byDay[label])byDay[label]=[];
+          byDay[label].push(rec);
+        });
+        const detailHtml=Object.keys(byDay).length===0
+          ? '<div class="empty-state" style="padding:8px 0;">Sin carros esta semana.</div>'
+          : Object.entries(byDay).map(([day,recs])=>`
+              <div class="emp-detail-day">${day} · ${recs.length}</div>
+              ${recs.map(rec=>`<div class="emp-detail-row"><span>${rec.date.toLocaleTimeString('es-MX',{hour:'numeric',minute:'2-digit'})}</span>${rec.plate||'—'} ${rec.model||''}</div>`).join('')}
+            `).join('');
+
+        return `<div class="emp-card" onclick="toggleEmpDetail(${idx})">
           <div class="emp-card-top">
-            <div class="emp-name">${e.label}</div>
+            <div class="emp-name">${e.label}<span class="arrow" id="arrow-${idx}">▸</span></div>
             <div class="emp-count">${e.today}<span> hoy</span></div>
           </div>
           <div class="emp-last">🕐 Último: ${lastText}</div>
           <div class="emp-week">${e.week} esta semana</div>
+          <div class="emp-detail" id="detail-${idx}">${detailHtml}</div>
         </div>`;
       }).join('');
 
@@ -249,12 +283,13 @@ function render(employees,records){
 
   const days=[];
   for(let i=6;i>=0;i--){
-    const d=new Date(Date.now()-i*86400000);
-    days.push({key:d.toLocaleDateString('en-US'),label:d.toLocaleDateString('es-MX',{weekday:'short'}),count:0});
+    const d=new Date(now.getTime()-i*86400000);
+    days.push({key:dayKeyOf(d),label:d.toLocaleDateString('es-MX',{weekday:'short'}),count:0});
   }
   records.forEach(r=>{
-    const key=(r.timestamp||'').split(',')[0];
-    const day=days.find(d=>d.key===key);
+    const d=new Date(r.timestamp);
+    if(isNaN(d))return;
+    const day=days.find(dd=>dd.key===dayKeyOf(d));
     if(day)day.count++;
   });
   const max=Math.max(1,...days.map(d=>d.count));
@@ -264,6 +299,13 @@ function render(employees,records){
       <div class="bar" style="height:${Math.max(3,Math.round(d.count/max*100))}%"></div>
       <div class="bar-label">${d.label}</div>
     </div>`).join('');
+}
+
+function toggleEmpDetail(idx){
+  const detail=document.getElementById('detail-'+idx);
+  const arrow=document.getElementById('arrow-'+idx);
+  detail.classList.toggle('open');
+  arrow.classList.toggle('open');
 }
 </script>
 </body>
