@@ -63,6 +63,30 @@ main{max-width:760px;margin:0 auto;padding:20px;}
 .rank-medal{font-size:20px;width:26px;text-align:center;flex-shrink:0;}
 .rank-name{flex:1;font-size:14px;font-weight:800;}
 .rank-count{font-size:16px;font-weight:900;color:var(--accent);}
+.cal-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);}
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.cal-header button{background:var(--bg);border:1px solid var(--border);border-radius:8px;width:30px;height:30px;font-size:16px;cursor:pointer;font-family:'Nunito',sans-serif;}
+.cal-month-label{font-size:14px;font-weight:800;text-transform:capitalize;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+.cal-dow{font-size:9px;font-weight:800;color:var(--muted);text-align:center;padding:4px 0;text-transform:uppercase;}
+.cal-cell{aspect-ratio:1;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;background:var(--bg);transition:transform .1s;}
+.cal-cell:active{transform:scale(.92);}
+.cal-cell.empty{background:transparent;cursor:default;}
+.cal-cell.today{outline:2px solid var(--accent);outline-offset:-2px;}
+.cal-daynum{font-size:10px;font-weight:700;color:var(--muted);}
+.cal-count{font-size:12px;font-weight:900;}
+.cal-cell.lvl0 .cal-count{display:none;}
+.cal-cell.lvl1{background:#fde68a;}
+.cal-cell.lvl1 .cal-count{color:#7c3d00;}
+.cal-cell.lvl2{background:#fbbf24;}
+.cal-cell.lvl2 .cal-count{color:#5c2e00;}
+.cal-cell.lvl3{background:var(--gold);}
+.cal-cell.lvl3 .cal-count,.cal-cell.lvl3 .cal-daynum{color:#fff;}
+.cal-cell.lvl4{background:var(--accent);}
+.cal-cell.lvl4 .cal-count,.cal-cell.lvl4 .cal-daynum{color:#fff;}
+.cal-legend{display:flex;align-items:center;gap:5px;margin-top:12px;font-size:10px;color:var(--muted);font-weight:700;}
+.cal-legend-box{width:12px;height:12px;border-radius:3px;}
+.cal-detail-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-top:10px;box-shadow:var(--shadow);}
 .lock-screen{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;}
 .lock-icon{font-size:40px;margin-bottom:14px;}
 .lock-title{font-size:18px;font-weight:800;margin-bottom:16px;}
@@ -122,6 +146,26 @@ main{max-width:760px;margin:0 auto;padding:20px;}
 
   <div class="section-title">Últimos 7 días</div>
   <div class="chart-wrap" id="weekChart"></div>
+
+  <div class="section-title">📅 Vista mensual</div>
+  <div class="cal-card">
+    <div class="cal-header">
+      <button onclick="calPrev()">‹</button>
+      <div class="cal-month-label" id="calMonthLabel"></div>
+      <button onclick="calNext()">›</button>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+    <div class="cal-legend">
+      <span>Menos</span>
+      <div class="cal-legend-box" style="background:var(--bg);"></div>
+      <div class="cal-legend-box" style="background:#fde68a;"></div>
+      <div class="cal-legend-box" style="background:#fbbf24;"></div>
+      <div class="cal-legend-box" style="background:var(--gold);"></div>
+      <div class="cal-legend-box" style="background:var(--accent);"></div>
+      <span>Más</span>
+    </div>
+  </div>
+  <div id="calDayDetail"></div>
 </main>
 </div>
 
@@ -155,6 +199,9 @@ if(localStorage.getItem('shinyDashboardUnlocked')==='1'){
 
 const SHEETS_URL='https://script.google.com/macros/s/AKfycbwE9v3w5n_CjRu9E0FshcIjf_c5RfCJrklg4UTye-AvnWj2pN9SImjOq_3V94vMvj4L/exec';
 
+let allRecordsCache=[];
+let calYear, calMonth;
+
 async function load(){
   try{
     const [cfgRes,histRes]=await Promise.all([
@@ -163,7 +210,14 @@ async function load(){
     ]);
     const employees=cfgRes.employees||[];
     const records=histRes.records||[];
+    allRecordsCache=records;
     render(employees,records);
+    if(calYear===undefined){
+      const now=new Date();
+      calYear=now.getFullYear();
+      calMonth=now.getMonth();
+    }
+    renderCalendar();
     document.getElementById('updateTime').textContent='Actualizado: '+new Date().toLocaleTimeString('es-MX');
   }catch(e){
     console.error('Error cargando dashboard:',e);
@@ -307,6 +361,64 @@ function toggleEmpDetail(idx){
   const arrow=document.getElementById('arrow-'+idx);
   detail.classList.toggle('open');
   arrow.classList.toggle('open');
+}
+
+function calPrev(){ calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderCalendar(); }
+function calNext(){ calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderCalendar(); }
+
+function renderCalendar(){
+  const months=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  document.getElementById('calMonthLabel').textContent=`${months[calMonth]} ${calYear}`;
+
+  const counts={};
+  allRecordsCache.forEach(r=>{
+    const d=new Date(r.timestamp);
+    if(isNaN(d))return;
+    if(d.getFullYear()===calYear && d.getMonth()===calMonth){
+      const day=d.getDate();
+      if(!counts[day])counts[day]={count:0,records:[]};
+      counts[day].count++;
+      counts[day].records.push({time:d,plate:r.plate,model:r.model,employee:r.employee});
+    }
+  });
+
+  const firstDay=new Date(calYear,calMonth,1).getDay();
+  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  const startOffset=(firstDay+6)%7; // empieza en lunes
+  const max=Math.max(1,...Object.values(counts).map(c=>c.count));
+  const today=new Date();
+
+  let html=['L','M','M','J','V','S','D'].map(d=>`<div class="cal-dow">${d}</div>`).join('');
+  for(let i=0;i<startOffset;i++)html+='<div class="cal-cell empty"></div>';
+  for(let day=1;day<=daysInMonth;day++){
+    const info=counts[day];
+    const cnt=info?info.count:0;
+    const lvl=cnt===0?0:Math.min(4,Math.ceil(cnt/max*4));
+    const isToday=today.getDate()===day&&today.getMonth()===calMonth&&today.getFullYear()===calYear;
+    html+=`<div class="cal-cell lvl${lvl}${isToday?' today':''}" onclick="showDayDetail(${day})">
+      <div class="cal-daynum">${day}</div>
+      <div class="cal-count">${cnt||''}</div>
+    </div>`;
+  }
+  document.getElementById('calGrid').innerHTML=html;
+  window._calCounts=counts;
+  document.getElementById('calDayDetail').innerHTML='';
+}
+
+function showDayDetail(day){
+  const info=window._calCounts[day];
+  const panel=document.getElementById('calDayDetail');
+  const months=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  if(!info){
+    panel.innerHTML=`<div class="cal-detail-card"><div class="empty-state" style="padding:6px 0;">Sin carros el ${day} de ${months[calMonth]}.</div></div>`;
+    return;
+  }
+  const rows=info.records.slice().sort((a,b)=>a.time-b.time).map(r=>`
+    <div class="emp-detail-row"><span>${r.time.toLocaleTimeString('es-MX',{hour:'numeric',minute:'2-digit'})} · ${r.employee||'—'}</span>${r.plate||'—'} ${r.model||''}</div>`).join('');
+  panel.innerHTML=`<div class="cal-detail-card">
+    <div class="section-title" style="margin-top:0;">${day} de ${months[calMonth]} — ${info.count} carro${info.count===1?'':'s'}</div>
+    ${rows}
+  </div>`;
 }
 </script>
 </body>
