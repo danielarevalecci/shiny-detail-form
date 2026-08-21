@@ -404,7 +404,8 @@ function renderHistory(filterEmp){
   const groups={};
   historyRecords.forEach(r=>{
     if(filterEmp && filterEmp!=='__all__' && r.employee!==filterEmp) return;
-    const day=(r.timestamp||'').split(',')[0]||'Sin fecha';
+    const dObj=new Date(r.timestamp);
+    const day=isNaN(dObj)?'Sin fecha':dObj.toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'short'});
     if(!groups[day])groups[day]=[];
     groups[day].push(r);
   });
