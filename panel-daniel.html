@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Shiny Detail — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#f5f4f0;--white:#fff;--border:#e2e0db;--text:#1a1a1a;--muted:#8a8680;
+  --accent:#1a1a1a;--gold:#f0a500;--green:#22c55e;--green-bg:#f0fdf4;
+  --radius:16px;--radius-sm:10px;--shadow:0 2px 12px rgba(0,0,0,0.07);
+}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:40px;}
+.header{background:var(--white);border-bottom:1px solid var(--border);padding:16px 20px;display:flex;align-items:center;gap:11px;position:sticky;top:0;z-index:10;}
+.logo{width:34px;height:34px;border-radius:9px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:17px;color:#fff;flex-shrink:0;}
+.h-title{font-size:16px;font-weight:800;}
+.h-sub{font-size:11px;color:var(--muted);font-weight:600;}
+.live{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:11px;font-weight:800;color:var(--green);}
+.live-dot{width:7px;height:7px;background:var(--green);border-radius:50%;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.update-time{font-size:10px;color:var(--muted);margin-left:10px;font-weight:600;}
+main{max-width:760px;margin:0 auto;padding:20px;}
+.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:22px;}
+.kpi{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px 14px;text-align:center;box-shadow:var(--shadow);}
+.kpi-val{font-size:30px;font-weight:900;line-height:1;}
+.kpi-label{font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:6px;}
+.section-title{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin:22px 0 10px;}
+.emp-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:10px;box-shadow:var(--shadow);}
+.emp-card-top{display:flex;justify-content:space-between;align-items:baseline;}
+.emp-name{font-size:16px;font-weight:800;}
+.emp-count{font-size:24px;font-weight:900;color:var(--accent);}
+.emp-count span{font-size:11px;font-weight:700;color:var(--muted);}
+.emp-last{font-size:12px;color:var(--muted);font-weight:600;margin-top:8px;}
+.emp-week{display:inline-block;margin-top:8px;font-size:11px;font-weight:800;background:var(--bg);padding:4px 10px;border-radius:20px;color:var(--muted);}
+.chart-wrap{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);display:flex;align-items:flex-end;justify-content:space-between;gap:8px;height:140px;}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;}
+.bar-count{font-size:11px;font-weight:800;margin-bottom:4px;color:var(--muted);}
+.bar{width:70%;background:var(--accent);border-radius:5px 5px 0 0;min-height:3px;transition:height .4s;}
+.bar-label{font-size:10px;font-weight:700;color:var(--muted);margin-top:6px;text-transform:capitalize;}
+.empty-state{text-align:center;color:var(--muted);font-weight:600;font-size:13px;padding:24px 0;}
+.goal-card{background:var(--accent);border-radius:var(--radius);padding:20px;color:#fff;margin-bottom:22px;}
+.goal-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;}
+.goal-label{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.7);}
+.goal-delta{font-size:13px;font-weight:800;}
+.goal-delta.up{color:#7dd87d;}
+.goal-delta.down{color:#ffb4b4;}
+.goal-nums{display:flex;align-items:baseline;gap:8px;margin-bottom:12px;}
+.goal-current{font-size:32px;font-weight:900;}
+.goal-target{font-size:14px;font-weight:700;color:rgba(255,255,255,.6);}
+.goal-track{height:10px;background:rgba(255,255,255,.15);border-radius:6px;overflow:hidden;}
+.goal-fill{height:100%;background:var(--gold);border-radius:6px;transition:width .5s;}
+.rank-row{display:flex;align-items:center;gap:12px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px;margin-bottom:8px;box-shadow:var(--shadow);}
+.rank-medal{font-size:20px;width:26px;text-align:center;flex-shrink:0;}
+.rank-name{flex:1;font-size:14px;font-weight:800;}
+.rank-count{font-size:16px;font-weight:900;color:var(--accent);}
+.lock-screen{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;}
+.lock-icon{font-size:40px;margin-bottom:14px;}
+.lock-title{font-size:18px;font-weight:800;margin-bottom:16px;}
+.lock-input{width:100%;max-width:260px;padding:13px 15px;background:var(--bg);border:2px solid var(--border);border-radius:var(--radius-sm);font-size:15px;font-weight:600;font-family:'Nunito',sans-serif;text-align:center;outline:none;margin-bottom:10px;}
+.lock-input:focus{border-color:var(--accent);}
+.lock-btn{padding:12px 28px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;}
+.lock-error{font-size:12px;color:#a32d2d;font-weight:700;margin-top:8px;min-height:16px;}
+#dashboardContent{display:none;}
+</style>
+</head>
+<body>
+
+<div class="lock-screen" id="lockScreen">
+  <div class="lock-icon">🔒</div>
+  <div class="lock-title">Acceso solo para el dueño</div>
+  <input type="password" class="lock-input" id="lockInput" placeholder="Contraseña" autocomplete="off"/>
+  <button class="lock-btn" onclick="tryUnlock()">Entrar</button>
+  <div class="lock-error" id="lockError"></div>
+</div>
+
+<div id="dashboardContent">
+<div class="header">
+  <div class="logo">✦</div>
+  <div>
+    <div class="h-title">Shiny Detail</div>
+    <div class="h-sub">Dashboard en vivo</div>
+  </div>
+  <div class="live"><div class="live-dot"></div>EN VIVO</div>
+  <div class="update-time" id="updateTime"></div>
+</div>
+
+<main>
+  <div class="goal-card">
+    <div class="goal-top">
+      <span class="goal-label">🎯 Meta semanal — superar la semana pasada</span>
+      <span class="goal-delta" id="goalDelta"></span>
+    </div>
+    <div class="goal-nums">
+      <span class="goal-current" id="goalCurrent">—</span>
+      <span class="goal-target" id="goalTarget"></span>
+    </div>
+    <div class="goal-track"><div class="goal-fill" id="goalFill" style="width:0%"></div></div>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi"><div class="kpi-val" id="kpiToday">—</div><div class="kpi-label">Carros hoy</div></div>
+    <div class="kpi"><div class="kpi-val" id="kpiWeek">—</div><div class="kpi-label">Esta semana</div></div>
+    <div class="kpi"><div class="kpi-val" id="kpiActive">—</div><div class="kpi-label">Activos hoy</div></div>
+  </div>
+
+  <div class="section-title">Por empleado</div>
+  <div id="empCards"><div class="empty-state">Cargando...</div></div>
+
+  <div class="section-title">🏆 Ranking de la semana</div>
+  <div id="rankList"></div>
+
+  <div class="section-title">Últimos 7 días</div>
+  <div class="chart-wrap" id="weekChart"></div>
+</main>
+</div>
+
+<script>
+// ⚠️ Cámbiala por la que tú quieras antes de subir el archivo.
+// Recuerda: esto es un candado simple, no seguridad real — cualquiera
+// que vea el código fuente de la página podría encontrarla.
+const DASHBOARD_PASSWORD = 'shiny2026';
+
+function tryUnlock(){
+  const input=document.getElementById('lockInput').value;
+  if(input===DASHBOARD_PASSWORD){
+    localStorage.setItem('shinyDashboardUnlocked','1');
+    showDashboard();
+  }else{
+    document.getElementById('lockError').textContent='Contraseña incorrecta.';
+  }
+}
+document.getElementById('lockInput').addEventListener('keydown',e=>{ if(e.key==='Enter')tryUnlock(); });
+
+function showDashboard(){
+  document.getElementById('lockScreen').style.display='none';
+  document.getElementById('dashboardContent').style.display='block';
+  load();
+  setInterval(load,30000);
+}
+
+if(localStorage.getItem('shinyDashboardUnlocked')==='1'){
+  showDashboard();
+}
+
+const SHEETS_URL='https://script.google.com/macros/s/AKfycbwE9v3w5n_CjRu9E0FshcIjf_c5RfCJrklg4UTye-AvnWj2pN9SImjOq_3V94vMvj4L/exec';
+
+async function load(){
+  try{
+    const [cfgRes,histRes]=await Promise.all([
+      fetch(SHEETS_URL+'?action=config').then(r=>r.json()),
+      fetch(SHEETS_URL+'?action=history').then(r=>r.json())
+    ]);
+    const employees=cfgRes.employees||[];
+    const records=histRes.records||[];
+    render(employees,records);
+    document.getElementById('updateTime').textContent='Actualizado: '+new Date().toLocaleTimeString('es-MX');
+  }catch(e){
+    console.error('Error cargando dashboard:',e);
+    document.getElementById('updateTime').textContent='Error al actualizar — reintentando...';
+  }
+}
+
+function timeAgo(date){
+  if(isNaN(date))return '—';
+  const mins=Math.floor((Date.now()-date.getTime())/60000);
+  if(mins<1)return 'justo ahora';
+  if(mins<60)return `hace ${mins} min`;
+  const hrs=Math.floor(mins/60);
+  if(hrs<24)return `hace ${hrs}h`;
+  return `hace ${Math.floor(hrs/24)}d`;
+}
+
+function render(employees,records){
+  const now=new Date();
+  const todayKey=now.toLocaleDateString('en-US');
+  const weekAgo=new Date(now.getTime()-7*24*60*60*1000);
+  const twoWeeksAgo=new Date(now.getTime()-14*24*60*60*1000);
+
+  const byEmp={};
+  employees.forEach(e=>{ byEmp[e.key]={label:e.label,today:0,week:0,last:null}; });
+
+  let thisWeekTotal=0, lastWeekTotal=0;
+
+  records.forEach(r=>{
+    const empKey=r.employee||'Sin nombre';
+    if(!byEmp[empKey])byEmp[empKey]={label:empKey,today:0,week:0,last:null};
+    const d=new Date(r.timestamp);
+    if(!isNaN(d)){
+      if(!byEmp[empKey].last||d>byEmp[empKey].last.date){
+        byEmp[empKey].last={date:d,plate:r.plate,model:r.model};
+      }
+      if(d>=weekAgo){ byEmp[empKey].week++; thisWeekTotal++; }
+      else if(d>=twoWeeksAgo){ lastWeekTotal++; }
+    }
+    if((r.timestamp||'').split(',')[0]===todayKey)byEmp[empKey].today++;
+  });
+
+  // ── Meta semanal: superar la semana pasada ──
+  document.getElementById('goalCurrent').textContent=thisWeekTotal;
+  document.getElementById('goalTarget').textContent=`/ ${lastWeekTotal} de la semana pasada`;
+  const goalFill=document.getElementById('goalFill');
+  const goalDelta=document.getElementById('goalDelta');
+  if(lastWeekTotal===0){
+    goalFill.style.width=thisWeekTotal>0?'100%':'0%';
+    goalDelta.textContent='';
+  }else{
+    const pct=Math.min(100,Math.round(thisWeekTotal/lastWeekTotal*100));
+    goalFill.style.width=pct+'%';
+    const diff=thisWeekTotal-lastWeekTotal;
+    goalDelta.textContent=diff>=0?`▲ +${diff}`:`▼ ${diff}`;
+    goalDelta.className='goal-delta '+(diff>=0?'up':'down');
+  }
+
+  const vals=Object.values(byEmp);
+  document.getElementById('kpiToday').textContent=vals.reduce((s,e)=>s+e.today,0);
+  document.getElementById('kpiWeek').textContent=vals.reduce((s,e)=>s+e.week,0);
+  document.getElementById('kpiActive').textContent=vals.filter(e=>e.today>0).length;
+
+  const sorted=Object.entries(byEmp).sort((a,b)=>b[1].today-a[1].today);
+  document.getElementById('empCards').innerHTML=sorted.length===0
+    ? '<div class="empty-state">Sin empleados configurados.</div>'
+    : sorted.map(([key,e])=>{
+        const lastText=e.last
+          ? `${timeAgo(e.last.date)} · ${e.last.plate||'—'} ${e.last.model||''}`
+          : 'Sin registros aún';
+        return `<div class="emp-card">
+          <div class="emp-card-top">
+            <div class="emp-name">${e.label}</div>
+            <div class="emp-count">${e.today}<span> hoy</span></div>
+          </div>
+          <div class="emp-last">🕐 Último: ${lastText}</div>
+          <div class="emp-week">${e.week} esta semana</div>
+        </div>`;
+      }).join('');
+
+  // ── Ranking semanal ──
+  const rankSorted=[...vals].sort((a,b)=>b.week-a.week).filter(e=>e.week>0);
+  const medals=['🥇','🥈','🥉'];
+  document.getElementById('rankList').innerHTML=rankSorted.length===0
+    ? '<div class="empty-state">Sin carros esta semana todavía.</div>'
+    : rankSorted.map((e,i)=>`
+      <div class="rank-row">
+        <div class="rank-medal">${medals[i]||(i+1)}</div>
+        <div class="rank-name">${e.label}</div>
+        <div class="rank-count">${e.week}</div>
+      </div>`).join('');
+
+  const days=[];
+  for(let i=6;i>=0;i--){
+    const d=new Date(Date.now()-i*86400000);
+    days.push({key:d.toLocaleDateString('en-US'),label:d.toLocaleDateString('es-MX',{weekday:'short'}),count:0});
+  }
+  records.forEach(r=>{
+    const key=(r.timestamp||'').split(',')[0];
+    const day=days.find(d=>d.key===key);
+    if(day)day.count++;
+  });
+  const max=Math.max(1,...days.map(d=>d.count));
+  document.getElementById('weekChart').innerHTML=days.map(d=>`
+    <div class="bar-col">
+      <div class="bar-count">${d.count}</div>
+      <div class="bar" style="height:${Math.max(3,Math.round(d.count/max*100))}%"></div>
+      <div class="bar-label">${d.label}</div>
+    </div>`).join('');
+}
+</script>
+</body>
+</html>
