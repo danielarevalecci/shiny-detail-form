@@ -145,8 +145,9 @@ select option{background:var(--white);}
     <div class="h-sub">Ingreso de Vehículos</div>
   </div>
   <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
-    <span id="pendingBadge" onclick="syncPending()" style="display:none;font-size:10px;font-weight:800;color:#b45309;background:#fff3cd;padding:3px 8px;border-radius:10px;cursor:pointer;"></span>
+    <span id="pendingBadge" onclick="syncPending()" style="font-size:10px;font-weight:800;color:var(--green);background:var(--green-bg);padding:3px 8px;border-radius:10px;cursor:pointer;">✓ Al día</span>
     <span onclick="openHistory()" style="font-size:11px;font-weight:800;color:var(--muted);cursor:pointer;text-decoration:underline;">📋 Historial</span>
+    <a href="/panel-daniel.html" style="font-size:11px;font-weight:800;color:var(--muted);text-decoration:underline;">📊 Panel</a>
   </div>
 </div>
 
@@ -806,10 +807,13 @@ function updatePendingBadge(){
   const badge=document.getElementById('pendingBadge');
   if(!badge)return;
   if(q.length>0){
-    badge.style.display='inline-flex';
     badge.textContent=`⏳ ${q.length} pendiente${q.length===1?'':'s'}`;
+    badge.style.color='#b45309';
+    badge.style.background='#fff3cd';
   }else{
-    badge.style.display='none';
+    badge.textContent='✓ Al día';
+    badge.style.color='var(--green)';
+    badge.style.background='var(--green-bg)';
   }
 }
 window.addEventListener('online',syncPending);
