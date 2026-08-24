@@ -48,7 +48,8 @@ main{max-width:760px;margin:0 auto;padding:20px;}
 .bar{width:70%;background:var(--accent);border-radius:5px 5px 0 0;min-height:3px;transition:height .4s;}
 .bar-label{font-size:10px;font-weight:700;color:var(--muted);margin-top:6px;text-transform:capitalize;}
 .empty-state{text-align:center;color:var(--muted);font-weight:600;font-size:13px;padding:24px 0;}
-.goal-card{background:var(--accent);border-radius:var(--radius);padding:20px;color:#fff;margin-bottom:22px;}
+.goal-card{background:var(--accent);border-radius:var(--radius);padding:20px;color:#fff;margin-bottom:22px;border:2px solid transparent;transition:border-color .3s;}
+.goal-card.behind{border-color:#a32d2d;}
 .goal-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;}
 .goal-label{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.7);}
 .goal-delta{font-size:13px;font-weight:800;}
@@ -68,6 +69,20 @@ main{max-width:760px;margin:0 auto;padding:20px;}
 .period-btn{flex:1;padding:9px;background:var(--white);border:2px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;color:var(--muted);}
 .period-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
 .emp-money{font-size:12px;font-weight:800;color:var(--green);}
+.custom-range{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:16px;box-shadow:var(--shadow);}
+.custom-range-row{display:flex;gap:10px;margin-bottom:10px;}
+.custom-range-field{flex:1;}
+.custom-range-field label{font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;}
+.custom-range-field input{width:100%;padding:9px;border:2px solid var(--border);border-radius:8px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;}
+.compare-bars{display:flex;gap:20px;align-items:flex-end;margin:16px 0 6px;height:110px;}
+.compare-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;height:100%;}
+.compare-bar-val{font-size:20px;font-weight:900;margin-bottom:6px;}
+.compare-bar-track{flex:1;width:100%;display:flex;align-items:flex-end;}
+.compare-bar{width:100%;border-radius:8px 8px 0 0;min-height:4px;transition:height .5s;}
+.compare-bar.current{background:#a32d2d;}
+.compare-bar.current.beat{background:var(--green);}
+.compare-bar.prev{background:rgba(255,255,255,.25);}
+.compare-bar-label{font-size:11px;font-weight:800;color:rgba(255,255,255,.6);margin-top:8px;}
 .rank-row{display:flex;align-items:center;gap:12px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px;margin-bottom:8px;box-shadow:var(--shadow);}
 .rank-medal{font-size:20px;width:26px;text-align:center;flex-shrink:0;}
 .rank-name{flex:1;font-size:14px;font-weight:800;}
@@ -104,6 +119,17 @@ main{max-width:760px;margin:0 auto;padding:20px;}
 .lock-btn{padding:12px 28px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;}
 .lock-error{font-size:12px;color:#a32d2d;font-weight:700;margin-top:8px;min-height:16px;}
 #dashboardContent{display:none;}
+.inactivity-banner{background:#a32d2d;color:#fff;padding:12px 20px;font-size:12px;font-weight:800;display:flex;align-items:center;gap:8px;}
+.pulse-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:16px;box-shadow:var(--shadow);}
+.pace-row{display:flex;align-items:center;gap:10px;padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid var(--border);}
+.pace-icon{font-size:22px;}
+.pace-text{font-size:13px;font-weight:800;}
+.pace-sub{font-size:11px;color:var(--muted);font-weight:600;}
+.live-feed-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;font-size:12px;font-weight:700;border-bottom:1px solid var(--border);}
+.live-feed-row:last-child{border-bottom:none;}
+.live-feed-who{color:var(--text);}
+.live-feed-what{color:var(--muted);font-weight:600;}
+.live-feed-time{color:var(--muted);font-size:10px;font-weight:800;white-space:nowrap;margin-left:8px;}
 </style>
 </head>
 <body>
@@ -117,6 +143,7 @@ main{max-width:760px;margin:0 auto;padding:20px;}
 </div>
 
 <div id="dashboardContent">
+<div id="inactivityBanner" class="inactivity-banner" style="display:none;"></div>
 <div class="header">
   <div class="logo">✦</div>
   <div>
@@ -129,10 +156,34 @@ main{max-width:760px;margin:0 auto;padding:20px;}
 </div>
 
 <main>
+  <div class="pulse-card">
+    <div class="pace-row">
+      <div class="pace-icon">⏱️</div>
+      <div>
+        <div class="pace-text" id="paceText">Calculando ritmo...</div>
+        <div class="pace-sub" id="paceSub"></div>
+      </div>
+    </div>
+    <div id="liveFeed"></div>
+  </div>
+
   <div class="period-toggle">
-    <button class="period-btn active" data-days="7" onclick="setPeriod(7,this)">Últimos 7 días</button>
-    <button class="period-btn" data-days="30" onclick="setPeriod(30,this)">Últimos 30 días</button>
-    <button class="period-btn" data-days="90" onclick="setPeriod(90,this)">Últimos 90 días</button>
+    <button class="period-btn active" id="thisWeekBtn" onclick="setThisWeek()">Esta semana (lun–dom)</button>
+    <button class="period-btn" id="customBtn" onclick="toggleCustomRange()">📅 Personalizado</button>
+  </div>
+
+  <div class="custom-range" id="customRangePanel" style="display:none;">
+    <div class="custom-range-row">
+      <div class="custom-range-field">
+        <label>Desde</label>
+        <input type="date" id="customFrom"/>
+      </div>
+      <div class="custom-range-field">
+        <label>Hasta</label>
+        <input type="date" id="customTo"/>
+      </div>
+    </div>
+    <button class="period-btn active" style="width:100%;" onclick="applyCustomRange()">Aplicar</button>
   </div>
 
   <div class="goal-card">
@@ -140,11 +191,18 @@ main{max-width:760px;margin:0 auto;padding:20px;}
       <span class="goal-label" id="goalLabel">🎯 Meta — superar el período anterior</span>
       <span class="goal-delta" id="goalDelta"></span>
     </div>
-    <div class="goal-nums">
-      <span class="goal-current" id="goalCurrent">—</span>
-      <span class="goal-target" id="goalTarget"></span>
+    <div class="compare-bars">
+      <div class="compare-bar-col">
+        <div class="compare-bar-val" id="cmpCurrentVal">—</div>
+        <div class="compare-bar-track"><div class="compare-bar current" id="cmpCurrentBar"></div></div>
+        <div class="compare-bar-label">Este período</div>
+      </div>
+      <div class="compare-bar-col">
+        <div class="compare-bar-val" id="cmpPrevVal">—</div>
+        <div class="compare-bar-track"><div class="compare-bar prev" id="cmpPrevBar"></div></div>
+        <div class="compare-bar-label">Anterior</div>
+      </div>
     </div>
-    <div class="goal-track"><div class="goal-fill" id="goalFill" style="width:0%"></div></div>
     <div class="goal-dates" id="goalDates"></div>
     <div class="goal-money">
       <span class="goal-money-label">💰 Generado</span>
@@ -163,6 +221,9 @@ main{max-width:760px;margin:0 auto;padding:20px;}
 
   <div class="section-title">🏆 Ranking por $ generado <span id="rankPeriodLabel"></span></div>
   <div id="rankList"></div>
+
+  <div class="section-title">🏢 Ranking de sucursales <span id="branchPeriodLabel"></span></div>
+  <div id="branchRankList"></div>
 
   <div class="section-title">Últimos 7 días</div>
   <div class="chart-wrap" id="weekChart"></div>
@@ -233,6 +294,8 @@ async function load(){
     const records=histRes.records||[];
     allRecordsCache=records;
     render(employees,records);
+    renderPulse(records);
+    renderInactivityBanner(records);
     if(calYear===undefined){
       const now=new Date();
       calYear=now.getFullYear();
@@ -243,6 +306,71 @@ async function load(){
   }catch(e){
     console.error('Error cargando dashboard:',e);
     document.getElementById('updateTime').textContent='Error al actualizar — reintentando...';
+  }
+}
+
+// ── Ritmo del día + actividad reciente en vivo (siempre "ahora", sin importar el período elegido) ──
+function renderPulse(records){
+  const now=new Date();
+  const todayKey=dayKeyOf(now);
+  const todayRecords=records
+    .map(r=>({...r,_d:new Date(r.timestamp)}))
+    .filter(r=>!isNaN(r._d)&&dayKeyOf(r._d)===todayKey)
+    .sort((a,b)=>a._d-b._d);
+
+  const paceText=document.getElementById('paceText');
+  const paceSub=document.getElementById('paceSub');
+  if(todayRecords.length<2){
+    paceText.textContent=todayRecords.length===1?'1 carro hoy — apenas arrancando':'Sin carros hoy todavía';
+    paceSub.textContent='';
+  }else{
+    const first=todayRecords[0]._d, last=todayRecords[todayRecords.length-1]._d;
+    const spanMin=(last-first)/60000;
+    const avgMin=Math.round(spanMin/(todayRecords.length-1));
+    paceText.textContent=`Ritmo de hoy: 1 carro cada ~${avgMin} min`;
+    paceSub.textContent=`${todayRecords.length} carros desde las ${first.toLocaleTimeString('es-MX',{hour:'numeric',minute:'2-digit'})}`;
+  }
+
+  // Actividad reciente — últimos 8 registros de todo el sistema, sin importar el día
+  const recent=records
+    .map(r=>({...r,_d:new Date(r.timestamp)}))
+    .filter(r=>!isNaN(r._d))
+    .sort((a,b)=>b._d-a._d)
+    .slice(0,8);
+  document.getElementById('liveFeed').innerHTML=recent.length===0
+    ? '<div class="empty-state" style="padding:6px 0;">Sin actividad todavía.</div>'
+    : recent.map(r=>`
+      <div class="live-feed-row">
+        <div><span class="live-feed-who">${r.employee||'—'}</span> <span class="live-feed-what">· ${r.branch||'—'} · ${r.plate||'—'} ${r.model||''}</span></div>
+        <div class="live-feed-time">${timeAgo(r._d)}</div>
+      </div>`).join('');
+}
+
+// ── Alerta de inactividad (horario de trabajo 8am–7pm, umbral 2 horas) ──
+const BUSINESS_HOUR_START=8, BUSINESS_HOUR_END=19, INACTIVITY_THRESHOLD_MIN=120;
+function renderInactivityBanner(records){
+  const banner=document.getElementById('inactivityBanner');
+  const now=new Date();
+  const hour=now.getHours();
+  const inBusinessHours=hour>=BUSINESS_HOUR_START&&hour<BUSINESS_HOUR_END;
+
+  if(!inBusinessHours||records.length===0){
+    banner.style.display='none';
+    return;
+  }
+  const lastDate=records
+    .map(r=>new Date(r.timestamp))
+    .filter(d=>!isNaN(d))
+    .sort((a,b)=>b-a)[0];
+  if(!lastDate){ banner.style.display='none'; return; }
+
+  const minsSince=Math.floor((now-lastDate)/60000);
+  if(minsSince>=INACTIVITY_THRESHOLD_MIN){
+    const hrs=Math.floor(minsSince/60), mins=minsSince%60;
+    banner.style.display='flex';
+    banner.textContent=`⚠️ Sin actividad hace ${hrs>0?hrs+'h ':''}${mins}min — último carro a las ${lastDate.toLocaleTimeString('es-MX',{hour:'numeric',minute:'2-digit'})}`;
+  }else{
+    banner.style.display='none';
   }
 }
 
@@ -262,13 +390,47 @@ function dayKeyOf(date){
   return date.toLocaleDateString('en-US');
 }
 
-let currentPeriodDays=7;
-const PERIOD_LABELS={7:'los últimos 7 días',30:'los últimos 30 días',90:'los últimos 90 días'};
+let customRange=null; // {start:Date, end:Date} cuando el usuario elige fechas propias
 
-function setPeriod(days,btn){
-  currentPeriodDays=days;
+function mondayOf(date){
+  const d=new Date(date);
+  const day=d.getDay(); // 0=domingo..6=sábado
+  const diffToMonday=(day===0?6:day-1);
+  return new Date(d.getFullYear(),d.getMonth(),d.getDate()-diffToMonday,0,0,0,0);
+}
+
+function setThisWeek(){
+  customRange=null;
+  document.getElementById('customRangePanel').style.display='none';
   document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
+  document.getElementById('thisWeekBtn').classList.add('active');
+  render(cachedEmployees,allRecordsCache);
+}
+
+function toggleCustomRange(){
+  const panel=document.getElementById('customRangePanel');
+  const open=panel.style.display==='block';
+  panel.style.display=open?'none':'block';
+  if(!open){
+    document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
+    document.getElementById('customBtn').classList.add('active');
+    if(!document.getElementById('customTo').value){
+      const today=new Date().toISOString().slice(0,10);
+      const weekAgo=new Date(Date.now()-7*86400000).toISOString().slice(0,10);
+      document.getElementById('customFrom').value=weekAgo;
+      document.getElementById('customTo').value=today;
+    }
+  }
+}
+
+function applyCustomRange(){
+  const from=document.getElementById('customFrom').value;
+  const to=document.getElementById('customTo').value;
+  if(!from||!to)return;
+  const start=new Date(from+'T00:00:00');
+  const end=new Date(to+'T23:59:59');
+  if(end<=start){ alert('La fecha "Hasta" debe ser después de "Desde".'); return; }
+  customRange={start,end};
   render(cachedEmployees,allRecordsCache);
 }
 
@@ -276,11 +438,27 @@ function render(employees,records){
   cachedEmployees=employees;
   const now=new Date();
   const todayKey=dayKeyOf(now);
-  const periodAgo=new Date(now.getTime()-currentPeriodDays*24*60*60*1000);
-  const twoPeriodsAgo=new Date(now.getTime()-currentPeriodDays*2*24*60*60*1000);
+
+  let periodStart,periodEnd,prevStart,prevEnd,periodLabel;
+  if(customRange){
+    periodStart=customRange.start;
+    periodEnd=customRange.end;
+    const lengthMs=periodEnd.getTime()-periodStart.getTime();
+    prevEnd=new Date(periodStart.getTime());
+    prevStart=new Date(periodStart.getTime()-lengthMs);
+    periodLabel='el período elegido';
+  }else{
+    // Semana calendario: lunes 00:00 → ahora. Anterior: lunes a domingo completo.
+    periodStart=mondayOf(now);
+    periodEnd=now;
+    prevStart=new Date(periodStart.getTime()-7*24*60*60*1000);
+    prevEnd=new Date(periodStart.getTime()-1); // domingo 23:59:59.999 anterior
+    periodLabel='esta semana (lunes a domingo)';
+  }
 
   const byEmp={};
   employees.forEach(e=>{ byEmp[e.key]={label:e.label,today:0,week:0,money:0,last:null,weekRecords:[]}; });
+  const byBranch={};
 
   let thisPeriodTotal=0, lastPeriodTotal=0, thisPeriodMoney=0, lastPeriodMoney=0;
 
@@ -293,48 +471,59 @@ function render(employees,records){
     if(!byEmp[empKey].last||d>byEmp[empKey].last.date){
       byEmp[empKey].last={date:d,plate:r.plate,model:r.model};
     }
-    if(d>=periodAgo){
+    if(d>=periodStart&&d<=periodEnd){
       byEmp[empKey].week++;
       byEmp[empKey].money+=amt;
       byEmp[empKey].weekRecords.push({date:d,plate:r.plate,model:r.model});
       thisPeriodTotal++;
       thisPeriodMoney+=amt;
-    } else if(d>=twoPeriodsAgo){
+
+      const branchKey=r.branch||'Sin sucursal';
+      if(!byBranch[branchKey])byBranch[branchKey]={branch:branchKey,count:0,money:0};
+      byBranch[branchKey].count++;
+      byBranch[branchKey].money+=amt;
+    } else if(d>=prevStart&&d<prevEnd){
       lastPeriodTotal++;
       lastPeriodMoney+=amt;
     }
     if(dayKeyOf(d)===todayKey)byEmp[empKey].today++;
   });
 
-  // ── Meta del período — superar el período anterior ──
-  const periodLabel=PERIOD_LABELS[currentPeriodDays];
+  // ── Meta del período — barras comparativas lado a lado ──
   const fmtShort=d=>d.toLocaleDateString('es-MX',{day:'numeric',month:'short'});
-  document.getElementById('goalLabel').textContent=`🎯 Meta — superar el período anterior (${periodLabel})`;
-  document.getElementById('kpiWeekLabel').textContent=periodLabel.replace('los ','');
-  document.getElementById('empPeriodLabel').textContent=`· ${periodLabel}`;
-  document.getElementById('rankPeriodLabel').textContent=`· ${periodLabel}`;
-  document.getElementById('goalCurrent').textContent=thisPeriodTotal;
-  document.getElementById('goalTarget').textContent=`/ ${lastPeriodTotal} del período anterior`;
+  document.getElementById('goalLabel').textContent=`🎯 Meta — superar ${periodLabel}`;
+  document.getElementById('kpiWeekLabel').textContent=customRange?'Período elegido':periodLabel.replace('los ','');
+  document.getElementById('empPeriodLabel').textContent=customRange?'· período elegido':`· ${periodLabel}`;
+  document.getElementById('rankPeriodLabel').textContent=customRange?'· período elegido':`· ${periodLabel}`;
+  document.getElementById('cmpCurrentVal').textContent=thisPeriodTotal;
+  document.getElementById('cmpPrevVal').textContent=lastPeriodTotal;
   document.getElementById('goalDates').textContent=
-    `Este período: ${fmtShort(periodAgo)}–${fmtShort(now)}  ·  Anterior: ${fmtShort(twoPeriodsAgo)}–${fmtShort(periodAgo)}`;
+    `Este período: ${fmtShort(periodStart)}–${fmtShort(periodEnd)}  ·  Anterior: ${fmtShort(prevStart)}–${fmtShort(prevEnd)}`;
   document.getElementById('goalMoney').textContent=
     `$${thisPeriodMoney.toLocaleString()} vs $${lastPeriodMoney.toLocaleString()}`;
-  const goalFill=document.getElementById('goalFill');
+
+  const maxVal=Math.max(1,thisPeriodTotal,lastPeriodTotal);
+  const currentBar=document.getElementById('cmpCurrentBar');
+  const prevBar=document.getElementById('cmpPrevBar');
+  currentBar.style.height=Math.max(4,Math.round(thisPeriodTotal/maxVal*100))+'%';
+  prevBar.style.height=Math.max(4,Math.round(lastPeriodTotal/maxVal*100))+'%';
+  currentBar.classList.toggle('beat',thisPeriodTotal>=lastPeriodTotal);
+
   const goalDelta=document.getElementById('goalDelta');
+  const goalCard=document.querySelector('.goal-card');
   if(lastPeriodTotal===0){
-    goalFill.style.width=thisPeriodTotal>0?'100%':'0%';
-    goalFill.classList.toggle('beat',thisPeriodTotal>0);
     goalDelta.textContent=thisPeriodTotal>0?'🎉 ¡Primer período con carros!':'';
     goalDelta.className='goal-delta up';
+    goalCard.classList.remove('behind');
   }else{
     const realPct=Math.round(thisPeriodTotal/lastPeriodTotal*100);
-    goalFill.style.width=Math.min(100,realPct)+'%';
     const diff=thisPeriodTotal-lastPeriodTotal;
-    goalFill.classList.toggle('beat',diff>=0);
     if(diff>=0){
       goalDelta.textContent=realPct>=200?`🎉 ${(thisPeriodTotal/lastPeriodTotal).toFixed(1)}x el período anterior`:`▲ +${diff}`;
+      goalCard.classList.remove('behind');
     }else{
-      goalDelta.textContent=`▼ ${diff}`;
+      goalDelta.textContent=`⚠️ Faltan ${Math.abs(diff)} para igualar`;
+      goalCard.classList.add('behind');
     }
     goalDelta.className='goal-delta '+(diff>=0?'up':'down');
   }
@@ -390,6 +579,18 @@ function render(employees,records){
         <div class="rank-medal">${medals[i]||(i+1)}</div>
         <div class="rank-name">${e.label}<div style="font-size:10px;color:var(--muted);font-weight:700;">${e.week} carro${e.week===1?'':'s'}</div></div>
         <div class="rank-count">$${e.money.toLocaleString()}</div>
+      </div>`).join('');
+
+  // ── Ranking de sucursales en el período ──
+  document.getElementById('branchPeriodLabel').textContent=customRange?'· período elegido':`· ${periodLabel}`;
+  const branchSorted=Object.values(byBranch).sort((a,b)=>b.money-a.money);
+  document.getElementById('branchRankList').innerHTML=branchSorted.length===0
+    ? '<div class="empty-state">Sin carros en este período todavía.</div>'
+    : branchSorted.map((b,i)=>`
+      <div class="rank-row">
+        <div class="rank-medal">${medals[i]||(i+1)}</div>
+        <div class="rank-name">${b.branch}<div style="font-size:10px;color:var(--muted);font-weight:700;">${b.count} carro${b.count===1?'':'s'}</div></div>
+        <div class="rank-count">$${b.money.toLocaleString()}</div>
       </div>`).join('');
 
   const days=[];
