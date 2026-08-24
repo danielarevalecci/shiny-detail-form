@@ -500,13 +500,32 @@ function renderServices(){
         <div class="svc-price">$${region.price}</div>
       </div>`;
   }
+  const regionKey=document.getElementById('fRegion').value;
+
+  // Agrupa SERVICES por "Key" — si hay varias filas con la misma Key pero
+  // distinta Region, elige el precio que corresponda a la región activa.
+  // Si una fila no tiene Region (vacía), es el precio por defecto/universal.
+  const byKey={};
   SERVICES.forEach(s=>{
-    const isSel=selectedSvcs.has(s.key);
+    if(!byKey[s.key])byKey[s.key]={label:s.label,sub:s.sub,priceDefault:null,priceByRegion:{}};
+    if(s.region){
+      byKey[s.key].priceByRegion[s.region]=s.price;
+    }else{
+      byKey[s.key].priceDefault=s.price;
+      byKey[s.key].label=s.label;
+      byKey[s.key].sub=s.sub;
+    }
+  });
+
+  Object.entries(byKey).forEach(([key,s])=>{
+    const price=(regionKey && s.priceByRegion[regionKey]!==undefined)?s.priceByRegion[regionKey]:s.priceDefault;
+    if(price===null)return; // no aplica a esta región y no hay precio por defecto
+    const isSel=selectedSvcs.has(key);
     html+=`
-      <div class="svc-item${isSel?' selected':''}" data-svc="${s.key}" data-price="${s.price}" onclick="toggleSvc(this)">
+      <div class="svc-item${isSel?' selected':''}" data-svc="${key}" data-price="${price}" onclick="toggleSvc(this)">
         <div class="svc-check">${isSel?'✓':''}</div>
         <div class="svc-body"><div class="svc-name">${s.label}</div><div class="svc-desc">${s.sub}</div></div>
-        <div class="svc-price">$${s.price}</div>
+        <div class="svc-price">$${price}</div>
       </div>`;
   });
   list.innerHTML=html;
