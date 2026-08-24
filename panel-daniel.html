@@ -59,6 +59,15 @@ main{max-width:760px;margin:0 auto;padding:20px;}
 .goal-target{font-size:14px;font-weight:700;color:rgba(255,255,255,.6);}
 .goal-track{height:10px;background:rgba(255,255,255,.15);border-radius:6px;overflow:hidden;}
 .goal-fill{height:100%;background:var(--gold);border-radius:6px;transition:width .5s;}
+.goal-fill.beat{background:var(--green);}
+.goal-dates{font-size:10px;font-weight:700;color:rgba(255,255,255,.5);margin-top:8px;}
+.goal-money{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.15);}
+.goal-money-label{font-size:11px;font-weight:800;color:rgba(255,255,255,.6);}
+.goal-money-val{font-size:16px;font-weight:900;}
+.period-toggle{display:flex;gap:6px;margin-bottom:16px;}
+.period-btn{flex:1;padding:9px;background:var(--white);border:2px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;color:var(--muted);}
+.period-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+.emp-money{font-size:12px;font-weight:800;color:var(--green);}
 .rank-row{display:flex;align-items:center;gap:12px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px;margin-bottom:8px;box-shadow:var(--shadow);}
 .rank-medal{font-size:20px;width:26px;text-align:center;flex-shrink:0;}
 .rank-name{flex:1;font-size:14px;font-weight:800;}
@@ -120,9 +129,15 @@ main{max-width:760px;margin:0 auto;padding:20px;}
 </div>
 
 <main>
+  <div class="period-toggle">
+    <button class="period-btn active" data-days="7" onclick="setPeriod(7,this)">Últimos 7 días</button>
+    <button class="period-btn" data-days="30" onclick="setPeriod(30,this)">Últimos 30 días</button>
+    <button class="period-btn" data-days="90" onclick="setPeriod(90,this)">Últimos 90 días</button>
+  </div>
+
   <div class="goal-card">
     <div class="goal-top">
-      <span class="goal-label">🎯 Meta semanal — superar la semana pasada</span>
+      <span class="goal-label" id="goalLabel">🎯 Meta — superar el período anterior</span>
       <span class="goal-delta" id="goalDelta"></span>
     </div>
     <div class="goal-nums">
@@ -130,18 +145,23 @@ main{max-width:760px;margin:0 auto;padding:20px;}
       <span class="goal-target" id="goalTarget"></span>
     </div>
     <div class="goal-track"><div class="goal-fill" id="goalFill" style="width:0%"></div></div>
+    <div class="goal-dates" id="goalDates"></div>
+    <div class="goal-money">
+      <span class="goal-money-label">💰 Generado</span>
+      <span class="goal-money-val" id="goalMoney">—</span>
+    </div>
   </div>
 
   <div class="kpi-row">
     <div class="kpi"><div class="kpi-val" id="kpiToday">—</div><div class="kpi-label">Carros hoy</div></div>
-    <div class="kpi"><div class="kpi-val" id="kpiWeek">—</div><div class="kpi-label">Esta semana</div></div>
+    <div class="kpi"><div class="kpi-val" id="kpiWeek">—</div><div class="kpi-label" id="kpiWeekLabel">Período</div></div>
     <div class="kpi"><div class="kpi-val" id="kpiActive">—</div><div class="kpi-label">Activos hoy</div></div>
   </div>
 
-  <div class="section-title">Por empleado</div>
+  <div class="section-title">Por empleado <span id="empPeriodLabel"></span></div>
   <div id="empCards"><div class="empty-state">Cargando...</div></div>
 
-  <div class="section-title">🏆 Ranking de la semana</div>
+  <div class="section-title">🏆 Ranking por $ generado <span id="rankPeriodLabel"></span></div>
   <div id="rankList"></div>
 
   <div class="section-title">Últimos 7 días</div>
@@ -200,6 +220,7 @@ if(localStorage.getItem('shinyDashboardUnlocked')==='1'){
 const SHEETS_URL='https://script.google.com/macros/s/AKfycbwE9v3w5n_CjRu9E0FshcIjf_c5RfCJrklg4UTye-AvnWj2pN9SImjOq_3V94vMvj4L/exec';
 
 let allRecordsCache=[];
+let cachedEmployees=[];
 let calYear, calMonth;
 
 async function load(){
@@ -241,48 +262,80 @@ function dayKeyOf(date){
   return date.toLocaleDateString('en-US');
 }
 
+let currentPeriodDays=7;
+const PERIOD_LABELS={7:'los últimos 7 días',30:'los últimos 30 días',90:'los últimos 90 días'};
+
+function setPeriod(days,btn){
+  currentPeriodDays=days;
+  document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  render(cachedEmployees,allRecordsCache);
+}
+
 function render(employees,records){
+  cachedEmployees=employees;
   const now=new Date();
   const todayKey=dayKeyOf(now);
-  const weekAgo=new Date(now.getTime()-7*24*60*60*1000);
-  const twoWeeksAgo=new Date(now.getTime()-14*24*60*60*1000);
+  const periodAgo=new Date(now.getTime()-currentPeriodDays*24*60*60*1000);
+  const twoPeriodsAgo=new Date(now.getTime()-currentPeriodDays*2*24*60*60*1000);
 
   const byEmp={};
-  employees.forEach(e=>{ byEmp[e.key]={label:e.label,today:0,week:0,last:null,weekRecords:[]}; });
+  employees.forEach(e=>{ byEmp[e.key]={label:e.label,today:0,week:0,money:0,last:null,weekRecords:[]}; });
 
-  let thisWeekTotal=0, lastWeekTotal=0;
+  let thisPeriodTotal=0, lastPeriodTotal=0, thisPeriodMoney=0, lastPeriodMoney=0;
 
   records.forEach(r=>{
     const empKey=r.employee||'Sin nombre';
-    if(!byEmp[empKey])byEmp[empKey]={label:empKey,today:0,week:0,last:null,weekRecords:[]};
+    if(!byEmp[empKey])byEmp[empKey]={label:empKey,today:0,week:0,money:0,last:null,weekRecords:[]};
     const d=new Date(r.timestamp);
     if(isNaN(d))return;
+    const amt=parseFloat(r.total)||0;
     if(!byEmp[empKey].last||d>byEmp[empKey].last.date){
       byEmp[empKey].last={date:d,plate:r.plate,model:r.model};
     }
-    if(d>=weekAgo){
+    if(d>=periodAgo){
       byEmp[empKey].week++;
+      byEmp[empKey].money+=amt;
       byEmp[empKey].weekRecords.push({date:d,plate:r.plate,model:r.model});
-      thisWeekTotal++;
-    } else if(d>=twoWeeksAgo){
-      lastWeekTotal++;
+      thisPeriodTotal++;
+      thisPeriodMoney+=amt;
+    } else if(d>=twoPeriodsAgo){
+      lastPeriodTotal++;
+      lastPeriodMoney+=amt;
     }
     if(dayKeyOf(d)===todayKey)byEmp[empKey].today++;
   });
 
-  // ── Meta semanal: superar la semana pasada ──
-  document.getElementById('goalCurrent').textContent=thisWeekTotal;
-  document.getElementById('goalTarget').textContent=`/ ${lastWeekTotal} de la semana pasada`;
+  // ── Meta del período — superar el período anterior ──
+  const periodLabel=PERIOD_LABELS[currentPeriodDays];
+  const fmtShort=d=>d.toLocaleDateString('es-MX',{day:'numeric',month:'short'});
+  document.getElementById('goalLabel').textContent=`🎯 Meta — superar el período anterior (${periodLabel})`;
+  document.getElementById('kpiWeekLabel').textContent=periodLabel.replace('los ','');
+  document.getElementById('empPeriodLabel').textContent=`· ${periodLabel}`;
+  document.getElementById('rankPeriodLabel').textContent=`· ${periodLabel}`;
+  document.getElementById('goalCurrent').textContent=thisPeriodTotal;
+  document.getElementById('goalTarget').textContent=`/ ${lastPeriodTotal} del período anterior`;
+  document.getElementById('goalDates').textContent=
+    `Este período: ${fmtShort(periodAgo)}–${fmtShort(now)}  ·  Anterior: ${fmtShort(twoPeriodsAgo)}–${fmtShort(periodAgo)}`;
+  document.getElementById('goalMoney').textContent=
+    `$${thisPeriodMoney.toLocaleString()} vs $${lastPeriodMoney.toLocaleString()}`;
   const goalFill=document.getElementById('goalFill');
   const goalDelta=document.getElementById('goalDelta');
-  if(lastWeekTotal===0){
-    goalFill.style.width=thisWeekTotal>0?'100%':'0%';
-    goalDelta.textContent='';
+  if(lastPeriodTotal===0){
+    goalFill.style.width=thisPeriodTotal>0?'100%':'0%';
+    goalFill.classList.toggle('beat',thisPeriodTotal>0);
+    goalDelta.textContent=thisPeriodTotal>0?'🎉 ¡Primer período con carros!':'';
+    goalDelta.className='goal-delta up';
   }else{
-    const pct=Math.min(100,Math.round(thisWeekTotal/lastWeekTotal*100));
-    goalFill.style.width=pct+'%';
-    const diff=thisWeekTotal-lastWeekTotal;
-    goalDelta.textContent=diff>=0?`▲ +${diff}`:`▼ ${diff}`;
+    const realPct=Math.round(thisPeriodTotal/lastPeriodTotal*100);
+    goalFill.style.width=Math.min(100,realPct)+'%';
+    const diff=thisPeriodTotal-lastPeriodTotal;
+    goalFill.classList.toggle('beat',diff>=0);
+    if(diff>=0){
+      goalDelta.textContent=realPct>=200?`🎉 ${(thisPeriodTotal/lastPeriodTotal).toFixed(1)}x el período anterior`:`▲ +${diff}`;
+    }else{
+      goalDelta.textContent=`▼ ${diff}`;
+    }
     goalDelta.className='goal-delta '+(diff>=0?'up':'down');
   }
 
@@ -307,7 +360,7 @@ function render(employees,records){
           byDay[label].push(rec);
         });
         const detailHtml=Object.keys(byDay).length===0
-          ? '<div class="empty-state" style="padding:8px 0;">Sin carros esta semana.</div>'
+          ? `<div class="empty-state" style="padding:8px 0;">Sin carros en ${periodLabel}.</div>`
           : Object.entries(byDay).map(([day,recs])=>`
               <div class="emp-detail-day">${day} · ${recs.length}</div>
               ${recs.map(rec=>`<div class="emp-detail-row"><span>${rec.date.toLocaleTimeString('es-MX',{hour:'numeric',minute:'2-digit'})}</span>${rec.plate||'—'} ${rec.model||''}</div>`).join('')}
@@ -319,21 +372,24 @@ function render(employees,records){
             <div class="emp-count">${e.today}<span> hoy</span></div>
           </div>
           <div class="emp-last">🕐 Último: ${lastText}</div>
-          <div class="emp-week">${e.week} esta semana</div>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:8px;">
+            <div class="emp-week">${e.week} · ${periodLabel}</div>
+            <div class="emp-money">💰 $${e.money.toLocaleString()}</div>
+          </div>
           <div class="emp-detail" id="detail-${idx}">${detailHtml}</div>
         </div>`;
       }).join('');
 
-  // ── Ranking semanal ──
-  const rankSorted=[...vals].sort((a,b)=>b.week-a.week).filter(e=>e.week>0);
+  // ── Ranking por $ generado en el período ──
+  const rankSorted=[...vals].sort((a,b)=>b.money-a.money).filter(e=>e.week>0);
   const medals=['🥇','🥈','🥉'];
   document.getElementById('rankList').innerHTML=rankSorted.length===0
-    ? '<div class="empty-state">Sin carros esta semana todavía.</div>'
+    ? '<div class="empty-state">Sin carros en este período todavía.</div>'
     : rankSorted.map((e,i)=>`
       <div class="rank-row">
         <div class="rank-medal">${medals[i]||(i+1)}</div>
-        <div class="rank-name">${e.label}</div>
-        <div class="rank-count">${e.week}</div>
+        <div class="rank-name">${e.label}<div style="font-size:10px;color:var(--muted);font-weight:700;">${e.week} carro${e.week===1?'':'s'}</div></div>
+        <div class="rank-count">$${e.money.toLocaleString()}</div>
       </div>`).join('');
 
   const days=[];
