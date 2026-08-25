@@ -341,7 +341,7 @@ function renderPulse(records){
     ? '<div class="empty-state" style="padding:6px 0;">Sin actividad todavía.</div>'
     : recent.map(r=>`
       <div class="live-feed-row">
-        <div><span class="live-feed-who">${r.employee||'—'}</span> <span class="live-feed-what">· ${r.branch||'—'} · ${r.plate||'—'} ${r.model||''}</span></div>
+        <div><span class="live-feed-who">${r.employee||'—'}</span> <span class="live-feed-what">· ${r.branch||'—'} · #${r.carNumber||'—'} · ${r.plate||'—'} ${r.model||''}</span></div>
         <div class="live-feed-time">${timeAgo(r._d)}</div>
       </div>`).join('');
 }
@@ -474,7 +474,7 @@ function render(employees,records){
     if(d>=periodStart&&d<=periodEnd){
       byEmp[empKey].week++;
       byEmp[empKey].money+=amt;
-      byEmp[empKey].weekRecords.push({date:d,plate:r.plate,model:r.model});
+      byEmp[empKey].weekRecords.push({date:d,plate:r.plate,model:r.model,carNumber:r.carNumber});
       thisPeriodTotal++;
       thisPeriodMoney+=amt;
 
@@ -552,7 +552,7 @@ function render(employees,records){
           ? `<div class="empty-state" style="padding:8px 0;">Sin carros en ${periodLabel}.</div>`
           : Object.entries(byDay).map(([day,recs])=>`
               <div class="emp-detail-day">${day} · ${recs.length}</div>
-              ${recs.map(rec=>`<div class="emp-detail-row"><span>${rec.date.toLocaleTimeString('es-MX',{hour:'numeric',minute:'2-digit'})}</span>${rec.plate||'—'} ${rec.model||''}</div>`).join('')}
+              ${recs.map(rec=>`<div class="emp-detail-row"><span>${rec.date.toLocaleTimeString('es-MX',{hour:'numeric',minute:'2-digit'})}</span>#${rec.carNumber||'—'} · ${rec.plate||'—'} ${rec.model||''}</div>`).join('')}
             `).join('');
 
         return `<div class="emp-card" onclick="toggleEmpDetail(${idx})">
@@ -635,7 +635,7 @@ function renderCalendar(){
       const day=d.getDate();
       if(!counts[day])counts[day]={count:0,records:[]};
       counts[day].count++;
-      counts[day].records.push({time:d,plate:r.plate,model:r.model,employee:r.employee});
+      counts[day].records.push({time:d,plate:r.plate,model:r.model,employee:r.employee,carNumber:r.carNumber});
     }
   });
 
@@ -671,7 +671,7 @@ function showDayDetail(day){
     return;
   }
   const rows=info.records.slice().sort((a,b)=>a.time-b.time).map(r=>`
-    <div class="emp-detail-row"><span>${r.time.toLocaleTimeString('es-MX',{hour:'numeric',minute:'2-digit'})} · ${r.employee||'—'}</span>${r.plate||'—'} ${r.model||''}</div>`).join('');
+    <div class="emp-detail-row"><span>${r.time.toLocaleTimeString('es-MX',{hour:'numeric',minute:'2-digit'})} · ${r.employee||'—'}</span>#${r.carNumber||'—'} · ${r.plate||'—'} ${r.model||''}</div>`).join('');
   panel.innerHTML=`<div class="cal-detail-card">
     <div class="section-title" style="margin-top:0;">${day} de ${months[calMonth]} — ${info.count} carro${info.count===1?'':'s'}</div>
     ${rows}
