@@ -179,7 +179,12 @@ select option{background:var(--white);}
   <div class="card">
     <div class="card-title">Región <span class="req">*</span></div>
     <div class="region-grid" id="regionGrid"></div>
-    <input type="text" id="fRegionCustom" placeholder="Escribe tu región (ej. FF)" style="display:none;margin-top:10px;"/>
+    <div id="regionSubWrap" style="display:none;margin-top:10px;">
+      <select id="fRegionSub" onchange="onRegionSubChange()">
+        <option value="">Selecciona la sucursal...</option>
+      </select>
+      <input type="text" id="fRegionCustom" placeholder="Escribe tu región (ej. FF)" style="display:none;margin-top:10px;"/>
+    </div>
     <input type="hidden" id="fRegion"/>
   </div>
 </div>
@@ -483,11 +488,20 @@ function closeHistory(){
 
 function renderRegions(){
   const grid=document.getElementById('regionGrid');
-  grid.innerHTML=REGIONS.map(r=>`
-    <div class="r-chip" data-key="${r.key}" onclick="pickRegion(this)">
-      <div class="r-chip-label">${r.label}</div>
-      <div class="r-chip-sub">${r.sub} $${r.price}</div>
-    </div>`).join('');
+  const national=REGIONS.find(r=>r.autoFillBranch)||REGIONS[0];
+  const others=REGIONS.filter(r=>r!==national);
+  grid.innerHTML=`
+    <div class="r-chip" data-key="${national.key}" onclick="pickMainRegion(this,'national')">
+      <div class="r-chip-label">${national.label}</div>
+      <div class="r-chip-sub">${national.sub} $${national.price}</div>
+    </div>
+    <div class="r-chip" data-key="__other__" onclick="pickMainRegion(this,'other')">
+      <div class="r-chip-label">🏢 Otra sucursal</div>
+      <div class="r-chip-sub">Selecciona cuál</div>
+    </div>`;
+  const sel=document.getElementById('fRegionSub');
+  sel.innerHTML='<option value="">Selecciona la sucursal...</option>'+
+    others.map(r=>`<option value="${r.key}">${r.label} — $${r.price}</option>`).join('');
 }
 
 function renderServices(){
@@ -590,12 +604,40 @@ function pickEmp(el){
   el.classList.add('selected');
   document.getElementById('fEmployee').value=el.dataset.name;
 }
-function pickRegion(el){
+function pickMainRegion(el,type){
   document.querySelectorAll('.r-chip').forEach(c=>c.classList.remove('selected'));
   el.classList.add('selected');
-  const key=el.dataset.key;
-  document.getElementById('fRegion').value=key;
+  const subWrap=document.getElementById('regionSubWrap');
+  const customInput=document.getElementById('fRegionCustom');
+  if(type==='national'){
+    subWrap.style.display='none';
+    document.getElementById('fRegionSub').value='';
+    customInput.style.display='none';
+    customInput.value='';
+    const national=REGIONS.find(r=>r.autoFillBranch)||REGIONS[0];
+    document.getElementById('fRegion').value=national.key;
+    applyRegionSideEffects(national);
+  }else{
+    subWrap.style.display='block';
+    document.getElementById('fRegion').value='';
+    customInput.style.display='none';
+    customInput.value='';
+    const note=document.getElementById('priceNote');
+    if(note){
+      note.textContent='⚠️ Selecciona la sucursal específica abajo.';
+      note.style.background='#fff3cd';
+      note.style.borderColor='#f0a500';
+      note.style.color='#7c3d00';
+    }
+    selectedSvcs.clear();
+    renderServices();
+  }
+}
+
+function onRegionSubChange(){
+  const key=document.getElementById('fRegionSub').value;
   const region=REGIONS.find(r=>r.key===key);
+  document.getElementById('fRegion').value=key;
   const customInput=document.getElementById('fRegionCustom');
   if(key==='Otro'){
     customInput.style.display='block';
@@ -604,8 +646,12 @@ function pickRegion(el){
     customInput.style.display='none';
     customInput.value='';
   }
+  if(region)applyRegionSideEffects(region);
+}
+
+function applyRegionSideEffects(region){
   const branchEl=document.getElementById('fBranch');
-  if(region && region.autoFillBranch){
+  if(region.autoFillBranch){
     branchEl.value=region.key;
     branchEl.readOnly=true;
     branchEl.style.background='#f0fdf4';
@@ -620,7 +666,7 @@ function pickRegion(el){
     branchEl.focus();
   }
   const note=document.getElementById('priceNote');
-  if(note && region){
+  if(note){
     note.textContent=`✅ Región "${region.label}" seleccionada — Detallado Completo: $${region.price}`;
     note.style.background='#d4edda';
     note.style.borderColor='#28a745';
@@ -865,6 +911,9 @@ function resetAll(){
   document.querySelectorAll('input[type=text],input[type=number],input[type=url]').forEach(i=>{i.value='';i.classList.remove('ai-filled');});
   document.getElementById('fEmployee').value='';document.getElementById('fRegion').value='';
   document.getElementById('fRegionCustom').style.display='none';
+  document.getElementById('regionSubWrap').style.display='none';
+  const regionSub=document.getElementById('fRegionSub');
+  if(regionSub)regionSub.value='';
   const br=document.getElementById('fBranch');if(br){br.readOnly=false;br.style.background='';br.style.borderColor='';br.style.color='';}
   document.querySelectorAll('.pz-prev').forEach(p=>{p.src='';p.classList.remove('show');});
   document.querySelectorAll('.pz-overlay,.pz-done').forEach(e=>e.classList.remove('show'));
