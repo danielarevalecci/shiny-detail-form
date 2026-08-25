@@ -172,20 +172,21 @@ select option{background:var(--white);}
     <input type="hidden" id="fEmployee"/>
   </div>
   <div class="card">
+    <div class="card-title">Región <span class="req">*</span></div>
+    <div class="region-grid" id="regionGrid"></div>
+    <input type="hidden" id="fRegion"/>
+  </div>
+  <div class="card">
     <div class="card-title">Datos de la sucursal</div>
     <div class="field"><div class="flabel">Recibido por (Manager) <span class="req">*</span></div><input type="text" id="fManager" placeholder="Nombre del manager"/></div>
     <div class="field"><div class="flabel">Número de sucursal <span class="req">*</span></div><input type="text" id="fBranch" placeholder="ej. 1212 o A-12"/></div>
-  </div>
-  <div class="card">
-    <div class="card-title">Región <span class="req">*</span></div>
-    <div class="region-grid" id="regionGrid"></div>
-    <div id="regionSubWrap" style="display:none;margin-top:10px;">
-      <select id="fRegionSub" onchange="onRegionSubChange()">
-        <option value="">Selecciona la sucursal...</option>
+    <div class="field" id="zonaField" style="display:none;">
+      <div class="flabel">Zona de la sucursal <span class="req">*</span></div>
+      <select id="fZona" onchange="onZonaChange()">
+        <option value="">Selecciona la zona...</option>
       </select>
-      <input type="text" id="fRegionCustom" placeholder="Escribe tu región (ej. FF)" style="display:none;margin-top:10px;"/>
+      <input type="text" id="fZonaCustom" placeholder="Escribe tu zona" style="display:none;margin-top:10px;"/>
     </div>
-    <input type="hidden" id="fRegion"/>
   </div>
 </div>
 
@@ -367,6 +368,9 @@ let EMPLOYEES=[
   {key:'José',label:'José'},{key:'Jaime',label:'Jaime'},{key:'Adrian',label:'Adrian'},
   {key:'Noe',label:'Noe'},{key:'Personal 5',label:'Personal 5'}
 ];
+let ZONES=[
+  {key:'CC',label:'CC'},{key:'DD',label:'DD'},{key:'EE',label:'EE'},{key:'Otro',label:'Otra zona'}
+];
 let historyRecords=[];
 
 async function loadConfig(){
@@ -376,12 +380,14 @@ async function loadConfig(){
     if(data.regions && data.regions.length) REGIONS=data.regions;
     if(data.services && data.services.length) SERVICES=data.services;
     if(data.employees && data.employees.length) EMPLOYEES=data.employees;
+    if(data.zones && data.zones.length) ZONES=data.zones;
   }catch(e){
     console.warn('No se pudo cargar Config, usando valores por defecto:',e);
   }
   renderRegions();
   renderServices();
   renderEmployees();
+  renderZonaOptions();
 }
 
 function renderEmployees(){
@@ -488,20 +494,18 @@ function closeHistory(){
 
 function renderRegions(){
   const grid=document.getElementById('regionGrid');
-  const national=REGIONS.find(r=>r.autoFillBranch)||REGIONS[0];
-  const others=REGIONS.filter(r=>r!==national);
-  grid.innerHTML=`
-    <div class="r-chip" data-key="${national.key}" onclick="pickMainRegion(this,'national')">
-      <div class="r-chip-label">${national.label}</div>
-      <div class="r-chip-sub">${national.sub} $${national.price}</div>
-    </div>
-    <div class="r-chip" data-key="__other__" onclick="pickMainRegion(this,'other')">
-      <div class="r-chip-label">🏢 Otra sucursal</div>
-      <div class="r-chip-sub">Selecciona cuál</div>
-    </div>`;
-  const sel=document.getElementById('fRegionSub');
-  sel.innerHTML='<option value="">Selecciona la sucursal...</option>'+
-    others.map(r=>`<option value="${r.key}">${r.label} — $${r.price}</option>`).join('');
+  grid.innerHTML=REGIONS.map(r=>`
+    <div class="r-chip" data-key="${r.key}" onclick="pickRegion(this)">
+      <div class="r-chip-label">${r.label}</div>
+      <div class="r-chip-sub">${r.sub} $${r.price}</div>
+    </div>`).join('');
+}
+
+function renderZonaOptions(){
+  const sel=document.getElementById('fZona');
+  if(!sel)return;
+  sel.innerHTML='<option value="">Selecciona la zona...</option>'+
+    ZONES.map(z=>`<option value="${z.key}">${z.label}</option>`).join('');
 }
 
 function renderServices(){
@@ -576,10 +580,14 @@ function updateNav(){
 function validate(n){
   if(n===0){
     if(!document.getElementById('fEmployee').value){toast('Toca tu nombre 👆');return false;}
+    if(!document.getElementById('fRegion').value){toast('Selecciona tu región');return false;}
     if(!document.getElementById('fManager').value.trim()){toast('Ingresa el nombre del manager');return false;}
     if(!document.getElementById('fBranch').value.trim()){toast('Ingresa el número de sucursal');return false;}
-    if(!document.getElementById('fRegion').value){toast('Selecciona tu región');return false;}
-    if(document.getElementById('fRegion').value==='Otro' && !document.getElementById('fRegionCustom').value.trim()){toast('Escribe el nombre de tu región');return false;}
+    if(document.getElementById('zonaField').style.display!=='none'){
+      const zonaKey=document.getElementById('fZona').value;
+      if(!zonaKey){toast('Selecciona la zona de la sucursal');return false;}
+      if(zonaKey==='Otro' && !document.getElementById('fZonaCustom').value.trim()){toast('Escribe el nombre de tu zona');return false;}
+    }
   }
   if(n===1){
     const p=document.getElementById('fPlate').value||document.getElementById('fPlate2').value;
@@ -593,65 +601,20 @@ function validate(n){
   }
   return true;
 }
-function getRegionValueForSave(){
-  const key=document.getElementById('fRegion').value;
-  if(key==='Otro')return document.getElementById('fRegionCustom').value.trim()||'Otro';
-  return key;
-}
 
 function pickEmp(el){
   document.querySelectorAll('.emp-card').forEach(c=>c.classList.remove('selected'));
   el.classList.add('selected');
   document.getElementById('fEmployee').value=el.dataset.name;
 }
-function pickMainRegion(el,type){
+function pickRegion(el){
   document.querySelectorAll('.r-chip').forEach(c=>c.classList.remove('selected'));
   el.classList.add('selected');
-  const subWrap=document.getElementById('regionSubWrap');
-  const customInput=document.getElementById('fRegionCustom');
-  if(type==='national'){
-    subWrap.style.display='none';
-    document.getElementById('fRegionSub').value='';
-    customInput.style.display='none';
-    customInput.value='';
-    const national=REGIONS.find(r=>r.autoFillBranch)||REGIONS[0];
-    document.getElementById('fRegion').value=national.key;
-    applyRegionSideEffects(national);
-  }else{
-    subWrap.style.display='block';
-    document.getElementById('fRegion').value='';
-    customInput.style.display='none';
-    customInput.value='';
-    const note=document.getElementById('priceNote');
-    if(note){
-      note.textContent='⚠️ Selecciona la sucursal específica abajo.';
-      note.style.background='#fff3cd';
-      note.style.borderColor='#f0a500';
-      note.style.color='#7c3d00';
-    }
-    selectedSvcs.clear();
-    renderServices();
-  }
-}
-
-function onRegionSubChange(){
-  const key=document.getElementById('fRegionSub').value;
-  const region=REGIONS.find(r=>r.key===key);
+  const key=el.dataset.key;
   document.getElementById('fRegion').value=key;
-  const customInput=document.getElementById('fRegionCustom');
-  if(key==='Otro'){
-    customInput.style.display='block';
-    customInput.focus();
-  }else{
-    customInput.style.display='none';
-    customInput.value='';
-  }
-  if(region)applyRegionSideEffects(region);
-}
-
-function applyRegionSideEffects(region){
+  const region=REGIONS.find(r=>r.key===key);
   const branchEl=document.getElementById('fBranch');
-  if(region.autoFillBranch){
+  if(region && region.autoFillBranch){
     branchEl.value=region.key;
     branchEl.readOnly=true;
     branchEl.style.background='#f0fdf4';
@@ -665,8 +628,18 @@ function applyRegionSideEffects(region){
     branchEl.style.color='';
     branchEl.focus();
   }
+  // El campo Zona solo aplica a sucursales que no son la de autollenado (ej. no-National)
+  const zonaField=document.getElementById('zonaField');
+  if(region && !region.autoFillBranch){
+    zonaField.style.display='block';
+  }else{
+    zonaField.style.display='none';
+    document.getElementById('fZona').value='';
+    document.getElementById('fZonaCustom').style.display='none';
+    document.getElementById('fZonaCustom').value='';
+  }
   const note=document.getElementById('priceNote');
-  if(note){
+  if(note && region){
     note.textContent=`✅ Región "${region.label}" seleccionada — Detallado Completo: $${region.price}`;
     note.style.background='#d4edda';
     note.style.borderColor='#28a745';
@@ -674,6 +647,25 @@ function applyRegionSideEffects(region){
   }
   selectedSvcs.clear();
   renderServices();
+}
+
+function onZonaChange(){
+  const key=document.getElementById('fZona').value;
+  const customInput=document.getElementById('fZonaCustom');
+  if(key==='Otro'){
+    customInput.style.display='block';
+    customInput.focus();
+  }else{
+    customInput.style.display='none';
+    customInput.value='';
+  }
+}
+
+function getZonaValueForSave(){
+  const key=document.getElementById('fZona').value;
+  if(!key)return'';
+  if(key==='Otro')return document.getElementById('fZonaCustom').value.trim()||'Otro';
+  return key;
 }
 function setupPhoto(inId,prevId,ovrId,doneId,phId,isVin){
   document.getElementById(inId).addEventListener('change',async(e)=>{
@@ -781,7 +773,7 @@ function buildReview(){
   const svcs=[...selectedSvcs].join(' + ');
   const total=document.getElementById('totalVal').textContent;
   const blocks=[
-    {s:'Empleado',rows:[['Nombre',document.getElementById('fEmployee').value],['Manager',document.getElementById('fManager').value],['Sucursal',document.getElementById('fBranch').value],['Región',getRegionValueForSave()]]},
+    {s:'Empleado',rows:[['Nombre',document.getElementById('fEmployee').value],['Manager',document.getElementById('fManager').value],['Sucursal',document.getElementById('fBranch').value],['Región',document.getElementById('fRegion').value],['Zona',getZonaValueForSave()]]},
     {s:'Vehículo',rows:[['Número de Auto',carNumber],['Placa',plate],['VIN',vin],['Modelo',model]]},
     {s:'Servicio',rows:[['Servicios',svcs],['Total',total]]},
   ];
@@ -804,7 +796,8 @@ async function submitData(){
     employee:document.getElementById('fEmployee').value,
     branch:document.getElementById('fBranch').value,
     manager:document.getElementById('fManager').value,
-    region:getRegionValueForSave(),
+    region:document.getElementById('fRegion').value,
+    zona:getZonaValueForSave(),
     plate,vin,model,carNumber,
     serviceType:svcs,
     subtotal:String(totalNum),total:String(totalNum),
@@ -843,6 +836,7 @@ function buildSuccess(p,pending){
       <div class="rv-section">Registro guardado</div>
       <div class="rv-row"><span class="rv-k">Empleado</span><span class="rv-v">${p.employee}</span></div>
       <div class="rv-row"><span class="rv-k">N° Auto</span><span class="rv-v">${p.carNumber||'—'}</span></div>
+      ${p.zona?`<div class="rv-row"><span class="rv-k">Zona</span><span class="rv-v">${p.zona}</span></div>`:''}
       <div class="rv-row"><span class="rv-k">Placa</span><span class="rv-v">${p.plate||'—'}</span></div>
       <div class="rv-row"><span class="rv-k">Modelo</span><span class="rv-v">${p.model||'—'}</span></div>
       <div class="rv-row"><span class="rv-k">Servicios</span><span class="rv-v">${p.serviceType||'—'}</span></div>
@@ -910,10 +904,10 @@ function resetAll(){
   cur=0;carB64=null;vinB64=null;aiDone=false;selectedSvcs=new Set();
   document.querySelectorAll('input[type=text],input[type=number],input[type=url]').forEach(i=>{i.value='';i.classList.remove('ai-filled');});
   document.getElementById('fEmployee').value='';document.getElementById('fRegion').value='';
-  document.getElementById('fRegionCustom').style.display='none';
-  document.getElementById('regionSubWrap').style.display='none';
-  const regionSub=document.getElementById('fRegionSub');
-  if(regionSub)regionSub.value='';
+  document.getElementById('zonaField').style.display='none';
+  document.getElementById('fZona').value='';
+  document.getElementById('fZonaCustom').style.display='none';
+  document.getElementById('fZonaCustom').value='';
   const br=document.getElementById('fBranch');if(br){br.readOnly=false;br.style.background='';br.style.borderColor='';br.style.color='';}
   document.querySelectorAll('.pz-prev').forEach(p=>{p.src='';p.classList.remove('show');});
   document.querySelectorAll('.pz-overlay,.pz-done').forEach(e=>e.classList.remove('show'));
