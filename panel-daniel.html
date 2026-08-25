@@ -460,14 +460,14 @@ function render(employees,records){
   }
 
   const byEmp={};
-  employees.forEach(e=>{ byEmp[e.key]={label:e.label,today:0,week:0,money:0,last:null,weekRecords:[]}; });
+  employees.forEach(e=>{ byEmp[e.key]={label:e.label,today:0,week:0,prevWeek:0,money:0,last:null,weekRecords:[]}; });
   const byBranch={};
 
   let thisPeriodTotal=0, lastPeriodTotal=0, thisPeriodMoney=0, lastPeriodMoney=0;
 
   records.forEach(r=>{
     const empKey=r.employee||'Sin nombre';
-    if(!byEmp[empKey])byEmp[empKey]={label:empKey,today:0,week:0,money:0,last:null,weekRecords:[]};
+    if(!byEmp[empKey])byEmp[empKey]={label:empKey,today:0,week:0,prevWeek:0,money:0,last:null,weekRecords:[]};
     const d=new Date(r.timestamp);
     if(isNaN(d))return;
     const amt=parseFloat(r.total)||0;
@@ -486,6 +486,7 @@ function render(employees,records){
       byBranch[branchKey].count++;
       byBranch[branchKey].money+=amt;
     } else if(d>=prevStart&&d<prevEnd){
+      byEmp[empKey].prevWeek++;
       lastPeriodTotal++;
       lastPeriodMoney+=amt;
     }
@@ -576,9 +577,10 @@ function render(employees,records){
             <div class="emp-count">${e.today}<span> hoy</span></div>
           </div>
           <div class="emp-last">🕐 Último: ${lastText}</div>
-          <div style="display:flex;gap:8px;align-items:center;margin-top:8px;">
+          <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap;">
             <div class="emp-week">${e.week} · ${periodLabel}</div>
             <div class="emp-money">💰 $${e.money.toLocaleString()}</div>
+            ${e.week>0||e.prevWeek>0?`<div class="emp-week" style="color:${e.week>=e.prevWeek?'#15803d':'#a32d2d'};background:${e.week>=e.prevWeek?'var(--green-bg)':'#fcebeb'};">${e.week>=e.prevWeek?'▲ +':'▼ '}${e.week-e.prevWeek} vs anterior</div>`:''}
           </div>
           <div class="emp-detail" id="detail-${idx}">${detailHtml}</div>
         </div>`;
