@@ -216,6 +216,9 @@ main{max-width:760px;margin:0 auto;padding:20px;}
     <div class="kpi"><div class="kpi-val" id="kpiActive">—</div><div class="kpi-label">Activos hoy</div></div>
   </div>
 
+  <div class="section-title">🏆 Ranking de hoy</div>
+  <div id="todayRankList"></div>
+
   <div class="section-title">Por empleado <span id="empPeriodLabel"></span></div>
   <div id="empCards"><div class="empty-state">Cargando...</div></div>
 
@@ -532,6 +535,18 @@ function render(employees,records){
   document.getElementById('kpiToday').textContent=vals.reduce((s,e)=>s+e.today,0);
   document.getElementById('kpiWeek').textContent=vals.reduce((s,e)=>s+e.week,0);
   document.getElementById('kpiActive').textContent=vals.filter(e=>e.today>0).length;
+
+  // ── Ranking de hoy — quién lleva más carros lavados hoy ──
+  const todayMedals=['🥇','🥈','🥉'];
+  const todaySorted=[...vals].sort((a,b)=>b.today-a.today).filter(e=>e.today>0);
+  document.getElementById('todayRankList').innerHTML=todaySorted.length===0
+    ? '<div class="empty-state">Sin carros hoy todavía.</div>'
+    : todaySorted.map((e,i)=>`
+      <div class="rank-row">
+        <div class="rank-medal">${todayMedals[i]||(i+1)}</div>
+        <div class="rank-name">${e.label}</div>
+        <div class="rank-count">${e.today}</div>
+      </div>`).join('');
 
   const sorted=Object.entries(byEmp).sort((a,b)=>b[1].today-a[1].today);
   document.getElementById('empCards').innerHTML=sorted.length===0
