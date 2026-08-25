@@ -824,7 +824,7 @@ async function submitData(){
   let totalNum=0;
   document.querySelectorAll('.svc-item.selected').forEach(el=>totalNum+=parseInt(el.dataset.price)||0);
   const payload={
-    timestamp:new Date().toLocaleString('en-US'),
+    timestamp:new Date().toISOString(),
     employee:document.getElementById('fEmployee').value,
     branch:document.getElementById('fBranch').value,
     manager:document.getElementById('fManager').value,
@@ -897,7 +897,7 @@ async function syncPending(){
       if(current.length===0)break;
       const item=current[0];
       try{
-        item.timestamp=new Date().toLocaleString('en-US'); // hora real del reintento
+        item.timestamp=new Date().toISOString(); // hora real del reintento, universal
         const res=await fetch(SHEETS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(item)});
         const data=await res.json();
         if(!data.success)throw new Error('fail');
