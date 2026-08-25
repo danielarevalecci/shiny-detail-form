@@ -258,9 +258,21 @@ select option{background:var(--white);}
       <div class="pz-done" id="vinDone">✓</div>
       <div id="vinPh"><div class="pz-icon">🔢</div><div class="pz-label">Número VIN</div><div class="pz-sub">Tablero o calcomanía del marco</div></div>
     </div>
-    <button class="scan-cta" id="scanBtn" disabled onclick="runScan()">
-      <span id="scanBtnTxt">✦  Escanear con IA</span>
-    </button>
+    <div class="photo-zone" id="keyZone">
+      <input type="file" id="keyInput" accept="image/*" capture="environment"/>
+      <img class="pz-prev" id="keyPrev"/>
+      <div class="pz-overlay" id="keyOvr"><div class="pz-change">Cambiar foto</div></div>
+      <div class="pz-done" id="keyDone">✓</div>
+      <div id="keyPh"><div class="pz-icon">🔑</div><div class="pz-label">Llavero (opcional)</div><div class="pz-sub">Número de Auto — se lee solo</div></div>
+    </div>
+    <div style="display:flex;gap:9px;margin-bottom:11px;">
+      <button class="scan-cta" id="scanBtn" disabled onclick="runScan()" style="margin-bottom:0;flex:2;">
+        <span id="scanBtnTxt">✦  Escanear con IA</span>
+      </button>
+      <button class="scan-cta" id="manualBtn" onclick="showManualEntry()" style="margin-bottom:0;flex:1;background:var(--bg);color:var(--text);border:2px solid var(--border);">
+        ✏️ Manual
+      </button>
+    </div>
     <div class="scan-anim" id="scanAnim">
       <div class="scan-rings"><div class="ring"></div><div class="ring"></div><div class="ring"></div><div class="scan-dot">✦</div></div>
       <div class="scan-msg" id="scanMsg">Analizando imágenes...</div>
@@ -352,7 +364,7 @@ select option{background:var(--white);}
 <div class="toast" id="toast"></div>
 
 <script>
-let cur=0, carB64=null, vinB64=null, aiDone=false;
+let cur=0, carB64=null, vinB64=null, keyB64=null, aiDone=false;
 let selectedSvcs=new Set();
 
 var SHEETS_URL='https://script.google.com/macros/s/AKfycbwE9v3w5n_CjRu9E0FshcIjf_c5RfCJrklg4UTye-AvnWj2pN9SImjOq_3V94vMvj4L/exec';
@@ -667,7 +679,7 @@ function getZonaValueForSave(){
   if(key==='Otro')return document.getElementById('fZonaCustom').value.trim()||'Otro';
   return key;
 }
-function setupPhoto(inId,prevId,ovrId,doneId,phId,isVin){
+function setupPhoto(inId,prevId,ovrId,doneId,phId,kind){
   document.getElementById(inId).addEventListener('change',async(e)=>{
     const f=e.target.files[0];if(!f)return;
     const url=URL.createObjectURL(f);
@@ -676,14 +688,17 @@ function setupPhoto(inId,prevId,ovrId,doneId,phId,isVin){
     document.getElementById(ovrId).classList.add('show');
     document.getElementById(doneId).classList.add('show');
     document.getElementById(phId).style.display='none';
-    document.getElementById(isVin?'vinZone':'carZone').classList.add('has-photo');
+    document.getElementById(kind+'Zone').classList.add('has-photo');
     const b64=await f2b64(f);
-    if(isVin)vinB64=b64;else carB64=b64;
+    if(kind==='vin')vinB64=b64;
+    else if(kind==='key')keyB64=b64;
+    else carB64=b64;
     checkScan();
   });
 }
-setupPhoto('carInput','carPrev','carOvr','carDone','carPh',false);
-setupPhoto('vinInput','vinPrev','vinOvr','vinDone','vinPh',true);
+setupPhoto('carInput','carPrev','carOvr','carDone','carPh','car');
+setupPhoto('vinInput','vinPrev','vinOvr','vinDone','vinPh','vin');
+setupPhoto('keyInput','keyPrev','keyOvr','keyDone','keyPh','key');
 function f2b64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=(e)=>{const img=new Image();img.onload=()=>{const c=document.createElement('canvas');const max=1600;let w=img.width,h=img.height;if(w>max){h=Math.round(h*max/w);w=max;}if(h>max){w=Math.round(w*max/h);h=max;}c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);res(c.toDataURL('image/jpeg',0.92).split(',')[1]);};img.onerror=rej;img.src=e.target.result;};r.onerror=rej;r.readAsDataURL(file);});}
 function checkScan(){
   document.getElementById('scanBtn').disabled=!(carB64||vinB64);
@@ -704,7 +719,12 @@ async function runScan(){
     content.push({type:'image',source:{type:'base64',media_type:'image/jpeg',data:vinB64}});
     content.push({type:'text',text:'Photo with a VIN number. Read the exact VIN string. Use null if unreadable.'});
   }
-  content.push({type:'text',text:'Reply ONLY with valid JSON, no backticks, no extra text:\n{"make":"...","model":"...","year":"...","plate":"...","vin":"...","confidence":"high|medium|low"}'});
+  if(keyB64){
+    msg.textContent='Leyendo el llavero...';
+    content.push({type:'image',source:{type:'base64',media_type:'image/jpeg',data:keyB64}});
+    content.push({type:'text',text:'Photo of a car rental keychain/key tag. Read the car number/unit number printed or written on it (usually a short number, 1-4 digits). Use null if unreadable.'});
+  }
+  content.push({type:'text',text:'Reply ONLY with valid JSON, no backticks, no extra text:\n{"make":"...","model":"...","year":"...","plate":"...","vin":"...","carNumber":"...","confidence":"high|medium|low"}'});
   try{
     msg.textContent='Procesando con IA...';sub.textContent='¡Ya casi!';
     const res=await fetch('/.netlify/functions/scan',{
@@ -723,6 +743,7 @@ async function runScan(){
     if(ai.vin){const el=document.getElementById('fVin');el.value=ai.vin;el.classList.add('ai-filled');}
     const ms=[ai.make,ai.model,ai.year].filter(Boolean).join(' ');
     if(ms){const el=document.getElementById('fModel');el.value=ms;el.classList.add('ai-filled');}
+    if(ai.carNumber){const el=document.getElementById('fCarNumber');el.value=ai.carNumber;el.classList.add('ai-filled');}
     aiDone=true;
     anim.classList.remove('show');
     document.getElementById('scanBtn').style.display='flex';
@@ -740,12 +761,20 @@ async function runScan(){
   }
 }
 
+// Botón "Manual" — disponible siempre, sin necesidad de foto ni de
+// haber intentado el escaneo con IA. Pensado para emergencias/prisa.
+function showManualEntry(){
+  document.getElementById('manualCard').style.display='block';
+  document.getElementById('fPlate2').focus();
+  document.getElementById('manualCard').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
 function retakePhotos(){
-  carB64=null;vinB64=null;aiDone=false;
+  carB64=null;vinB64=null;keyB64=null;aiDone=false;
   document.querySelectorAll('.pz-prev').forEach(p=>{p.src='';p.classList.remove('show');});
   document.querySelectorAll('.pz-overlay,.pz-done').forEach(e=>e.classList.remove('show'));
   document.querySelectorAll('.photo-zone').forEach(z=>z.classList.remove('has-photo'));
-  document.querySelectorAll('#carPh,#vinPh').forEach(e=>e.style.display='');
+  document.querySelectorAll('#carPh,#vinPh,#keyPh').forEach(e=>e.style.display='');
   document.getElementById('vCard').style.display='none';
   document.getElementById('manualCard').style.display='none';
   document.getElementById('scanBtn').disabled=true;
@@ -901,7 +930,7 @@ function updatePendingBadge(){
 window.addEventListener('online',syncPending);
 setInterval(syncPending,20000);
 function resetAll(){
-  cur=0;carB64=null;vinB64=null;aiDone=false;selectedSvcs=new Set();
+  cur=0;carB64=null;vinB64=null;keyB64=null;aiDone=false;selectedSvcs=new Set();
   document.querySelectorAll('input[type=text],input[type=number],input[type=url]').forEach(i=>{i.value='';i.classList.remove('ai-filled');});
   document.getElementById('fEmployee').value='';document.getElementById('fRegion').value='';
   document.getElementById('zonaField').style.display='none';
@@ -912,7 +941,7 @@ function resetAll(){
   document.querySelectorAll('.pz-prev').forEach(p=>{p.src='';p.classList.remove('show');});
   document.querySelectorAll('.pz-overlay,.pz-done').forEach(e=>e.classList.remove('show'));
   document.querySelectorAll('.photo-zone').forEach(z=>z.classList.remove('has-photo'));
-  document.querySelectorAll('#carPh,#vinPh').forEach(e=>e.style.display='');
+  document.querySelectorAll('#carPh,#vinPh,#keyPh').forEach(e=>e.style.display='');
   document.getElementById('scanAnim').classList.remove('show');
   document.getElementById('scanBtn').style.display='flex';document.getElementById('scanBtn').disabled=true;
   document.getElementById('vCard').style.display='none';document.getElementById('manualCard').style.display='none';
