@@ -179,6 +179,7 @@ select option{background:var(--white);}
   <div class="card">
     <div class="card-title">Región <span class="req">*</span></div>
     <div class="region-grid" id="regionGrid"></div>
+    <input type="text" id="fRegionCustom" placeholder="Escribe tu región (ej. FF)" style="display:none;margin-top:10px;"/>
     <input type="hidden" id="fRegion"/>
   </div>
 </div>
@@ -266,6 +267,7 @@ select option{background:var(--white);}
     <div class="field"><div class="flabel">Placa</div><input type="text" id="fPlate" placeholder="ej. XKX7590"/></div>
     <div class="field"><div class="flabel">Número VIN</div><input type="text" id="fVin" placeholder="VIN de 17 caracteres" style="font-family:monospace;font-size:13px;letter-spacing:1px;"/></div>
     <div class="field"><div class="flabel">Modelo y Año</div><input type="text" id="fModel" placeholder="ej. Chevrolet Tahoe 2025"/></div>
+    <div class="field"><div class="flabel">Número de Auto (llavero) <span class="req">*</span></div><input type="text" id="fCarNumber" placeholder="ej. 42" inputmode="numeric"/></div>
     <div id="vCardOk" style="background:#f0fdf4;border:1px solid #86efac;border-radius:9px;padding:9px 13px;display:flex;align-items:center;gap:8px;margin-top:4px;">
       <span style="font-size:16px;">✅</span>
       <span style="font-size:12px;font-weight:700;color:#15803d;">¡Datos extraídos! Edita si es necesario.</span>
@@ -281,6 +283,7 @@ select option{background:var(--white);}
     <div class="field"><div class="flabel">Placa</div><input type="text" id="fPlate2" placeholder="ej. XKX7590"/></div>
     <div class="field"><div class="flabel">Número VIN</div><input type="text" id="fVin2" placeholder="VIN de 17 caracteres" style="font-family:monospace;font-size:13px;"/></div>
     <div class="field"><div class="flabel">Modelo y Año</div><input type="text" id="fModel2" placeholder="ej. Chevrolet Tahoe 2025"/></div>
+    <div class="field"><div class="flabel">Número de Auto (llavero) <span class="req">*</span></div><input type="text" id="fCarNumber2" placeholder="ej. 42" inputmode="numeric"/></div>
   </div>
 </div>
 
@@ -464,7 +467,7 @@ function renderHistory(filterEmp){
     const dayTotal=items.reduce((s,r)=>s+(parseFloat(r.total)||0),0);
     html+=`<div class="card"><div class="card-title">${day} — ${items.length} carro${items.length===1?'':'s'} · $${dayTotal}</div>`;
     items.forEach(r=>{
-      html+=`<div class="rv-row"><span class="rv-k">${r.plate||'—'} · ${r.model||''}</span><span class="rv-v">${r.employee||''} · $${r.total||0}</span></div>`;
+      html+=`<div class="rv-row"><span class="rv-k">#${r.carNumber||'—'} · ${r.plate||'—'} · ${r.model||''}</span><span class="rv-v">${r.employee||''} · $${r.total||0}</span></div>`;
     });
     html+='</div>';
   });
@@ -562,10 +565,13 @@ function validate(n){
     if(!document.getElementById('fManager').value.trim()){toast('Ingresa el nombre del manager');return false;}
     if(!document.getElementById('fBranch').value.trim()){toast('Ingresa el número de sucursal');return false;}
     if(!document.getElementById('fRegion').value){toast('Selecciona tu región');return false;}
+    if(document.getElementById('fRegion').value==='Otro' && !document.getElementById('fRegionCustom').value.trim()){toast('Escribe el nombre de tu región');return false;}
   }
   if(n===1){
     const p=document.getElementById('fPlate').value||document.getElementById('fPlate2').value;
     if(!p){toast('Agrega el número de placa');return false;}
+    const cn=document.getElementById('fCarNumber').value||document.getElementById('fCarNumber2').value;
+    if(!cn){toast('Agrega el número de auto (llavero)');return false;}
   }
   if(n===2){
     if(!document.getElementById('fRegion').value){toast('Regresa y selecciona tu región primero');return false;}
@@ -573,6 +579,12 @@ function validate(n){
   }
   return true;
 }
+function getRegionValueForSave(){
+  const key=document.getElementById('fRegion').value;
+  if(key==='Otro')return document.getElementById('fRegionCustom').value.trim()||'Otro';
+  return key;
+}
+
 function pickEmp(el){
   document.querySelectorAll('.emp-card').forEach(c=>c.classList.remove('selected'));
   el.classList.add('selected');
@@ -584,6 +596,14 @@ function pickRegion(el){
   const key=el.dataset.key;
   document.getElementById('fRegion').value=key;
   const region=REGIONS.find(r=>r.key===key);
+  const customInput=document.getElementById('fRegionCustom');
+  if(key==='Otro'){
+    customInput.style.display='block';
+    customInput.focus();
+  }else{
+    customInput.style.display='none';
+    customInput.value='';
+  }
   const branchEl=document.getElementById('fBranch');
   if(region && region.autoFillBranch){
     branchEl.value=region.key;
@@ -711,11 +731,12 @@ function buildReview(){
   const plate=document.getElementById('fPlate').value||document.getElementById('fPlate2').value;
   const vin=document.getElementById('fVin').value||document.getElementById('fVin2').value;
   const model=document.getElementById('fModel').value||document.getElementById('fModel2').value;
+  const carNumber=document.getElementById('fCarNumber').value||document.getElementById('fCarNumber2').value;
   const svcs=[...selectedSvcs].join(' + ');
   const total=document.getElementById('totalVal').textContent;
   const blocks=[
-    {s:'Empleado',rows:[['Nombre',document.getElementById('fEmployee').value],['Manager',document.getElementById('fManager').value],['Sucursal',document.getElementById('fBranch').value],['Región',document.getElementById('fRegion').value]]},
-    {s:'Vehículo',rows:[['Placa',plate],['VIN',vin],['Modelo',model]]},
+    {s:'Empleado',rows:[['Nombre',document.getElementById('fEmployee').value],['Manager',document.getElementById('fManager').value],['Sucursal',document.getElementById('fBranch').value],['Región',getRegionValueForSave()]]},
+    {s:'Vehículo',rows:[['Número de Auto',carNumber],['Placa',plate],['VIN',vin],['Modelo',model]]},
     {s:'Servicio',rows:[['Servicios',svcs],['Total',total]]},
   ];
   document.getElementById('rvContent').innerHTML=blocks.map(b=>`
@@ -728,6 +749,7 @@ async function submitData(){
   const plate=document.getElementById('fPlate').value||document.getElementById('fPlate2').value;
   const vin=document.getElementById('fVin').value||document.getElementById('fVin2').value;
   const model=document.getElementById('fModel').value||document.getElementById('fModel2').value;
+  const carNumber=document.getElementById('fCarNumber').value||document.getElementById('fCarNumber2').value;
   const svcs=[...selectedSvcs].join(' + ');
   let totalNum=0;
   document.querySelectorAll('.svc-item.selected').forEach(el=>totalNum+=parseInt(el.dataset.price)||0);
@@ -736,8 +758,8 @@ async function submitData(){
     employee:document.getElementById('fEmployee').value,
     branch:document.getElementById('fBranch').value,
     manager:document.getElementById('fManager').value,
-    region:document.getElementById('fRegion').value,
-    plate,vin,model,
+    region:getRegionValueForSave(),
+    plate,vin,model,carNumber,
     serviceType:svcs,
     subtotal:String(totalNum),total:String(totalNum),
     carPhoto:carB64||'',
@@ -774,6 +796,7 @@ function buildSuccess(p,pending){
     <div class="review-block">
       <div class="rv-section">Registro guardado</div>
       <div class="rv-row"><span class="rv-k">Empleado</span><span class="rv-v">${p.employee}</span></div>
+      <div class="rv-row"><span class="rv-k">N° Auto</span><span class="rv-v">${p.carNumber||'—'}</span></div>
       <div class="rv-row"><span class="rv-k">Placa</span><span class="rv-v">${p.plate||'—'}</span></div>
       <div class="rv-row"><span class="rv-k">Modelo</span><span class="rv-v">${p.model||'—'}</span></div>
       <div class="rv-row"><span class="rv-k">Servicios</span><span class="rv-v">${p.serviceType||'—'}</span></div>
@@ -841,6 +864,7 @@ function resetAll(){
   cur=0;carB64=null;vinB64=null;aiDone=false;selectedSvcs=new Set();
   document.querySelectorAll('input[type=text],input[type=number],input[type=url]').forEach(i=>{i.value='';i.classList.remove('ai-filled');});
   document.getElementById('fEmployee').value='';document.getElementById('fRegion').value='';
+  document.getElementById('fRegionCustom').style.display='none';
   const br=document.getElementById('fBranch');if(br){br.readOnly=false;br.style.background='';br.style.borderColor='';br.style.color='';}
   document.querySelectorAll('.pz-prev').forEach(p=>{p.src='';p.classList.remove('show');});
   document.querySelectorAll('.pz-overlay,.pz-done').forEach(e=>e.classList.remove('show'));
