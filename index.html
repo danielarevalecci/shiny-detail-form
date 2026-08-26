@@ -682,6 +682,12 @@ function getZonaValueForSave(){
   if(key==='Otro')return document.getElementById('fZonaCustom').value.trim()||'Otro';
   return key;
 }
+function getEffectiveRegionForSave(){
+  const key=document.getElementById('fRegion').value;
+  const region=REGIONS.find(r=>r.key===key);
+  if(region && region.autoFillBranch) return key; // Nacional — se queda igual
+  return getZonaValueForSave() || key; // Externa — se reemplaza por CC/DD/EE/lo que escriban
+}
 function setupPhoto(inId,prevId,ovrId,doneId,phId,kind){
   document.getElementById(inId).addEventListener('change',async(e)=>{
     const f=e.target.files[0];if(!f)return;
@@ -805,7 +811,7 @@ function buildReview(){
   const svcs=[...selectedSvcs].join(' + ');
   const total=document.getElementById('totalVal').textContent;
   const blocks=[
-    {s:'Empleado',rows:[['Nombre',document.getElementById('fEmployee').value],['Manager',document.getElementById('fManager').value],['Sucursal',document.getElementById('fBranch').value],['Región',document.getElementById('fRegion').value],['Zona',getZonaValueForSave()]]},
+    {s:'Empleado',rows:[['Nombre',document.getElementById('fEmployee').value],['Manager',document.getElementById('fManager').value],['Sucursal',document.getElementById('fBranch').value],['Región',getEffectiveRegionForSave()]]},
     {s:'Vehículo',rows:[['Número de Auto',carNumber],['Placa',plate],['VIN',vin],['Modelo',model]]},
     {s:'Servicio',rows:[['Servicios',svcs],['Total',total]]},
   ];
@@ -828,8 +834,7 @@ async function submitData(){
     employee:document.getElementById('fEmployee').value,
     branch:document.getElementById('fBranch').value,
     manager:document.getElementById('fManager').value,
-    region:document.getElementById('fRegion').value,
-    zona:getZonaValueForSave(),
+    region:getEffectiveRegionForSave(),
     plate,vin,model,carNumber,
     serviceType:svcs,
     subtotal:String(totalNum),total:String(totalNum),
@@ -868,7 +873,6 @@ function buildSuccess(p,pending){
       <div class="rv-section">Registro guardado</div>
       <div class="rv-row"><span class="rv-k">Empleado</span><span class="rv-v">${p.employee}</span></div>
       <div class="rv-row"><span class="rv-k">N° Auto</span><span class="rv-v">${p.carNumber||'—'}</span></div>
-      ${p.zona?`<div class="rv-row"><span class="rv-k">Zona</span><span class="rv-v">${p.zona}</span></div>`:''}
       <div class="rv-row"><span class="rv-k">Placa</span><span class="rv-v">${p.plate||'—'}</span></div>
       <div class="rv-row"><span class="rv-k">Modelo</span><span class="rv-v">${p.model||'—'}</span></div>
       <div class="rv-row"><span class="rv-k">Servicios</span><span class="rv-v">${p.serviceType||'—'}</span></div>
