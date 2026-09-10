@@ -160,7 +160,7 @@ select option{background:var(--white);}
     </div>
     <span id="pendingBadge" onclick="syncPending()" style="font-size:10px;font-weight:800;color:var(--green);background:var(--green-bg);padding:3px 8px;border-radius:10px;cursor:pointer;">✓ <span data-i18n="upToDate">Al día</span></span>
     <span onclick="openHistory()" style="font-size:11px;font-weight:800;color:var(--muted);cursor:pointer;text-decoration:underline;">📋 <span data-i18n="history">Historial</span></span>
-    <a href="/panel-daniel.html" style="font-size:11px;font-weight:800;color:var(--muted);text-decoration:underline;">📊 <span data-i18n="panel">Panel</span></a>
+    <a href='/panel-daniel' style='font-size:11px;font-weight:800;color:var(--muted);text-decoration:underline;'>📊 <span data-i18n="panel">Panel</span></a>
   </div>
 </div>
 
@@ -394,8 +394,7 @@ let SERVICES=[
   {key:'15-Seat Van',label:'🚐 Van de 15 Asientos',sub:'Detallado completo — van grande',price:115}
 ];
 let EMPLOYEES=[
-  {key:'José',label:'José'},{key:'Jaime',label:'Jaime'},{key:'Adrian',label:'Adrian'},
-  {key:'Noe',label:'Noe'},{key:'Personal 5',label:'Personal 5'}
+  {key:'Alan',label:'Alan'},{key:'Adrian',label:'Adrian'}
 ];
 let ZONES=[
   {key:'CC',label:'CC'},{key:'DD',label:'DD'},{key:'EE',label:'EE'},{key:'Otro',label:'Otra zona'}
@@ -571,15 +570,30 @@ function applyLang(){
 }
 
 async function loadConfig(){
-  try{
+  async function fetchConfig(){
     const res=await fetch(SHEETS_URL+'?action=config');
-    const data=await res.json();
+    return res.json();
+  }
+  try{
+    const data=await fetchConfig();
     if(data.regions && data.regions.length) REGIONS=data.regions;
     if(data.services && data.services.length) SERVICES=data.services;
     if(data.employees && data.employees.length) EMPLOYEES=data.employees;
     if(data.zones && data.zones.length) ZONES=data.zones;
   }catch(e){
-    console.warn('No se pudo cargar Config, usando valores por defecto:',e);
+    try{
+      await new Promise(r=>setTimeout(r,1500));
+      const data=await fetchConfig();
+      if(data.regions && data.regions.length) REGIONS=data.regions;
+      if(data.services && data.services.length) SERVICES=data.services;
+      if(data.employees && data.employees.length) EMPLOYEES=data.employees;
+      if(data.zones && data.zones.length) ZONES=data.zones;
+    }catch(e2){
+      console.warn('No se pudo cargar Config tras reintentar, usando valores por defecto:',e2);
+      toast(LANG==='es'
+        ? '⚠️ No se pudo cargar la lista actualizada — verifica tu conexión'
+        : '⚠️ Could not load the updated list — check your connection');
+    }
   }
   renderRegions();
   renderServices();
