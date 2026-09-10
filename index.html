@@ -493,7 +493,7 @@ function renderHistory(filterEmp){
     const dayTotal=items.reduce((s,r)=>s+(parseFloat(r.total)||0),0);
     html+=`<div class="card"><div class="card-title">${day} — ${items.length} carro${items.length===1?'':'s'} · $${dayTotal}</div>`;
     items.forEach(r=>{
-      html+=`<div class="rv-row"><span class="rv-k">#${r.carNumber||'—'} · ${r.plate||'—'} · ${r.model||''}</span><span class="rv-v">${r.employee||''} · $${r.total||0}</span></div>`;
+      html+=`<div class="rv-row"><span class="rv-k">${r.folio?`#${r.folio} · `:''}Auto ${r.carNumber||'—'} · ${r.plate||'—'} · ${r.model||''}</span><span class="rv-v">${r.employee||''} · $${r.total||0}</span></div>`;
     });
     html+='</div>';
   });
@@ -853,6 +853,7 @@ async function submitData(){
     clearTimeout(timer);
     const data=await res.json();
     if(!data.success){ throw new Error(data.error||'El servidor no pudo guardar el registro.'); }
+    payload.folio=data.folio;
     buildSuccess(payload,false);goTo(4);
   }catch(err){
     console.error('Submit error:',err);
@@ -871,6 +872,7 @@ function buildSuccess(p,pending){
     ${banner}
     <div class="review-block">
       <div class="rv-section">Registro guardado</div>
+      ${p.folio?`<div class="rv-row"><span class="rv-k">Folio</span><span class="rv-v" style="font-size:17px;">#${p.folio}</span></div>`:''}
       <div class="rv-row"><span class="rv-k">Empleado</span><span class="rv-v">${p.employee}</span></div>
       <div class="rv-row"><span class="rv-k">N° Auto</span><span class="rv-v">${p.carNumber||'—'}</span></div>
       <div class="rv-row"><span class="rv-k">Placa</span><span class="rv-v">${p.plate||'—'}</span></div>
