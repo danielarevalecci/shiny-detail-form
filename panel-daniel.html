@@ -8,9 +8,9 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
-  --bg:#f5f4f0;--white:#fff;--border:#e2e0db;--text:#1a1a1a;--muted:#8a8680;
-  --accent:#1a1a1a;--gold:#f0a500;--green:#22c55e;--green-bg:#f0fdf4;
-  --radius:16px;--radius-sm:10px;--shadow:0 2px 12px rgba(0,0,0,0.07);
+--bg:#f5f4f0;--white:#fff;--border:#e2e0db;--text:#1a1a1a;--muted:#8a8680;
+--accent:#1a1a1a;--gold:#f0a500;--green:#22c55e;--green-bg:#f0fdf4;
+--radius:16px;--radius-sm:10px;--shadow:0 2px 12px rgba(0,0,0,0.07);
 }
 body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:40px;}
 .header{background:var(--white);border-bottom:1px solid var(--border);padding:16px 20px;display:flex;align-items:center;gap:11px;position:sticky;top:0;z-index:10;}
@@ -27,6 +27,7 @@ main{max-width:760px;margin:0 auto;padding:20px;}
 .kpi-val{font-size:30px;font-weight:900;line-height:1;}
 .kpi-label{font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:6px;}
 .section-title{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin:22px 0 10px;}
+.section-sub{font-size:11px;color:var(--muted);font-weight:600;margin:-6px 0 10px;}
 .emp-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:10px;box-shadow:var(--shadow);cursor:pointer;}
 .emp-card-top{display:flex;justify-content:space-between;align-items:baseline;}
 .emp-name{font-size:16px;font-weight:800;}
@@ -42,11 +43,11 @@ main{max-width:760px;margin:0 auto;padding:20px;}
 .emp-detail-day:first-child{margin-top:0;}
 .emp-detail-row{font-size:12px;font-weight:600;color:var(--text);padding:4px 0;display:flex;justify-content:space-between;}
 .emp-detail-row span{color:var(--muted);}
-.chart-wrap{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);display:flex;align-items:flex-end;justify-content:space-between;gap:8px;height:140px;}
-.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;}
+.chart-wrap{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);display:flex;align-items:flex-end;justify-content:space-between;gap:8px;height:140px;overflow-x:auto;}
+.bar-col{flex:1;min-width:26px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;}
 .bar-count{font-size:11px;font-weight:800;margin-bottom:4px;color:var(--muted);}
 .bar{width:70%;background:var(--accent);border-radius:5px 5px 0 0;min-height:3px;transition:height .4s;}
-.bar-label{font-size:10px;font-weight:700;color:var(--muted);margin-top:6px;text-transform:capitalize;}
+.bar-label{font-size:10px;font-weight:700;color:var(--muted);margin-top:6px;text-transform:capitalize;white-space:nowrap;}
 .empty-state{text-align:center;color:var(--muted);font-weight:600;font-size:13px;padding:24px 0;}
 .goal-card{background:var(--accent);border-radius:var(--radius);padding:20px;color:#fff;margin-bottom:22px;border:2px solid transparent;transition:border-color .3s;}
 .goal-card.behind{border-color:#a32d2d;}
@@ -65,6 +66,19 @@ main{max-width:760px;margin:0 auto;padding:20px;}
 .goal-money{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.15);}
 .goal-money-label{font-size:11px;font-weight:800;color:rgba(255,255,255,.6);}
 .goal-money-val{font-size:16px;font-weight:900;}
+.goal-history{margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.15);}
+.goal-history-label{font-size:11px;font-weight:800;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;}
+.goal-history-sub{font-size:10px;font-weight:600;color:rgba(255,255,255,.4);margin-bottom:10px;}
+.goal-history-chart{display:flex;align-items:flex-end;gap:6px;height:70px;}
+.gh-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;}
+.gh-count{font-size:10px;font-weight:800;color:rgba(255,255,255,.85);margin-bottom:3px;}
+.gh-bar{width:75%;background:rgba(255,255,255,.3);border-radius:4px 4px 0 0;min-height:3px;transition:height .4s;}
+.gh-bar.beat{background:var(--green);}
+.gh-bar.miss{background:#ff8a8a;}
+.gh-bar.current{background:var(--gold);}
+.gh-label{font-size:9px;font-weight:700;color:rgba(255,255,255,.5);margin-top:5px;white-space:nowrap;}
+.gh-legend{display:flex;gap:12px;margin-top:10px;font-size:9px;font-weight:700;color:rgba(255,255,255,.55);flex-wrap:wrap;}
+.gh-legend-dot{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px;vertical-align:middle;}
 .period-toggle{display:flex;gap:6px;margin-bottom:16px;}
 .period-btn{flex:1;padding:9px;background:var(--white);border:2px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;color:var(--muted);}
 .period-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
@@ -135,564 +149,694 @@ main{max-width:760px;margin:0 auto;padding:20px;}
 <body>
 
 <div class="lock-screen" id="lockScreen">
-  <div class="lock-icon">🔒</div>
-  <div class="lock-title">Acceso solo para el dueño</div>
-  <input type="password" class="lock-input" id="lockInput" placeholder="Contraseña" autocomplete="off"/>
-  <button class="lock-btn" onclick="tryUnlock()">Entrar</button>
-  <div class="lock-error" id="lockError"></div>
+<div class="lock-icon">🔒</div>
+<div class="lock-title">Acceso solo para el dueño</div>
+<input type="password" class="lock-input" id="lockInput" placeholder="Contraseña" autocomplete="off"/>
+<button class="lock-btn" onclick="tryUnlock()">Entrar</button>
+<div class="lock-error" id="lockError"></div>
 </div>
 
 <div id="dashboardContent">
 <div id="inactivityBanner" class="inactivity-banner" style="display:none;"></div>
 <div class="header">
-  <div class="logo">✦</div>
-  <div>
-    <div class="h-title">Shiny Detail</div>
-    <div class="h-sub">Dashboard en vivo</div>
-  </div>
-  <div class="live"><div class="live-dot"></div>EN VIVO</div>
-  <a href="https://docs.google.com/spreadsheets/d/1khUEy6uGLxzVKdzE_fiZgWZKY13zrjdPuzg-ZASKo6U/edit" target="_blank" style="font-size:11px;font-weight:800;color:var(--muted);text-decoration:underline;margin-left:12px;">📄 Ver Excel</a>
-  <div class="update-time" id="updateTime"></div>
+<div class="logo">✦</div>
+<div>
+<div class="h-title">Shiny Detail</div>
+<div class="h-sub">Dashboard en vivo</div>
+</div>
+<div class="live"><div class="live-dot"></div>EN VIVO</div>
+<a href="https://docs.google.com/spreadsheets/d/1khUEy6uGLxzVKdzE_fiZgWZKY13zrjdPuzg-ZASKo6U/edit" target="_blank" style="font-size:11px;font-weight:800;color:var(--muted);text-decoration:underline;margin-left:12px;">📄 Ver Excel</a>
+<div class="update-time" id="updateTime"></div>
 </div>
 
 <main>
-  <div class="pulse-card">
-    <div class="pace-row">
-      <div class="pace-icon">⏱️</div>
-      <div>
-        <div class="pace-text" id="paceText">Calculando ritmo...</div>
-        <div class="pace-sub" id="paceSub"></div>
-      </div>
-    </div>
-    <div id="liveFeed"></div>
-  </div>
+<div class="pulse-card">
+<div class="pace-row">
+<div class="pace-icon">⏱️</div>
+<div>
+<div class="pace-text" id="paceText">Calculando ritmo...</div>
+<div class="pace-sub" id="paceSub"></div>
+</div>
+</div>
+<div id="liveFeed"></div>
+</div>
 
-  <div class="period-toggle">
-    <button class="period-btn active" id="thisWeekBtn" onclick="setThisWeek()">Esta semana (lun–dom)</button>
-    <button class="period-btn" id="customBtn" onclick="toggleCustomRange()">📅 Personalizado</button>
-  </div>
+<div class="period-toggle">
+<button class="period-btn active" id="thisWeekBtn" onclick="setThisWeek()">Esta semana (lun–dom)</button>
+<button class="period-btn" id="customBtn" onclick="toggleCustomRange()">📅 Personalizado</button>
+</div>
 
-  <div class="custom-range" id="customRangePanel" style="display:none;">
-    <div class="custom-range-row">
-      <div class="custom-range-field">
-        <label>Desde</label>
-        <input type="date" id="customFrom"/>
-      </div>
-      <div class="custom-range-field">
-        <label>Hasta</label>
-        <input type="date" id="customTo"/>
-      </div>
-    </div>
-    <button class="period-btn active" style="width:100%;" onclick="applyCustomRange()">Aplicar</button>
-  </div>
+<div class="custom-range" id="customRangePanel" style="display:none;">
+<div class="custom-range-row">
+<div class="custom-range-field">
+<label>Desde</label>
+<input type="date" id="customFrom"/>
+</div>
+<div class="custom-range-field">
+<label>Hasta</label>
+<input type="date" id="customTo"/>
+</div>
+</div>
+<button class="period-btn active" style="width:100%;" onclick="applyCustomRange()">Aplicar</button>
+</div>
 
-  <div class="goal-card">
-    <div class="goal-top">
-      <span class="goal-label" id="goalLabel">🎯 Meta — superar el período anterior</span>
-      <span class="goal-delta" id="goalDelta"></span>
-    </div>
-    <div class="compare-bars">
-      <div class="compare-bar-col">
-        <div class="compare-bar-val" id="cmpCurrentVal">—</div>
-        <div class="compare-bar-track"><div class="compare-bar current" id="cmpCurrentBar"></div></div>
-        <div class="compare-bar-label">Este período</div>
-      </div>
-      <div class="compare-bar-col">
-        <div class="compare-bar-val" id="cmpPrevVal">—</div>
-        <div class="compare-bar-track"><div class="compare-bar prev" id="cmpPrevBar"></div></div>
-        <div class="compare-bar-label">Anterior</div>
-      </div>
-    </div>
-    <div class="goal-dates" id="goalDates"></div>
-    <div class="goal-money">
-      <span class="goal-money-label">💰 Generado</span>
-      <span class="goal-money-val" id="goalMoney">—</span>
-    </div>
-  </div>
+<div class="goal-card">
+<div class="goal-top">
+<span class="goal-label" id="goalLabel">🎯 Meta — superar el período anterior</span>
+<span class="goal-delta" id="goalDelta"></span>
+</div>
+<div class="compare-bars">
+<div class="compare-bar-col">
+<div class="compare-bar-val" id="cmpCurrentVal">—</div>
+<div class="compare-bar-track"><div class="compare-bar current" id="cmpCurrentBar"></div></div>
+<div class="compare-bar-label">Este período</div>
+</div>
+<div class="compare-bar-col">
+<div class="compare-bar-val" id="cmpPrevVal">—</div>
+<div class="compare-bar-track"><div class="compare-bar prev" id="cmpPrevBar"></div></div>
+<div class="compare-bar-label">Anterior</div>
+</div>
+</div>
+<div class="goal-dates" id="goalDates"></div>
+<div class="goal-money">
+<span class="goal-money-label">💰 Generado</span>
+<span class="goal-money-val" id="goalMoney">—</span>
+</div>
+<div class="goal-history">
+<div class="goal-history-label">📊 Últimas 8 semanas</div>
+<div class="goal-history-sub">Cada barra es una semana (lun–dom). Verde = superó a la anterior, rojo = no.</div>
+<div class="goal-history-chart" id="goalHistoryChart"></div>
+<div class="gh-legend">
+<span><span class="gh-legend-dot" style="background:var(--green);"></span>Superó la semana anterior</span>
+<span><span class="gh-legend-dot" style="background:#ff8a8a;"></span>No la superó</span>
+<span><span class="gh-legend-dot" style="background:var(--gold);"></span>En curso</span>
+</div>
+</div>
+</div>
 
-  <div class="kpi-row">
-    <div class="kpi"><div class="kpi-val" id="kpiToday">—</div><div class="kpi-label">Carros hoy</div></div>
-    <div class="kpi"><div class="kpi-val" id="kpiWeek">—</div><div class="kpi-label" id="kpiWeekLabel">Período</div></div>
-    <div class="kpi"><div class="kpi-val" id="kpiActive">—</div><div class="kpi-label">Activos hoy</div></div>
-  </div>
+<div class="kpi-row">
+<div class="kpi"><div class="kpi-val" id="kpiToday">—</div><div class="kpi-label">Carros hoy</div></div>
+<div class="kpi"><div class="kpi-val" id="kpiWeek">—</div><div class="kpi-label" id="kpiWeekLabel">Período</div></div>
+<div class="kpi"><div class="kpi-val" id="kpiActive">—</div><div class="kpi-label">Activos hoy</div></div>
+</div>
 
-  <div class="section-title">🏆 Ranking de hoy</div>
-  <div id="todayRankList"></div>
+<div class="section-title">📈 Tendencia general — desde el primer registro</div>
+<div class="section-sub">Carros lavados por mes, desde que empezamos. Sirve para ver de un vistazo si vamos subiendo o bajando.</div>
+<div class="chart-wrap" id="trendChart"></div>
+<div class="kpi-row" style="margin-top:10px;">
+<div class="kpi"><div class="kpi-val" id="kpiAllTime">—</div><div class="kpi-label">Total histórico</div></div>
+<div class="kpi"><div class="kpi-val" id="kpiAllTimeMoney" style="font-size:22px;">—</div><div class="kpi-label">$ histórico</div></div>
+<div class="kpi"><div class="kpi-val" id="kpiTrendArrow" style="font-size:22px;">—</div><div class="kpi-label" id="kpiTrendLabel">Tendencia</div></div>
+</div>
 
-  <div class="section-title">Por empleado <span id="empPeriodLabel"></span></div>
-  <div id="empCards"><div class="empty-state">Cargando...</div></div>
+<div class="section-title">🏆 Ranking de hoy</div>
+<div id="todayRankList"></div>
 
-  <div class="section-title">🏆 Ranking por $ generado <span id="rankPeriodLabel"></span></div>
-  <div id="rankList"></div>
+<div class="section-title">Por empleado <span id="empPeriodLabel"></span></div>
+<div id="empCards"><div class="empty-state">Cargando...</div></div>
 
-  <div class="section-title">🏢 Ranking de sucursales <span id="branchPeriodLabel"></span></div>
-  <div id="branchRankList"></div>
+<div class="section-title">🏆 Ranking por $ generado <span id="rankPeriodLabel"></span></div>
+<div id="rankList"></div>
 
-  <div class="section-title">Últimos 7 días</div>
-  <div class="chart-wrap" id="weekChart"></div>
+<div class="section-title">🏢 Ranking de sucursales <span id="branchPeriodLabel"></span></div>
+<div id="branchRankList"></div>
 
-  <div class="section-title">📅 Vista mensual</div>
-  <div class="cal-card">
-    <div class="cal-header">
-      <button onclick="calPrev()">‹</button>
-      <div class="cal-month-label" id="calMonthLabel"></div>
-      <button onclick="calNext()">›</button>
-    </div>
-    <div class="cal-grid" id="calGrid"></div>
-    <div class="cal-legend">
-      <span>Menos</span>
-      <div class="cal-legend-box" style="background:var(--bg);"></div>
-      <div class="cal-legend-box" style="background:#fde68a;"></div>
-      <div class="cal-legend-box" style="background:#fbbf24;"></div>
-      <div class="cal-legend-box" style="background:var(--gold);"></div>
-      <div class="cal-legend-box" style="background:var(--accent);"></div>
-      <span>Más</span>
-    </div>
-  </div>
-  <div id="calDayDetail"></div>
+<div class="section-title">Últimos 7 días</div>
+<div class="chart-wrap" id="weekChart"></div>
+
+<div class="section-title">📅 Vista mensual</div>
+<div class="cal-card">
+<div class="cal-header">
+<button onclick="calPrev()">‹</button>
+<div class="cal-month-label" id="calMonthLabel"></div>
+<button onclick="calNext()">›</button>
+</div>
+<div class="cal-grid" id="calGrid"></div>
+<div class="cal-legend">
+<span>Menos</span>
+<div class="cal-legend-box" style="background:var(--bg);"></div>
+<div class="cal-legend-box" style="background:#fde68a;"></div>
+<div class="cal-legend-box" style="background:#fbbf24;"></div>
+<div class="cal-legend-box" style="background:var(--gold);"></div>
+<div class="cal-legend-box" style="background:var(--accent);"></div>
+<span>Más</span>
+</div>
+</div>
+<div id="calDayDetail"></div>
 </main>
 </div>
 
 <script>
+// ── SHEETS_URL se declara aquí ARRIBA de todo lo demás. ──────
+// Antes estaba más abajo, después del bloque que auto-abre el
+// dashboard para quien ya puso la contraseña antes (localStorage).
+// Ese bloque llama a load() -> render(), y render() usa SHEETS_URL
+// antes de que la línea "const SHEETS_URL = ..." llegara a
+// ejecutarse — un "Cannot access before initialization" que
+// tronaba el dashboard SIEMPRE para cualquiera que ya lo hubiera
+// desbloqueado antes (o sea, en la práctica, siempre para el
+// dueño). Declarar todo lo que load()/render() necesitan antes de
+// llamar showDashboard() evita el problema de raíz.
+const SHEETS_URL='https://script.google.com/macros/s/AKfycbwE9v3w5n_CjRu9E0FshcIjf_c5RfCJrklg4UTye-AvnWj2pN9SImjOq_3V94vMvj4L/exec';
+let allRecordsCache=[];
+let cachedEmployees=[];
+let calYear, calMonth;
+let customRange=null; // {start:Date, end:Date} cuando el usuario elige fechas propias
+
 // ⚠️ Cámbiala por la que tú quieras antes de subir el archivo.
 // Recuerda: esto es un candado simple, no seguridad real — cualquiera
 // que vea el código fuente de la página podría encontrarla.
 const DASHBOARD_PASSWORD = 'shiny2026';
 
 function tryUnlock(){
-  const input=document.getElementById('lockInput').value;
-  if(input===DASHBOARD_PASSWORD){
-    localStorage.setItem('shinyDashboardUnlocked','1');
-    showDashboard();
-  }else{
-    document.getElementById('lockError').textContent='Contraseña incorrecta.';
-  }
+const input=document.getElementById('lockInput').value;
+if(input===DASHBOARD_PASSWORD){
+localStorage.setItem('shinyDashboardUnlocked','1');
+showDashboard();
+}else{
+document.getElementById('lockError').textContent='Contraseña incorrecta.';
+}
 }
 document.getElementById('lockInput').addEventListener('keydown',e=>{ if(e.key==='Enter')tryUnlock(); });
 
 function showDashboard(){
-  document.getElementById('lockScreen').style.display='none';
-  document.getElementById('dashboardContent').style.display='block';
-  load();
-  setInterval(load,30000);
+document.getElementById('lockScreen').style.display='none';
+document.getElementById('dashboardContent').style.display='block';
+load();
+setInterval(load,30000);
 }
 
 if(localStorage.getItem('shinyDashboardUnlocked')==='1'){
-  showDashboard();
+showDashboard();
 }
 
-const SHEETS_URL='https://script.google.com/macros/s/AKfycbwE9v3w5n_CjRu9E0FshcIjf_c5RfCJrklg4UTye-AvnWj2pN9SImjOq_3V94vMvj4L/exec';
-
-let allRecordsCache=[];
-let cachedEmployees=[];
-let calYear, calMonth;
-
 async function load(){
-  try{
-    const [cfgRes,histRes]=await Promise.all([
-      fetch(SHEETS_URL+'?action=config').then(r=>r.json()),
-      fetch(SHEETS_URL+'?action=history').then(r=>r.json())
-    ]);
-    const employees=cfgRes.employees||[];
-    const records=histRes.records||[];
-    allRecordsCache=records;
-    render(employees,records);
-    renderPulse(records);
-    renderInactivityBanner(records);
-    if(calYear===undefined){
-      const now=new Date();
-      calYear=now.getFullYear();
-      calMonth=now.getMonth();
-    }
-    renderCalendar();
-    document.getElementById('updateTime').textContent='Actualizado: '+new Date().toLocaleTimeString('es-MX');
-  }catch(e){
-    console.error('Error cargando dashboard:',e);
-    document.getElementById('updateTime').textContent='Error al actualizar — reintentando...';
-  }
+try{
+const [cfgRes,histRes]=await Promise.all([
+fetch(SHEETS_URL+'?action=config').then(r=>r.json()),
+fetch(SHEETS_URL+'?action=history').then(r=>r.json())
+]);
+const employees=cfgRes.employees||[];
+const records=histRes.records||[];
+allRecordsCache=records;
+render(employees,records);
+renderPulse(records);
+renderInactivityBanner(records);
+renderTrend(records);
+renderGoalHistory(records);
+if(calYear===undefined){
+const now=new Date();
+calYear=now.getFullYear();
+calMonth=now.getMonth();
+}
+renderCalendar();
+document.getElementById('updateTime').textContent='Actualizado: '+new Date().toLocaleTimeString('es-MX');
+}catch(e){
+console.error('Error cargando dashboard:',e);
+document.getElementById('updateTime').textContent='Error al actualizar — reintentando...';
+}
 }
 
 // ── Ritmo del día + actividad reciente en vivo (siempre "ahora", sin importar el período elegido) ──
 function renderPulse(records){
-  const now=new Date();
-  const todayKey=dayKeyOf(now);
-  const todayRecords=records
-    .map(r=>({...r,_d:new Date(r.timestamp)}))
-    .filter(r=>!isNaN(r._d)&&dayKeyOf(r._d)===todayKey)
-    .sort((a,b)=>a._d-b._d);
+const now=new Date();
+const todayKey=dayKeyOf(now);
+const todayRecords=records
+.map(r=>({...r,_d:new Date(r.timestamp)}))
+.filter(r=>!isNaN(r._d)&&dayKeyOf(r._d)===todayKey)
+.sort((a,b)=>a._d-b._d);
 
-  const paceText=document.getElementById('paceText');
-  const paceSub=document.getElementById('paceSub');
-  if(todayRecords.length<2){
-    paceText.textContent=todayRecords.length===1?'1 carro hoy — apenas arrancando':'Sin carros hoy todavía';
-    paceSub.textContent='';
-  }else{
-    const first=todayRecords[0]._d, last=todayRecords[todayRecords.length-1]._d;
-    const spanMin=(last-first)/60000;
-    const avgMin=Math.round(spanMin/(todayRecords.length-1));
-    paceText.textContent=`Ritmo de hoy: 1 carro cada ~${avgMin} min`;
-    paceSub.textContent=`${todayRecords.length} carros desde las ${first.toLocaleTimeString('es-MX',{hour:'numeric',minute:'2-digit'})}`;
-  }
+const paceText=document.getElementById('paceText');
+const paceSub=document.getElementById('paceSub');
+if(todayRecords.length<2){
+paceText.textContent=todayRecords.length===1?'1 carro hoy — apenas arrancando':'Sin carros hoy todavía';
+paceSub.textContent='';
+}else{
+const first=todayRecords[0]._d, last=todayRecords[todayRecords.length-1]._d;
+const spanMin=(last-first)/60000;
+const avgMin=Math.round(spanMin/(todayRecords.length-1));
+paceText.textContent=`Ritmo de hoy: 1 carro cada ~${avgMin} min`;
+paceSub.textContent=`${todayRecords.length} carros desde las ${first.toLocaleTimeString('es-MX',{hour:'numeric',minute:'2-digit'})}`;
+}
 
-  // Actividad reciente — últimos 8 registros de todo el sistema, sin importar el día
-  const recent=records
-    .map(r=>({...r,_d:new Date(r.timestamp)}))
-    .filter(r=>!isNaN(r._d))
-    .sort((a,b)=>b._d-a._d)
-    .slice(0,8);
-  document.getElementById('liveFeed').innerHTML=recent.length===0
-    ? '<div class="empty-state" style="padding:6px 0;">Sin actividad todavía.</div>'
-    : recent.map(r=>`
-      <div class="live-feed-row">
-        <div><span class="live-feed-who">${r.employee||'—'}</span> <span class="live-feed-what">· ${r.branch||'—'} · #${r.carNumber||'—'} · ${r.plate||'—'} ${r.model||''}</span></div>
-        <div class="live-feed-time">${timeAgo(r._d)}</div>
-      </div>`).join('');
+// Actividad reciente — últimos 8 registros de todo el sistema, sin importar el día
+const recent=records
+.map(r=>({...r,_d:new Date(r.timestamp)}))
+.filter(r=>!isNaN(r._d))
+.sort((a,b)=>b._d-a._d)
+.slice(0,8);
+document.getElementById('liveFeed').innerHTML=recent.length===0
+? '<div class="empty-state" style="padding:6px 0;">Sin actividad todavía.</div>'
+: recent.map(r=>`
+<div class="live-feed-row">
+<div><span class="live-feed-who">${r.employee||'—'}</span> <span class="live-feed-what">· ${r.branch||'—'} · #${r.carNumber||'—'} · ${r.plate||'—'} ${r.model||''}</span></div>
+<div class="live-feed-time">${timeAgo(r._d)}</div>
+</div>`).join('');
 }
 
 // ── Alerta de inactividad (horario de trabajo 8am–7pm, umbral 2 horas) ──
 const BUSINESS_HOUR_START=8, BUSINESS_HOUR_END=19, INACTIVITY_THRESHOLD_MIN=120;
 function renderInactivityBanner(records){
-  const banner=document.getElementById('inactivityBanner');
-  const now=new Date();
-  const hour=now.getHours();
-  const inBusinessHours=hour>=BUSINESS_HOUR_START&&hour<BUSINESS_HOUR_END;
+const banner=document.getElementById('inactivityBanner');
+const now=new Date();
+const hour=now.getHours();
+const inBusinessHours=hour>=BUSINESS_HOUR_START&&hour<BUSINESS_HOUR_END;
 
-  if(!inBusinessHours||records.length===0){
-    banner.style.display='none';
-    return;
-  }
-  const lastDate=records
-    .map(r=>new Date(r.timestamp))
-    .filter(d=>!isNaN(d))
-    .sort((a,b)=>b-a)[0];
-  if(!lastDate){ banner.style.display='none'; return; }
+if(!inBusinessHours||records.length===0){
+banner.style.display='none';
+return;
+}
+const lastDate=records
+.map(r=>new Date(r.timestamp))
+.filter(d=>!isNaN(d))
+.sort((a,b)=>b-a)[0];
+if(!lastDate){ banner.style.display='none'; return; }
 
-  const minsSince=Math.floor((now-lastDate)/60000);
-  if(minsSince>=INACTIVITY_THRESHOLD_MIN){
-    const hrs=Math.floor(minsSince/60), mins=minsSince%60;
-    banner.style.display='flex';
-    banner.textContent=`⚠️ Sin actividad hace ${hrs>0?hrs+'h ':''}${mins}min — último carro a las ${lastDate.toLocaleTimeString('es-MX',{hour:'numeric',minute:'2-digit'})}`;
-  }else{
-    banner.style.display='none';
-  }
+const minsSince=Math.floor((now-lastDate)/60000);
+if(minsSince>=INACTIVITY_THRESHOLD_MIN){
+const hrs=Math.floor(minsSince/60), mins=minsSince%60;
+banner.style.display='flex';
+banner.textContent=`⚠️ Sin actividad hace ${hrs>0?hrs+'h ':''}${mins}min — último carro a las ${lastDate.toLocaleTimeString('es-MX',{hour:'numeric',minute:'2-digit'})}`;
+}else{
+banner.style.display='none';
+}
+}
+
+// ── Tendencia general — desde el primer registro hasta hoy ──────
+// Agrupa TODOS los carros por mes (no por semana) para que la
+// gráfica se mantenga legible sin importar cuánto tiempo llevemos
+// operando. También calcula un indicador simple de tendencia:
+// compara el promedio mensual de los últimos 2 meses contra el
+// promedio de los 2 meses anteriores a esos.
+function renderTrend(records){
+const byMonth={};
+records.forEach(r=>{
+const d=new Date(r.timestamp);
+if(isNaN(d))return;
+const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+if(!byMonth[key])byMonth[key]={count:0,money:0,year:d.getFullYear(),month:d.getMonth()};
+byMonth[key].count++;
+byMonth[key].money+=parseFloat(r.total)||0;
+});
+
+const monthNamesShort=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const keys=Object.keys(byMonth).sort();
+const chartEl=document.getElementById('trendChart');
+
+if(keys.length===0){
+chartEl.innerHTML='<div class="empty-state">Sin datos todavía.</div>';
+}else{
+const maxCount=Math.max(1,...keys.map(k=>byMonth[k].count));
+chartEl.innerHTML=keys.map(k=>{
+const m=byMonth[k];
+return `<div class="bar-col">
+<div class="bar-count">${m.count}</div>
+<div class="bar" style="height:${Math.max(3,Math.round(m.count/maxCount*100))}%"></div>
+<div class="bar-label">${monthNamesShort[m.month]} ${String(m.year).slice(2)}</div>
+</div>`;
+}).join('');
+}
+
+const totalCount=records.length;
+const totalMoney=records.reduce((s,r)=>s+(parseFloat(r.total)||0),0);
+document.getElementById('kpiAllTime').textContent=totalCount;
+document.getElementById('kpiAllTimeMoney').textContent='$'+totalMoney.toLocaleString();
+
+const trendEl=document.getElementById('kpiTrendArrow');
+const trendLabelEl=document.getElementById('kpiTrendLabel');
+if(keys.length<4){
+trendEl.textContent='—';
+trendEl.style.color='';
+trendLabelEl.textContent='Tendencia (faltan meses de datos)';
+}else{
+const last=keys.slice(-2);
+const prev=keys.slice(-4,-2);
+const lastAvg=last.reduce((s,k)=>s+byMonth[k].count,0)/last.length;
+const prevAvg=prev.reduce((s,k)=>s+byMonth[k].count,0)/prev.length;
+trendLabelEl.textContent='Tendencia (últ. 2 meses vs 2 antes)';
+if(prevAvg===0){
+trendEl.textContent=lastAvg>0?'🎉 Nuevo':'—';
+trendEl.style.color='';
+}else{
+const pct=Math.round((lastAvg-prevAvg)/prevAvg*100);
+trendEl.textContent=(pct>=0?'▲ +':'▼ ')+Math.abs(pct)+'%';
+trendEl.style.color=pct>=0?'#15803d':'#a32d2d';
+}
+}
+}
+
+// ── Racha semanal dentro de la tarjeta de Meta ───────────────
+// Muestra las últimas 8 semanas calendario (lunes a domingo) como
+// barras: verde si esa semana superó a la anterior, roja si no,
+// y dorada para la semana en curso (todavía no es una comparación
+// justa porque no ha terminado). Siempre usa TODO el historial,
+// sin importar si arriba está seleccionado "Personalizado".
+function renderGoalHistory(records){
+const now=new Date();
+const WEEKS=8;
+const weeks=[];
+for(let i=WEEKS-1;i>=0;i--){
+const monday=new Date(mondayOf(now).getTime()-i*7*24*60*60*1000);
+const isCurrent=i===0;
+const end=isCurrent?now:new Date(monday.getTime()+7*24*60*60*1000-1);
+weeks.push({start:monday,end,isCurrent,count:0});
+}
+records.forEach(r=>{
+const d=new Date(r.timestamp);
+if(isNaN(d))return;
+weeks.forEach(w=>{ if(d>=w.start&&d<=w.end)w.count++; });
+});
+const max=Math.max(1,...weeks.map(w=>w.count));
+const fmt=d=>d.toLocaleDateString('es-MX',{day:'numeric',month:'short'});
+document.getElementById('goalHistoryChart').innerHTML=weeks.map((w,idx)=>{
+let cls='';
+if(w.isCurrent){
+cls='current';
+}else if(idx>0){
+cls=w.count>=weeks[idx-1].count?'beat':'miss';
+}
+return `<div class="gh-col">
+<div class="gh-count">${w.count}</div>
+<div class="gh-bar ${cls}" style="height:${Math.max(4,Math.round(w.count/max*100))}%"></div>
+<div class="gh-label">${fmt(w.start)}</div>
+</div>`;
+}).join('');
 }
 
 function timeAgo(date){
-  if(isNaN(date))return '—';
-  const mins=Math.floor((Date.now()-date.getTime())/60000);
-  if(mins<1)return 'justo ahora';
-  if(mins<60)return `hace ${mins} min`;
-  const hrs=Math.floor(mins/60);
-  if(hrs<24)return `hace ${hrs}h`;
-  return `hace ${Math.floor(hrs/24)}d`;
+if(isNaN(date))return '—';
+const mins=Math.floor((Date.now()-date.getTime())/60000);
+if(mins<1)return 'justo ahora';
+if(mins<60)return `hace ${mins} min`;
+const hrs=Math.floor(mins/60);
+if(hrs<24)return `hace ${hrs}h`;
+return `hace ${Math.floor(hrs/24)}d`;
 }
 
 function dayKeyOf(date){
-  // Clave de día consistente, siempre a partir de un objeto Date real
-  // (nunca cortando el texto crudo — ese fue el bug).
-  return date.toLocaleDateString('en-US');
+// Clave de día consistente, siempre a partir de un objeto Date real
+// (nunca cortando el texto crudo — ese fue el bug).
+return date.toLocaleDateString('en-US');
 }
 
-let customRange=null; // {start:Date, end:Date} cuando el usuario elige fechas propias
-
 function mondayOf(date){
-  const d=new Date(date);
-  const day=d.getDay(); // 0=domingo..6=sábado
-  const diffToMonday=(day===0?6:day-1);
-  return new Date(d.getFullYear(),d.getMonth(),d.getDate()-diffToMonday,0,0,0,0);
+const d=new Date(date);
+const day=d.getDay(); // 0=domingo..6=sábado
+const diffToMonday=(day===0?6:day-1);
+return new Date(d.getFullYear(),d.getMonth(),d.getDate()-diffToMonday,0,0,0,0);
 }
 
 function setThisWeek(){
-  customRange=null;
-  document.getElementById('customRangePanel').style.display='none';
-  document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('thisWeekBtn').classList.add('active');
-  render(cachedEmployees,allRecordsCache);
+customRange=null;
+document.getElementById('customRangePanel').style.display='none';
+document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
+document.getElementById('thisWeekBtn').classList.add('active');
+render(cachedEmployees,allRecordsCache);
 }
 
 function toggleCustomRange(){
-  const panel=document.getElementById('customRangePanel');
-  const open=panel.style.display==='block';
-  panel.style.display=open?'none':'block';
-  if(!open){
-    document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
-    document.getElementById('customBtn').classList.add('active');
-    if(!document.getElementById('customTo').value){
-      const today=new Date().toISOString().slice(0,10);
-      const weekAgo=new Date(Date.now()-7*86400000).toISOString().slice(0,10);
-      document.getElementById('customFrom').value=weekAgo;
-      document.getElementById('customTo').value=today;
-    }
-  }
+const panel=document.getElementById('customRangePanel');
+const open=panel.style.display==='block';
+panel.style.display=open?'none':'block';
+if(!open){
+document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
+document.getElementById('customBtn').classList.add('active');
+if(!document.getElementById('customTo').value){
+const today=new Date().toISOString().slice(0,10);
+const weekAgo=new Date(Date.now()-7*86400000).toISOString().slice(0,10);
+document.getElementById('customFrom').value=weekAgo;
+document.getElementById('customTo').value=today;
+}
+}
 }
 
 function applyCustomRange(){
-  const from=document.getElementById('customFrom').value;
-  const to=document.getElementById('customTo').value;
-  if(!from||!to)return;
-  const start=new Date(from+'T00:00:00');
-  const end=new Date(to+'T23:59:59');
-  if(end<=start){ alert('La fecha "Hasta" debe ser después de "Desde".'); return; }
-  customRange={start,end};
-  render(cachedEmployees,allRecordsCache);
+const from=document.getElementById('customFrom').value;
+const to=document.getElementById('customTo').value;
+if(!from||!to)return;
+const start=new Date(from+'T00:00:00');
+const end=new Date(to+'T23:59:59');
+if(end<=start){ alert('La fecha "Hasta" debe ser después de "Desde".'); return; }
+customRange={start,end};
+render(cachedEmployees,allRecordsCache);
 }
 
 function render(employees,records){
-  cachedEmployees=employees;
-  const now=new Date();
-  const todayKey=dayKeyOf(now);
+cachedEmployees=employees;
+const now=new Date();
+const todayKey=dayKeyOf(now);
 
-  let periodStart,periodEnd,prevStart,prevEnd,periodLabel;
-  if(customRange){
-    periodStart=customRange.start;
-    periodEnd=customRange.end;
-    const lengthMs=periodEnd.getTime()-periodStart.getTime();
-    prevEnd=new Date(periodStart.getTime());
-    prevStart=new Date(periodStart.getTime()-lengthMs);
-    periodLabel='el período elegido';
-  }else{
-    // Semana calendario: lunes 00:00 → ahora. Anterior: lunes a domingo completo.
-    periodStart=mondayOf(now);
-    periodEnd=now;
-    prevStart=new Date(periodStart.getTime()-7*24*60*60*1000);
-    prevEnd=new Date(periodStart.getTime()-1); // domingo 23:59:59.999 anterior
-    periodLabel='esta semana (lunes a domingo)';
-  }
+let periodStart,periodEnd,prevStart,prevEnd,periodLabel;
+if(customRange){
+periodStart=customRange.start;
+periodEnd=customRange.end;
+const lengthMs=periodEnd.getTime()-periodStart.getTime();
+prevEnd=new Date(periodStart.getTime());
+prevStart=new Date(periodStart.getTime()-lengthMs);
+periodLabel='el período elegido';
+}else{
+// Semana calendario: lunes 00:00 → ahora. Anterior: lunes a domingo completo.
+periodStart=mondayOf(now);
+periodEnd=now;
+prevStart=new Date(periodStart.getTime()-7*24*60*60*1000);
+prevEnd=new Date(periodStart.getTime()-1); // domingo 23:59:59.999 anterior
+periodLabel='esta semana (lunes a domingo)';
+}
 
-  const byEmp={};
-  employees.forEach(e=>{ byEmp[e.key]={label:e.label,today:0,week:0,prevWeek:0,money:0,last:null,weekRecords:[]}; });
-  const byBranch={};
+const byEmp={};
+employees.forEach(e=>{ byEmp[e.key]={label:e.label,today:0,week:0,prevWeek:0,money:0,last:null,weekRecords:[]}; });
+const byBranch={};
 
-  let thisPeriodTotal=0, lastPeriodTotal=0, thisPeriodMoney=0, lastPeriodMoney=0;
+let thisPeriodTotal=0, lastPeriodTotal=0, thisPeriodMoney=0, lastPeriodMoney=0;
 
-  records.forEach(r=>{
-    const empKey=r.employee||'Sin nombre';
-    if(!byEmp[empKey])byEmp[empKey]={label:empKey,today:0,week:0,prevWeek:0,money:0,last:null,weekRecords:[]};
-    const d=new Date(r.timestamp);
-    if(isNaN(d))return;
-    const amt=parseFloat(r.total)||0;
-    if(!byEmp[empKey].last||d>byEmp[empKey].last.date){
-      byEmp[empKey].last={date:d,plate:r.plate,model:r.model};
-    }
-    if(d>=periodStart&&d<=periodEnd){
-      byEmp[empKey].week++;
-      byEmp[empKey].money+=amt;
-      byEmp[empKey].weekRecords.push({date:d,plate:r.plate,model:r.model,carNumber:r.carNumber});
-      thisPeriodTotal++;
-      thisPeriodMoney+=amt;
+records.forEach(r=>{
+const empKey=r.employee||'Sin nombre';
+if(!byEmp[empKey])byEmp[empKey]={label:empKey,today:0,week:0,prevWeek:0,money:0,last:null,weekRecords:[]};
+const d=new Date(r.timestamp);
+if(isNaN(d))return;
+const amt=parseFloat(r.total)||0;
+if(!byEmp[empKey].last||d>byEmp[empKey].last.date){
+byEmp[empKey].last={date:d,plate:r.plate,model:r.model};
+}
+if(d>=periodStart&&d<=periodEnd){
+byEmp[empKey].week++;
+byEmp[empKey].money+=amt;
+byEmp[empKey].weekRecords.push({date:d,plate:r.plate,model:r.model,carNumber:r.carNumber});
+thisPeriodTotal++;
+thisPeriodMoney+=amt;
 
-      const branchKey=r.branch||'Sin sucursal';
-      if(!byBranch[branchKey])byBranch[branchKey]={branch:branchKey,count:0,money:0};
-      byBranch[branchKey].count++;
-      byBranch[branchKey].money+=amt;
-    } else if(d>=prevStart&&d<prevEnd){
-      byEmp[empKey].prevWeek++;
-      lastPeriodTotal++;
-      lastPeriodMoney+=amt;
-    }
-    if(dayKeyOf(d)===todayKey)byEmp[empKey].today++;
-  });
+const branchKey=r.branch||'Sin sucursal';
+if(!byBranch[branchKey])byBranch[branchKey]={branch:branchKey,count:0,money:0};
+byBranch[branchKey].count++;
+byBranch[branchKey].money+=amt;
+} else if(d>=prevStart&&d<prevEnd){
+byEmp[empKey].prevWeek++;
+lastPeriodTotal++;
+lastPeriodMoney+=amt;
+}
+if(dayKeyOf(d)===todayKey)byEmp[empKey].today++;
+});
 
-  // ── Meta del período — barras comparativas lado a lado ──
-  const fmtShort=d=>d.toLocaleDateString('es-MX',{day:'numeric',month:'short'});
-  document.getElementById('goalLabel').textContent=`🎯 Meta — superar ${periodLabel}`;
-  document.getElementById('kpiWeekLabel').textContent=customRange?'Período elegido':periodLabel.replace('los ','');
-  document.getElementById('empPeriodLabel').textContent=customRange?'· período elegido':`· ${periodLabel}`;
-  document.getElementById('rankPeriodLabel').textContent=customRange?'· período elegido':`· ${periodLabel}`;
-  document.getElementById('cmpCurrentVal').textContent=thisPeriodTotal;
-  document.getElementById('cmpPrevVal').textContent=lastPeriodTotal;
-  document.getElementById('goalDates').textContent=
-    `Este período: ${fmtShort(periodStart)}–${fmtShort(periodEnd)}  ·  Anterior: ${fmtShort(prevStart)}–${fmtShort(prevEnd)}`;
-  document.getElementById('goalMoney').textContent=
-    `$${thisPeriodMoney.toLocaleString()} vs $${lastPeriodMoney.toLocaleString()}`;
+// ── Meta del período — barras comparativas lado a lado ──
+const fmtShort=d=>d.toLocaleDateString('es-MX',{day:'numeric',month:'short'});
+document.getElementById('goalLabel').textContent=`🎯 Meta — superar ${periodLabel}`;
+document.getElementById('kpiWeekLabel').textContent=customRange?'Período elegido':periodLabel.replace('los ','');
+document.getElementById('empPeriodLabel').textContent=customRange?'· período elegido':`· ${periodLabel}`;
+document.getElementById('rankPeriodLabel').textContent=customRange?'· período elegido':`· ${periodLabel}`;
+document.getElementById('cmpCurrentVal').textContent=thisPeriodTotal;
+document.getElementById('cmpPrevVal').textContent=lastPeriodTotal;
+document.getElementById('goalDates').textContent=
+`Este período: ${fmtShort(periodStart)}–${fmtShort(periodEnd)} · Anterior: ${fmtShort(prevStart)}–${fmtShort(prevEnd)}`;
+document.getElementById('goalMoney').textContent=
+`$${thisPeriodMoney.toLocaleString()} vs $${lastPeriodMoney.toLocaleString()}`;
 
-  const maxVal=Math.max(1,thisPeriodTotal,lastPeriodTotal);
-  const currentBar=document.getElementById('cmpCurrentBar');
-  const prevBar=document.getElementById('cmpPrevBar');
-  currentBar.style.height=Math.max(4,Math.round(thisPeriodTotal/maxVal*100))+'%';
-  prevBar.style.height=Math.max(4,Math.round(lastPeriodTotal/maxVal*100))+'%';
-  currentBar.classList.toggle('beat',thisPeriodTotal>=lastPeriodTotal);
+const maxVal=Math.max(1,thisPeriodTotal,lastPeriodTotal);
+const currentBar=document.getElementById('cmpCurrentBar');
+const prevBar=document.getElementById('cmpPrevBar');
+currentBar.style.height=Math.max(4,Math.round(thisPeriodTotal/maxVal*100))+'%';
+prevBar.style.height=Math.max(4,Math.round(lastPeriodTotal/maxVal*100))+'%';
+currentBar.classList.toggle('beat',thisPeriodTotal>=lastPeriodTotal);
 
-  const goalDelta=document.getElementById('goalDelta');
-  const goalCard=document.querySelector('.goal-card');
-  if(lastPeriodTotal===0){
-    goalDelta.textContent=thisPeriodTotal>0?'🎉 ¡Primer período con carros!':'';
-    goalDelta.className='goal-delta up';
-    goalCard.classList.remove('behind');
-  }else{
-    const realPct=Math.round(thisPeriodTotal/lastPeriodTotal*100);
-    const diff=thisPeriodTotal-lastPeriodTotal;
-    if(diff>=0){
-      goalDelta.textContent=realPct>=200?`🎉 ${(thisPeriodTotal/lastPeriodTotal).toFixed(1)}x el período anterior`:`▲ +${diff}`;
-      goalCard.classList.remove('behind');
-    }else{
-      goalDelta.textContent=`⚠️ Faltan ${Math.abs(diff)} para igualar`;
-      goalCard.classList.add('behind');
-    }
-    goalDelta.className='goal-delta '+(diff>=0?'up':'down');
-  }
+const goalDelta=document.getElementById('goalDelta');
+const goalCard=document.querySelector('.goal-card');
+if(lastPeriodTotal===0){
+goalDelta.textContent=thisPeriodTotal>0?'🎉 ¡Primer período con carros!':'';
+goalDelta.className='goal-delta up';
+goalCard.classList.remove('behind');
+}else{
+const realPct=Math.round(thisPeriodTotal/lastPeriodTotal*100);
+const diff=thisPeriodTotal-lastPeriodTotal;
+if(diff>=0){
+goalDelta.textContent=realPct>=200?`🎉 ${(thisPeriodTotal/lastPeriodTotal).toFixed(1)}x el período anterior`:`▲ +${diff}`;
+goalCard.classList.remove('behind');
+}else{
+goalDelta.textContent=`⚠️ Faltan ${Math.abs(diff)} para igualar`;
+goalCard.classList.add('behind');
+}
+goalDelta.className='goal-delta '+(diff>=0?'up':'down');
+}
 
-  const vals=Object.values(byEmp);
-  document.getElementById('kpiToday').textContent=vals.reduce((s,e)=>s+e.today,0);
-  document.getElementById('kpiWeek').textContent=vals.reduce((s,e)=>s+e.week,0);
-  document.getElementById('kpiActive').textContent=vals.filter(e=>e.today>0).length;
+const vals=Object.values(byEmp);
+document.getElementById('kpiToday').textContent=vals.reduce((s,e)=>s+e.today,0);
+document.getElementById('kpiWeek').textContent=vals.reduce((s,e)=>s+e.week,0);
+document.getElementById('kpiActive').textContent=vals.filter(e=>e.today>0).length;
 
-  // ── Ranking de hoy — quién lleva más carros lavados hoy ──
-  const todayMedals=['🥇','🥈','🥉'];
-  const todaySorted=[...vals].sort((a,b)=>b.today-a.today).filter(e=>e.today>0);
-  document.getElementById('todayRankList').innerHTML=todaySorted.length===0
-    ? '<div class="empty-state">Sin carros hoy todavía.</div>'
-    : todaySorted.map((e,i)=>`
-      <div class="rank-row">
-        <div class="rank-medal">${todayMedals[i]||(i+1)}</div>
-        <div class="rank-name">${e.label}</div>
-        <div class="rank-count">${e.today}</div>
-      </div>`).join('');
+// ── Ranking de hoy — quién lleva más carros lavados hoy ──
+const todayMedals=['🥇','🥈','🥉'];
+const todaySorted=[...vals].sort((a,b)=>b.today-a.today).filter(e=>e.today>0);
+document.getElementById('todayRankList').innerHTML=todaySorted.length===0
+? '<div class="empty-state">Sin carros hoy todavía.</div>'
+: todaySorted.map((e,i)=>`
+<div class="rank-row">
+<div class="rank-medal">${todayMedals[i]||(i+1)}</div>
+<div class="rank-name">${e.label}</div>
+<div class="rank-count">${e.today}</div>
+</div>`).join('');
 
-  const sorted=Object.entries(byEmp).sort((a,b)=>b[1].today-a[1].today);
-  document.getElementById('empCards').innerHTML=sorted.length===0
-    ? '<div class="empty-state">Sin empleados configurados.</div>'
-    : sorted.map(([key,e],idx)=>{
-        const lastText=e.last
-          ? `${timeAgo(e.last.date)} · ${e.last.plate||'—'} ${e.last.model||''}`
-          : 'Sin registros aún';
+const sorted=Object.entries(byEmp).sort((a,b)=>b[1].today-a[1].today);
+document.getElementById('empCards').innerHTML=sorted.length===0
+? '<div class="empty-state">Sin empleados configurados.</div>'
+: sorted.map(([key,e],idx)=>{
+const lastText=e.last
+? `${timeAgo(e.last.date)} · ${e.last.plate||'—'} ${e.last.model||''}`
+: 'Sin registros aún';
 
-        // Agrupa los carros de la semana de este empleado por día
-        const byDay={};
-        e.weekRecords.slice().sort((a,b)=>b.date-a.date).forEach(rec=>{
-          const label=rec.date.toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'short'});
-          if(!byDay[label])byDay[label]=[];
-          byDay[label].push(rec);
-        });
-        const detailHtml=Object.keys(byDay).length===0
-          ? `<div class="empty-state" style="padding:8px 0;">Sin carros en ${periodLabel}.</div>`
-          : Object.entries(byDay).map(([day,recs])=>`
-              <div class="emp-detail-day">${day} · ${recs.length}</div>
-              ${recs.map(rec=>`<div class="emp-detail-row"><span>${rec.date.toLocaleTimeString('es-MX',{hour:'numeric',minute:'2-digit'})}</span>#${rec.carNumber||'—'} · ${rec.plate||'—'} ${rec.model||''}</div>`).join('')}
-            `).join('');
+// Agrupa los carros de la semana de este empleado por día
+const byDay={};
+e.weekRecords.slice().sort((a,b)=>b.date-a.date).forEach(rec=>{
+const label=rec.date.toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'short'});
+if(!byDay[label])byDay[label]=[];
+byDay[label].push(rec);
+});
+const detailHtml=Object.keys(byDay).length===0
+? `<div class="empty-state" style="padding:8px 0;">Sin carros en ${periodLabel}.</div>`
+: Object.entries(byDay).map(([day,recs])=>`
+<div class="emp-detail-day">${day} · ${recs.length}</div>
+${recs.map(rec=>`<div class="emp-detail-row"><span>${rec.date.toLocaleTimeString('es-MX',{hour:'numeric',minute:'2-digit'})}</span>#${rec.carNumber||'—'} · ${rec.plate||'—'} ${rec.model||''}</div>`).join('')}
+`).join('');
 
-        return `<div class="emp-card" onclick="toggleEmpDetail(${idx})">
-          <div class="emp-card-top">
-            <div class="emp-name">${e.label}<span class="arrow" id="arrow-${idx}">▸</span></div>
-            <div class="emp-count">${e.today}<span> hoy</span></div>
-          </div>
-          <div class="emp-last">🕐 Último: ${lastText}</div>
-          <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap;">
-            <div class="emp-week">${e.week} · ${periodLabel}</div>
-            <div class="emp-money">💰 $${e.money.toLocaleString()}</div>
-            ${e.week>0||e.prevWeek>0?`<div class="emp-week" style="color:${e.week>=e.prevWeek?'#15803d':'#a32d2d'};background:${e.week>=e.prevWeek?'var(--green-bg)':'#fcebeb'};">${e.week>=e.prevWeek?'▲ +':'▼ '}${e.week-e.prevWeek} vs anterior</div>`:''}
-          </div>
-          <div class="emp-detail" id="detail-${idx}">${detailHtml}</div>
-        </div>`;
-      }).join('');
+return `<div class="emp-card" onclick="toggleEmpDetail(${idx})">
+<div class="emp-card-top">
+<div class="emp-name">${e.label}<span class="arrow" id="arrow-${idx}">▸</span></div>
+<div class="emp-count">${e.today}<span> hoy</span></div>
+</div>
+<div class="emp-last">🕐 Último: ${lastText}</div>
+<div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap;">
+<div class="emp-week">${e.week} · ${periodLabel}</div>
+<div class="emp-money">💰 $${e.money.toLocaleString()}</div>
+${e.week>0||e.prevWeek>0?`<div class="emp-week" style="color:${e.week>=e.prevWeek?'#15803d':'#a32d2d'};background:${e.week>=e.prevWeek?'var(--green-bg)':'#fcebeb'};">${e.week>=e.prevWeek?'▲ +':'▼ '}${e.week-e.prevWeek} vs anterior</div>`:''}
+</div>
+<div class="emp-detail" id="detail-${idx}">${detailHtml}</div>
+</div>`;
+}).join('');
 
-  // ── Ranking por $ generado en el período ──
-  const rankSorted=[...vals].sort((a,b)=>b.money-a.money).filter(e=>e.week>0);
-  const medals=['🥇','🥈','🥉'];
-  document.getElementById('rankList').innerHTML=rankSorted.length===0
-    ? '<div class="empty-state">Sin carros en este período todavía.</div>'
-    : rankSorted.map((e,i)=>`
-      <div class="rank-row">
-        <div class="rank-medal">${medals[i]||(i+1)}</div>
-        <div class="rank-name">${e.label}<div style="font-size:10px;color:var(--muted);font-weight:700;">${e.week} carro${e.week===1?'':'s'}</div></div>
-        <div class="rank-count">$${e.money.toLocaleString()}</div>
-      </div>`).join('');
+// ── Ranking por $ generado en el período ──
+const rankSorted=[...vals].sort((a,b)=>b.money-a.money).filter(e=>e.week>0);
+const medals=['🥇','🥈','🥉'];
+document.getElementById('rankList').innerHTML=rankSorted.length===0
+? '<div class="empty-state">Sin carros en este período todavía.</div>'
+: rankSorted.map((e,i)=>`
+<div class="rank-row">
+<div class="rank-medal">${medals[i]||(i+1)}</div>
+<div class="rank-name">${e.label}<div style="font-size:10px;color:var(--muted);font-weight:700;">${e.week} carro${e.week===1?'':'s'}</div></div>
+<div class="rank-count">$${e.money.toLocaleString()}</div>
+</div>`).join('');
 
-  // ── Ranking de sucursales en el período ──
-  document.getElementById('branchPeriodLabel').textContent=customRange?'· período elegido':`· ${periodLabel}`;
-  const branchSorted=Object.values(byBranch).sort((a,b)=>b.money-a.money);
-  document.getElementById('branchRankList').innerHTML=branchSorted.length===0
-    ? '<div class="empty-state">Sin carros en este período todavía.</div>'
-    : branchSorted.map((b,i)=>`
-      <div class="rank-row">
-        <div class="rank-medal">${medals[i]||(i+1)}</div>
-        <div class="rank-name">${b.branch}<div style="font-size:10px;color:var(--muted);font-weight:700;">${b.count} carro${b.count===1?'':'s'}</div></div>
-        <div class="rank-count">$${b.money.toLocaleString()}</div>
-      </div>`).join('');
+// ── Ranking de sucursales en el período ──
+document.getElementById('branchPeriodLabel').textContent=customRange?'· período elegido':`· ${periodLabel}`;
+const branchSorted=Object.values(byBranch).sort((a,b)=>b.money-a.money);
+document.getElementById('branchRankList').innerHTML=branchSorted.length===0
+? '<div class="empty-state">Sin carros en este período todavía.</div>'
+: branchSorted.map((b,i)=>`
+<div class="rank-row">
+<div class="rank-medal">${medals[i]||(i+1)}</div>
+<div class="rank-name">${b.branch}<div style="font-size:10px;color:var(--muted);font-weight:700;">${b.count} carro${b.count===1?'':'s'}</div></div>
+<div class="rank-count">$${b.money.toLocaleString()}</div>
+</div>`).join('');
 
-  const days=[];
-  for(let i=6;i>=0;i--){
-    const d=new Date(now.getTime()-i*86400000);
-    days.push({key:dayKeyOf(d),label:d.toLocaleDateString('es-MX',{weekday:'short'}),count:0});
-  }
-  records.forEach(r=>{
-    const d=new Date(r.timestamp);
-    if(isNaN(d))return;
-    const day=days.find(dd=>dd.key===dayKeyOf(d));
-    if(day)day.count++;
-  });
-  const max=Math.max(1,...days.map(d=>d.count));
-  document.getElementById('weekChart').innerHTML=days.map(d=>`
-    <div class="bar-col">
-      <div class="bar-count">${d.count}</div>
-      <div class="bar" style="height:${Math.max(3,Math.round(d.count/max*100))}%"></div>
-      <div class="bar-label">${d.label}</div>
-    </div>`).join('');
+const days=[];
+for(let i=6;i>=0;i--){
+const d=new Date(now.getTime()-i*86400000);
+days.push({key:dayKeyOf(d),label:d.toLocaleDateString('es-MX',{weekday:'short'}),count:0});
+}
+records.forEach(r=>{
+const d=new Date(r.timestamp);
+if(isNaN(d))return;
+const day=days.find(dd=>dd.key===dayKeyOf(d));
+if(day)day.count++;
+});
+const max=Math.max(1,...days.map(d=>d.count));
+document.getElementById('weekChart').innerHTML=days.map(d=>`
+<div class="bar-col">
+<div class="bar-count">${d.count}</div>
+<div class="bar" style="height:${Math.max(3,Math.round(d.count/max*100))}%"></div>
+<div class="bar-label">${d.label}</div>
+</div>`).join('');
 }
 
 function toggleEmpDetail(idx){
-  const detail=document.getElementById('detail-'+idx);
-  const arrow=document.getElementById('arrow-'+idx);
-  detail.classList.toggle('open');
-  arrow.classList.toggle('open');
+const detail=document.getElementById('detail-'+idx);
+const arrow=document.getElementById('arrow-'+idx);
+detail.classList.toggle('open');
+arrow.classList.toggle('open');
 }
 
 function calPrev(){ calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderCalendar(); }
 function calNext(){ calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderCalendar(); }
 
 function renderCalendar(){
-  const months=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  document.getElementById('calMonthLabel').textContent=`${months[calMonth]} ${calYear}`;
+const months=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+document.getElementById('calMonthLabel').textContent=`${months[calMonth]} ${calYear}`;
 
-  const counts={};
-  allRecordsCache.forEach(r=>{
-    const d=new Date(r.timestamp);
-    if(isNaN(d))return;
-    if(d.getFullYear()===calYear && d.getMonth()===calMonth){
-      const day=d.getDate();
-      if(!counts[day])counts[day]={count:0,records:[]};
-      counts[day].count++;
-      counts[day].records.push({time:d,plate:r.plate,model:r.model,employee:r.employee,carNumber:r.carNumber});
-    }
-  });
+const counts={};
+allRecordsCache.forEach(r=>{
+const d=new Date(r.timestamp);
+if(isNaN(d))return;
+if(d.getFullYear()===calYear && d.getMonth()===calMonth){
+const day=d.getDate();
+if(!counts[day])counts[day]={count:0,records:[]};
+counts[day].count++;
+counts[day].records.push({time:d,plate:r.plate,model:r.model,employee:r.employee,carNumber:r.carNumber});
+}
+});
 
-  const firstDay=new Date(calYear,calMonth,1).getDay();
-  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
-  const startOffset=(firstDay+6)%7; // empieza en lunes
-  const max=Math.max(1,...Object.values(counts).map(c=>c.count));
-  const today=new Date();
+const firstDay=new Date(calYear,calMonth,1).getDay();
+const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+const startOffset=(firstDay+6)%7; // empieza en lunes
+const max=Math.max(1,...Object.values(counts).map(c=>c.count));
+const today=new Date();
 
-  let html=['L','M','M','J','V','S','D'].map(d=>`<div class="cal-dow">${d}</div>`).join('');
-  for(let i=0;i<startOffset;i++)html+='<div class="cal-cell empty"></div>';
-  for(let day=1;day<=daysInMonth;day++){
-    const info=counts[day];
-    const cnt=info?info.count:0;
-    const lvl=cnt===0?0:Math.min(4,Math.ceil(cnt/max*4));
-    const isToday=today.getDate()===day&&today.getMonth()===calMonth&&today.getFullYear()===calYear;
-    html+=`<div class="cal-cell lvl${lvl}${isToday?' today':''}" onclick="showDayDetail(${day})">
-      <div class="cal-daynum">${day}</div>
-      <div class="cal-count">${cnt||''}</div>
-    </div>`;
-  }
-  document.getElementById('calGrid').innerHTML=html;
-  window._calCounts=counts;
-  document.getElementById('calDayDetail').innerHTML='';
+let html=['L','M','M','J','V','S','D'].map(d=>`<div class="cal-dow">${d}</div>`).join('');
+for(let i=0;i<startOffset;i++)html+='<div class="cal-cell empty"></div>';
+for(let day=1;day<=daysInMonth;day++){
+const info=counts[day];
+const cnt=info?info.count:0;
+const lvl=cnt===0?0:Math.min(4,Math.ceil(cnt/max*4));
+const isToday=today.getDate()===day&&today.getMonth()===calMonth&&today.getFullYear()===calYear;
+html+=`<div class="cal-cell lvl${lvl}${isToday?' today':''}" onclick="showDayDetail(${day})">
+<div class="cal-daynum">${day}</div>
+<div class="cal-count">${cnt||''}</div>
+</div>`;
+}
+document.getElementById('calGrid').innerHTML=html;
+window._calCounts=counts;
+document.getElementById('calDayDetail').innerHTML='';
 }
 
 function showDayDetail(day){
-  const info=window._calCounts[day];
-  const panel=document.getElementById('calDayDetail');
-  const months=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
-  if(!info){
-    panel.innerHTML=`<div class="cal-detail-card"><div class="empty-state" style="padding:6px 0;">Sin carros el ${day} de ${months[calMonth]}.</div></div>`;
-    return;
-  }
-  const rows=info.records.slice().sort((a,b)=>a.time-b.time).map(r=>`
-    <div class="emp-detail-row"><span>${r.time.toLocaleTimeString('es-MX',{hour:'numeric',minute:'2-digit'})} · ${r.employee||'—'}</span>#${r.carNumber||'—'} · ${r.plate||'—'} ${r.model||''}</div>`).join('');
-  panel.innerHTML=`<div class="cal-detail-card">
-    <div class="section-title" style="margin-top:0;">${day} de ${months[calMonth]} — ${info.count} carro${info.count===1?'':'s'}</div>
-    ${rows}
-  </div>`;
+const info=window._calCounts[day];
+const panel=document.getElementById('calDayDetail');
+const months=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+if(!info){
+panel.innerHTML=`<div class="cal-detail-card"><div class="empty-state" style="padding:6px 0;">Sin carros el ${day} de ${months[calMonth]}.</div></div>`;
+return;
+}
+const rows=info.records.slice().sort((a,b)=>a.time-b.time).map(r=>`
+<div class="emp-detail-row"><span>${r.time.toLocaleTimeString('es-MX',{hour:'numeric',minute:'2-digit'})} · ${r.employee||'—'}</span>#${r.carNumber||'—'} · ${r.plate||'—'} ${r.model||''}</div>`).join('');
+panel.innerHTML=`<div class="cal-detail-card">
+<div class="section-title" style="margin-top:0;">${day} de ${months[calMonth]} — ${info.count} carro${info.count===1?'':'s'}</div>
+${rows}
+</div>`;
 }
 </script>
 </body>
