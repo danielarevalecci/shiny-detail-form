@@ -211,7 +211,7 @@ select option{background:var(--white);}
 
   <div class="carnum-card">
     <div class="carnum-title">🔢 <span data-i18n="carNumberTitle">Número de Auto</span> <span class="req">*</span></div>
-    <div class="carnum-help" data-i18n="carNumberHelp">Este dato es obligatorio. La foto del llavero no siempre se lee bien, así que escríbelo aquí directamente.</div>
+    <div class="carnum-help" data-i18n="carNumberHelp">Este dato es obligatorio. Escríbelo directamente desde la tarjeta del carro.</div>
     <input type="text" id="fCarNumberMain" data-i18n-placeholder="carNumberPlaceholder" placeholder="ej. 7XV3RK" />
   </div>
 
@@ -411,7 +411,7 @@ const I18N = {
     branchZone: "Zona de la sucursal", selectZone: "Selecciona la zona...", typeZonePlaceholder: "Escribe tu zona",
     step2of4: "Paso 2 de 4", scanTitle: "Escanea el vehículo", scanDesc: "Toma las fotos de abajo — la IA llena los datos ✨",
     carNumberTitle: "Número de Auto",
-    carNumberHelp: "Este dato es obligatorio. Escríbelo directamente del llavero del carro.",
+    carNumberHelp: "Este dato es obligatorio. Escríbelo directamente desde la tarjeta del carro.",
     carNumberPlaceholder: "ej. 42",
     photoGuideTitle: "📸 Guía de fotos",
     tipCarName: "Frente o parte trasera del carro", tipCarDesc: "Captura la placa completa + el modelo del carro. Párate a 1.5–2.5 m de distancia.",
@@ -918,9 +918,7 @@ async function runScan(){
     content.push({type:'image',source:{type:'base64',media_type:'image/jpeg',data:vinB64}});
     content.push({type:'text',text:'Photo with a VIN number. Read the exact VIN string. Use null if unreadable.'});
   }
-// key photo removed from AI scan);
-    content.push({type:'text',text:'Photo of a car rental keychain/key tag. Read the car number/unit number printed or written on it (usually a short number, 1-4 digits). Use null if unreadable.'});
-  }
+  // key photo removed from AI scan
   content.push({type:'text',text:'Reply ONLY with valid JSON, no backticks, no extra text:\n{"make":"...","model":"...","year":"...","plate":"...","vin":"...","carNumber":"...","confidence":"high|medium|low"}'});
   try{
     msg.textContent=t('analyzing');sub.textContent=t('takesSeconds');
