@@ -974,7 +974,7 @@ function retakePhotos(){
   document.querySelectorAll('.pz-prev').forEach(p=>{p.src='';p.classList.remove('show');});
   document.querySelectorAll('.pz-overlay,.pz-done').forEach(e=>e.classList.remove('show'));
   document.querySelectorAll('.photo-zone').forEach(z=>z.classList.remove('has-photo'));
-  document.querySelectorAll('#carPh,#vinPh,#keyPh').forEach(e=>e.style.display='');
+  document.querySelectorAll('#carPh,#vinPh').forEach(e=>e.style.display='');
   document.getElementById('vCard').style.display='none';
   document.getElementById('manualCard').style.display='none';
   document.getElementById('scanBtn').disabled=true;
@@ -1141,7 +1141,7 @@ function resetAll(){
   document.querySelectorAll('.pz-prev').forEach(p=>{p.src='';p.classList.remove('show');});
   document.querySelectorAll('.pz-overlay,.pz-done').forEach(e=>e.classList.remove('show'));
   document.querySelectorAll('.photo-zone').forEach(z=>z.classList.remove('has-photo'));
-  document.querySelectorAll('#carPh,#vinPh,#keyPh').forEach(e=>e.style.display='');
+  document.querySelectorAll('#carPh,#vinPh').forEach(e=>e.style.display='');
   document.getElementById('scanAnim').classList.remove('show');
   document.getElementById('scanBtn').style.display='flex';document.getElementById('scanBtn').disabled=true;
   document.getElementById('vCard').style.display='none';document.getElementById('manualCard').style.display='none';
