@@ -210,7 +210,7 @@ select option{background:var(--white);}
   <div class="step-desc" data-i18n="scanDesc">Toma las fotos de abajo — la IA llena los datos ✨</div>
 
   <div class="carnum-card">
-    <div class="carnum-title">🔢 <span data-i18n="carNumberTitle">Número de Auto (llavero)</span> <span class="req">*</span></div>
+    <div class="carnum-title">🔢 <span data-i18n="carNumberTitle">Número de Auto</span> <span class="req">*</span></div>
     <div class="carnum-help" data-i18n="carNumberHelp">Este dato es obligatorio. La foto del llavero no siempre se lee bien, así que escríbelo aquí directamente.</div>
     <input type="text" id="fCarNumberMain" data-i18n-placeholder="carNumberPlaceholder" placeholder="ej. 7XV3RK" />
   </div>
@@ -277,13 +277,7 @@ select option{background:var(--white);}
       <div class="pz-done" id="vinDone">✓</div>
       <div id="vinPh"><div class="pz-icon">🔢</div><div class="pz-label" data-i18n="vinPhotoLabel">Número VIN</div><div class="pz-sub" data-i18n="vinPhotoSub">Tablero o calcomanía del marco</div></div>
     </div>
-    <div class="photo-zone" id="keyZone">
-      <input type="file" id="keyInput" accept="image/*" capture="environment"/>
-      <img class="pz-prev" id="keyPrev"/>
-      <div class="pz-overlay" id="keyOvr"><div class="pz-change" data-i18n="changePhoto">Cambiar foto</div></div>
-      <div class="pz-done" id="keyDone">✓</div>
-      <div id="keyPh"><div class="pz-icon">🔑</div><div class="pz-label" data-i18n="keyPhotoLabel">Llavero (foto de referencia)</div><div class="pz-sub" data-i18n="keyPhotoSub">Ayuda a la IA — el número ya lo escribiste arriba</div></div>
-    </div>
+
     <div style="display:flex;gap:9px;margin-bottom:11px;">
       <button class="scan-cta" id="scanBtn" disabled onclick="runScan()" style="margin-bottom:0;flex:2;">
         <span id="scanBtnTxt">✦  <span data-i18n="scanWithAi">Escanear con IA</span></span>
@@ -381,7 +375,7 @@ select option{background:var(--white);}
 <div class="toast" id="toast"></div>
 
 <script>
-let cur=0, carB64=null, vinB64=null, keyB64=null, aiDone=false;
+let cur=0, carB64=null, vinB64=null, aiDone=false;
 let selectedSvcs=new Set();
 
 var SHEETS_URL='https://script.google.com/macros/s/AKfycbwE9v3w5n_CjRu9E0FshcIjf_c5RfCJrklg4UTye-AvnWj2pN9SImjOq_3V94vMvj4L/exec';
@@ -416,8 +410,8 @@ const I18N = {
     branchNumber: "Número de sucursal", branchPlaceholder: "ej. 1212 o A-12",
     branchZone: "Zona de la sucursal", selectZone: "Selecciona la zona...", typeZonePlaceholder: "Escribe tu zona",
     step2of4: "Paso 2 de 4", scanTitle: "Escanea el vehículo", scanDesc: "Toma las fotos de abajo — la IA llena los datos ✨",
-    carNumberTitle: "Número de Auto (llavero)",
-    carNumberHelp: "Este dato es obligatorio. La foto del llavero no siempre se lee bien, así que escríbelo aquí directamente.",
+    carNumberTitle: "Número de Auto",
+    carNumberHelp: "Este dato es obligatorio. Escríbelo directamente del llavero del carro.",
     carNumberPlaceholder: "ej. 42",
     photoGuideTitle: "📸 Guía de fotos",
     tipCarName: "Frente o parte trasera del carro", tipCarDesc: "Captura la placa completa + el modelo del carro. Párate a 1.5–2.5 m de distancia.",
@@ -426,7 +420,7 @@ const I18N = {
     uploadPhotos: "Sube tus fotos", changePhoto: "Cambiar foto",
     carPhotoLabel: "Foto del carro", carPhotoSub: "Frente o trasera — placa visible",
     vinPhotoLabel: "Número VIN", vinPhotoSub: "Tablero o calcomanía del marco",
-    keyPhotoLabel: "Llavero (foto de referencia)", keyPhotoSub: "Ayuda a la IA — el número ya lo escribiste arriba",
+    
     scanWithAi: "Escanear con IA", manual: "Manual", analyzing: "Analizando imágenes...", takesSeconds: "Esto toma unos segundos",
     vehicleData: "Datos del vehículo", aiFilled: "Llenado por IA",
     plate: "Placa", vinNumber: "Número VIN", vin17: "VIN de 17 caracteres", modelYear: "Modelo y Año",
@@ -460,7 +454,7 @@ const I18N = {
     tapYourName: "Toca tu nombre 👆", selectYourRegion: "Selecciona tu región",
     enterManagerName: "Ingresa el nombre del manager", enterBranchNumber: "Ingresa el número de sucursal",
     selectBranchZone: "Selecciona la zona de la sucursal", typeYourZone: "Escribe el nombre de tu zona",
-    addPlateNumber: "Agrega el número de placa", addCarNumber: "Agrega el número de auto (llavero)",
+    addPlateNumber: "Agrega el número de placa", addCarNumber: "Agrega el número de auto",
     goBackSelectRegion: "Regresa y selecciona tu región primero", selectOneService: "Selecciona al menos un servicio",
     didntReadWell: "⚠️ No se leyó muy bien", dataExtractedShort: "✦ ¡Datos extraídos!",
     couldNotAnalyze: "No se pudo analizar — ingresa manualmente",
@@ -477,7 +471,7 @@ const I18N = {
     branchZone: "Branch zone", selectZone: "Select zone...", typeZonePlaceholder: "Type your zone",
     step2of4: "Step 2 of 4", scanTitle: "Scan the vehicle", scanDesc: "Take the photos below — AI fills in the data ✨",
     carNumberTitle: "Car Number (keychain)",
-    carNumberHelp: "This field is required. The keychain photo doesn't always read well, so type it in directly here.",
+    carNumberHelp: "This field is required. Type it directly from the car keychain.",
     carNumberPlaceholder: "e.g. 42",
     photoGuideTitle: "📸 Photo guide",
     tipCarName: "Front or back of the car", tipCarDesc: "Capture the full plate + car model. Stand 1.5–2.5 m away.",
@@ -486,7 +480,7 @@ const I18N = {
     uploadPhotos: "Upload your photos", changePhoto: "Change photo",
     carPhotoLabel: "Car photo", carPhotoSub: "Front or back — plate visible",
     vinPhotoLabel: "VIN number", vinPhotoSub: "Dashboard or door-frame sticker",
-    keyPhotoLabel: "Keychain (reference photo)", keyPhotoSub: "Helps the AI — you already typed the number above",
+    
     scanWithAi: "Scan with AI", manual: "Manual", analyzing: "Analyzing images...", takesSeconds: "This takes a few seconds",
     vehicleData: "Vehicle data", aiFilled: "AI filled",
     plate: "Plate", vinNumber: "VIN number", vin17: "17-character VIN", modelYear: "Make/Model and Year",
@@ -897,14 +891,13 @@ function setupPhoto(inId,prevId,ovrId,doneId,phId,kind){
     document.getElementById(kind+'Zone').classList.add('has-photo');
     const b64=await f2b64(f);
     if(kind==='vin')vinB64=b64;
-    else if(kind==='key')keyB64=b64;
     else carB64=b64;
     checkScan();
   });
 }
 setupPhoto('carInput','carPrev','carOvr','carDone','carPh','car');
 setupPhoto('vinInput','vinPrev','vinOvr','vinDone','vinPh','vin');
-setupPhoto('keyInput','keyPrev','keyOvr','keyDone','keyPh','key');
+// key photo removed
 function f2b64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=(e)=>{const img=new Image();img.onload=()=>{const c=document.createElement('canvas');const max=1600;let w=img.width,h=img.height;if(w>max){h=Math.round(h*max/w);w=max;}if(h>max){w=Math.round(w*max/h);h=max;}c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);res(c.toDataURL('image/jpeg',0.92).split(',')[1]);};img.onerror=rej;img.src=e.target.result;};r.onerror=rej;r.readAsDataURL(file);});}
 function checkScan(){
   document.getElementById('scanBtn').disabled=!(carB64||vinB64);
@@ -925,9 +918,7 @@ async function runScan(){
     content.push({type:'image',source:{type:'base64',media_type:'image/jpeg',data:vinB64}});
     content.push({type:'text',text:'Photo with a VIN number. Read the exact VIN string. Use null if unreadable.'});
   }
-  if(keyB64){
-    msg.textContent=t('analyzing');
-    content.push({type:'image',source:{type:'base64',media_type:'image/jpeg',data:keyB64}});
+// key photo removed from AI scan);
     content.push({type:'text',text:'Photo of a car rental keychain/key tag. Read the car number/unit number printed or written on it (usually a short number, 1-4 digits). Use null if unreadable.'});
   }
   content.push({type:'text',text:'Reply ONLY with valid JSON, no backticks, no extra text:\n{"make":"...","model":"...","year":"...","plate":"...","vin":"...","carNumber":"...","confidence":"high|medium|low"}'});
@@ -979,7 +970,7 @@ function showManualEntry(){
 }
 
 function retakePhotos(){
-  carB64=null;vinB64=null;keyB64=null;aiDone=false;
+  carB64=null;vinB64=null;aiDone=false;
   document.querySelectorAll('.pz-prev').forEach(p=>{p.src='';p.classList.remove('show');});
   document.querySelectorAll('.pz-overlay,.pz-done').forEach(e=>e.classList.remove('show'));
   document.querySelectorAll('.photo-zone').forEach(z=>z.classList.remove('has-photo'));
@@ -1139,7 +1130,7 @@ function updatePendingBadge(){
 window.addEventListener('online',syncPending);
 setInterval(syncPending,20000);
 function resetAll(){
-  cur=0;carB64=null;vinB64=null;keyB64=null;aiDone=false;selectedSvcs=new Set();
+  cur=0;carB64=null;vinB64=null;aiDone=false;selectedSvcs=new Set();
   document.querySelectorAll('input[type=text],input[type=number],input[type=url]').forEach(i=>{i.value='';i.classList.remove('ai-filled');});
   document.getElementById('fEmployee').value='';document.getElementById('fRegion').value='';
   document.getElementById('zonaField').style.display='none';
