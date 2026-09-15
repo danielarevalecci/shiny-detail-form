@@ -898,7 +898,7 @@ function setupPhoto(inId,prevId,ovrId,doneId,phId,kind){
 setupPhoto('carInput','carPrev','carOvr','carDone','carPh','car');
 setupPhoto('vinInput','vinPrev','vinOvr','vinDone','vinPh','vin');
 // key photo removed
-function f2b64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=(e)=>{const img=new Image();img.onload=()=>{const c=document.createElement('canvas');const max=1600;let w=img.width,h=img.height;if(w>max){h=Math.round(h*max/w);w=max;}if(h>max){w=Math.round(w*max/h);h=max;}c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);res(c.toDataURL('image/jpeg',0.92).split(',')[1]);};img.onerror=rej;img.src=e.target.result;};r.onerror=rej;r.readAsDataURL(file);});}
+function f2b64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=(e)=>{const img=new Image();img.onload=()=>{const c=document.createElement('canvas');const max=2200;let w=img.width,h=img.height;if(w>max){h=Math.round(h*max/w);w=max;}if(h>max){w=Math.round(w*max/h);h=max;}c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);res(c.toDataURL('image/jpeg',0.95).split(',')[1]);};img.onerror=rej;img.src=e.target.result;};r.onerror=rej;r.readAsDataURL(file);});}
 function checkScan(){
   document.getElementById('scanBtn').disabled=!(carB64||vinB64);
 }
@@ -911,7 +911,7 @@ async function runScan(){
   if(carB64){
     msg.textContent=t('analyzing');
     content.push({type:'image',source:{type:'base64',media_type:'image/jpeg',data:carB64}});
-    content.push({type:'text',text:'Photo of a vehicle. Extract: make, model, year, license plate number. Use null if not visible.'});
+    content.push({type:'text',text:'Photo of a vehicle in the USA (could be any state). Extract the following:\n1. LICENSE PLATE: This is the MOST IMPORTANT field. Read the plate number VERY carefully — zoom in mentally, read each character one by one. US plates are typically 6-7 characters (letters and digits). If the plate is at an angle or partially visible, still attempt to read what you can. Use null ONLY if truly impossible.\n2. Make (brand) — look for the logo/emblem on the trunk or front, or the brand name written on the back of the vehicle (e.g. NISSAN, TOYOTA, CHEVROLET).\n3. Model — look for the model name badge usually on the trunk or side (e.g. Altima, Camry, Silverado).\n4. Year — estimate from body style if not visible.\nAlways attempt every field before using null.'});
   }
   if(vinB64){
     msg.textContent=t('analyzing');
