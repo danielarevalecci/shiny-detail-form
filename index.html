@@ -993,10 +993,10 @@ function recalc(){
 }
 
 function buildReview(){
-  const carNumber=document.getElementById('fCarNumberMain').value;
-  const plate=document.getElementById('fPlate').value||document.getElementById('fPlate2').value;
-  const vin=document.getElementById('fVin').value||document.getElementById('fVin2').value;
-  const model=document.getElementById('fModel').value||document.getElementById('fModel2').value;
+  const carNumber=(document.getElementById('fCarNumberMain').value||'').toUpperCase();
+  const plate=(document.getElementById('fPlate').value||document.getElementById('fPlate2').value||'').toUpperCase();
+  const vin=(document.getElementById('fVin').value||document.getElementById('fVin2').value||'').toUpperCase();
+  const model=(document.getElementById('fModel').value||document.getElementById('fModel2').value||'').toUpperCase();
   const svcs=[...selectedSvcs].join(' + ');
   const total=document.getElementById('totalVal').textContent;
   const blocks=[
@@ -1011,10 +1011,10 @@ function buildReview(){
     </div>`).join('');
 }
 async function submitData(){
-  const carNumber=document.getElementById('fCarNumberMain').value;
-  const plate=document.getElementById('fPlate').value||document.getElementById('fPlate2').value;
-  const vin=document.getElementById('fVin').value||document.getElementById('fVin2').value;
-  const model=document.getElementById('fModel').value||document.getElementById('fModel2').value;
+  const carNumber=(document.getElementById('fCarNumberMain').value||'').toUpperCase();
+  const plate=(document.getElementById('fPlate').value||document.getElementById('fPlate2').value||'').toUpperCase();
+  const vin=(document.getElementById('fVin').value||document.getElementById('fVin2').value||'').toUpperCase();
+  const model=(document.getElementById('fModel').value||document.getElementById('fModel2').value||'').toUpperCase();
   const svcs=[...selectedSvcs].join(' + ');
   let totalNum=0;
   document.querySelectorAll('.svc-item.selected').forEach(el=>totalNum+=parseInt(el.dataset.price)||0);
