@@ -693,10 +693,13 @@ document.getElementById('todayRankList').innerHTML=todaySorted.length===0
 <div class="rank-count">${e.today}</div>
 </div>`).join('');
 
-const sorted=Object.entries(byEmp).sort((a,b)=>b[1].today-a[1].today);
-document.getElementById('empCards').innerHTML=sorted.length===0
-? '<div class="empty-state">Sin empleados configurados.</div>'
-: sorted.map(([key,e],idx)=>{
+// Solo empleados con actividad en el período seleccionado
+  const sorted=Object.entries(byEmp)
+    .sort((a,b)=>(b[1].week+b[1].today)-(a[1].week+a[1].today))
+    .filter(([k,e])=>e.week>0||e.today>0);
+  document.getElementById('empCards').innerHTML=sorted.length===0
+  ? '<div class="empty-state">Sin actividad en este período.</div>'
+  : sorted.map(([key,e],idx)=>{
 const lastText=e.last
 ? `${timeAgo(e.last.date)} · ${e.last.plate||'—'} ${e.last.model||''}`
 : 'Sin registros aún';
@@ -743,16 +746,40 @@ document.getElementById('rankList').innerHTML=rankSorted.length===0
 </div>`).join('');
 
 // ── Ranking de sucursales en el período ──
-document.getElementById('branchPeriodLabel').textContent=customRange?'· período elegido':`· ${periodLabel}`;
-const branchSorted=Object.values(byBranch).sort((a,b)=>b.money-a.money);
-document.getElementById('branchRankList').innerHTML=branchSorted.length===0
-? '<div class="empty-state">Sin carros en este período todavía.</div>'
-: branchSorted.map((b,i)=>`
-<div class="rank-row">
-<div class="rank-medal">${medals[i]||(i+1)}</div>
-<div class="rank-name">${b.branch}<div style="font-size:10px;color:var(--muted);font-weight:700;">${b.count} carro${b.count===1?'':'s'}</div></div>
-<div class="rank-count">$${b.money.toLocaleString()}</div>
-</div>`).join('');
+  // Filtra branches que son Car Numbers o VINs del histórico
+  const isRealBranch=br=>{
+    const b=String(br||'').trim().toUpperCase();
+    if(!b||b==='UNDEFINED'||b==='NULL'||b==='—'||b==='')return false;
+    // Branches válidas: empiezan con "09" (ej. 0939, 0929, 09FG) o son National/NAT
+    if(/^09/i.test(b))return true;
+    if(b==='NATIONAL'||b==='NAT'||b==='NATIONAL ACCOUNT')return true;
+    // Todo lo demás (CC, DD, EE, Car Numbers, VINs, etc.) se excluye
+    return false;
+  };
+  const branchSorted=Object.values(byBranch).filter(b=>isRealBranch(b.branch)).sort((a,b)=>b.money-a.money);
+  const branchTop=branchSorted.slice(0,5);
+  const branchRest=branchSorted.slice(5);
+  document.getElementById('branchPeriodLabel').textContent=customRange?'· período elegido':`· ${periodLabel}`;
+  const branchTopHtml=branchTop.length===0
+    ?'<div class="empty-state">Sin sucursales en este período.</div>'
+    :branchTop.map((b,i)=>`
+      <div class="rank-row">
+        <div class="rank-medal">${medals[i]||(i+1)}</div>
+        <div class="rank-name">${b.branch}<div style="font-size:10px;color:var(--muted);font-weight:700;">${b.count} carro${b.count===1?'':'s'}</div></div>
+        <div class="rank-count">$${b.money.toLocaleString()}</div>
+      </div>`).join('');
+  const branchRestHtml=branchRest.map((b,i)=>`
+      <div class="rank-row" style="opacity:.7;">
+        <div class="rank-medal" style="color:var(--muted);">${i+6}</div>
+        <div class="rank-name">${b.branch}<div style="font-size:10px;color:var(--muted);font-weight:700;">${b.count} carro${b.count===1?'':'s'}</div></div>
+        <div class="rank-count" style="color:var(--muted);">$${b.money.toLocaleString()}</div>
+      </div>`).join('');
+  document.getElementById('branchRankList').innerHTML=branchTopHtml+(branchRest.length>0?`
+    <div id="branchMoreBtn" onclick="document.getElementById('branchMore').style.display='block';this.style.display='none';"
+      style="text-align:center;padding:10px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;border:1px dashed var(--border);border-radius:8px;margin-top:6px;">
+      + ${branchRest.length} más
+    </div>
+    <div id="branchMore" style="display:none;">${branchRestHtml}</div>`:'');
 
 const days=[];
 for(let i=6;i>=0;i--){
