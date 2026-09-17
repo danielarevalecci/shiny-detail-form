@@ -261,8 +261,10 @@ main{max-width:760px;margin:0 auto;padding:20px;}
 <div class="section-title">🏢 Ranking de sucursales <span id="branchPeriodLabel"></span></div>
 <div id="branchRankList"></div>
 
-<div class="section-title">Últimos 7 días</div>
+<div class="section-title">📅 Últimos 7 días — carros y tendencia</div>
+<div class="section-sub" style="font-size:11px;color:var(--muted);margin-bottom:10px;">Cada barra = un día. El número arriba = carros lavados. Hoy se marca en negro.</div>
 <div class="chart-wrap" id="weekChart"></div>
+<div id="weekSummary" style="display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;"></div>
 
 <div class="section-title">📅 Vista mensual</div>
 <div class="cal-card">
@@ -814,22 +816,48 @@ document.getElementById('rankList').innerHTML=rankSorted.length===0
 
 const days=[];
 for(let i=6;i>=0;i--){
-const d=new Date(now.getTime()-i*86400000);
-days.push({key:dayKeyOf(d),label:d.toLocaleDateString('es-MX',{weekday:'short'}),count:0});
+  const d=new Date(now.getFullYear(),now.getMonth(),now.getDate()-i);
+  const dateStr=d.toLocaleDateString('es-MX',{day:'numeric',month:'short'});
+  const dayName=d.toLocaleDateString('es-MX',{weekday:'short'});
+  days.push({key:dayKeyOf(d),label:dayName,date:dateStr,count:0,money:0,isToday:i===0});
 }
 records.forEach(r=>{
-const d=new Date(r.timestamp);
-if(isNaN(d))return;
-const day=days.find(dd=>dd.key===dayKeyOf(d));
-if(day)day.count++;
+  if(r.employee==='TestClaude')return;
+  const d=new Date(r.timestamp);
+  if(isNaN(d))return;
+  const day=days.find(dd=>dd.key===dayKeyOf(d));
+  if(day){day.count++;day.money+=parseFloat(r.total)||70;}
 });
 const max=Math.max(1,...days.map(d=>d.count));
+// Total and average for the 7 days
+const total7=days.reduce((s,d)=>s+d.count,0);
+const money7=days.reduce((s,d)=>s+d.money,0);
+const activeDays=days.filter(d=>d.count>0).length;
+const best7=days.reduce((a,b)=>b.count>a.count?b:a,days[0]);
 document.getElementById('weekChart').innerHTML=days.map(d=>`
 <div class="bar-col">
-<div class="bar-count">${d.count}</div>
-<div class="bar" style="height:${Math.max(3,Math.round(d.count/max*100))}%"></div>
-<div class="bar-label">${d.label}</div>
+<div class="bar-count" style="font-weight:${d.isToday?900:700};color:${d.isToday?'var(--accent)':'var(--muted)'}">${d.count}</div>
+<div class="bar ${d.isToday?'':'gray'}" style="height:${Math.max(3,Math.round(d.count/max*100))}%;background:${d.isToday?'var(--accent)':d.count===best7.count&&d.count>0?'#22c55e':'var(--border)'};"></div>
+<div class="bar-label" style="font-weight:${d.isToday?800:600}">${d.label}</div>
+<div class="bar-label" style="font-size:9px;color:var(--muted);margin-top:1px;">${d.date}</div>
 </div>`).join('');
+document.getElementById('weekSummary').innerHTML=`
+<div style="background:var(--bg);border-radius:8px;padding:10px 14px;flex:1;min-width:100px;">
+  <div style="font-size:20px;font-weight:900;">${total7}</div>
+  <div style="font-size:10px;color:var(--muted);font-weight:700;">CARROS 7 DÍAS</div>
+</div>
+<div style="background:var(--bg);border-radius:8px;padding:10px 14px;flex:1;min-width:100px;">
+  <div style="font-size:20px;font-weight:900;">$${money7.toLocaleString()}</div>
+  <div style="font-size:10px;color:var(--muted);font-weight:700;">GENERADO 7 DÍAS</div>
+</div>
+<div style="background:var(--bg);border-radius:8px;padding:10px 14px;flex:1;min-width:100px;">
+  <div style="font-size:20px;font-weight:900;">${activeDays>0?(total7/activeDays).toFixed(1):0}</div>
+  <div style="font-size:10px;color:var(--muted);font-weight:700;">PROM. / DÍA ACTIVO</div>
+</div>
+<div style="background:var(--bg);border-radius:8px;padding:10px 14px;flex:1;min-width:100px;">
+  <div style="font-size:20px;font-weight:900;">${best7.count}</div>
+  <div style="font-size:10px;color:var(--muted);font-weight:700;">MEJOR DÍA (${best7.label} ${best7.date})</div>
+</div>`;
 }
 
 function toggleEmpDetail(idx){
