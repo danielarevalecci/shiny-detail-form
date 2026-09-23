@@ -56,11 +56,7 @@ select option{background:var(--white);}
 .emp-card.selected{border-color:var(--accent);background:var(--accent);}
 .emp-card.selected .emp-name{color:#fff;}
 .emp-card.selected .emp-icon{background:rgba(255,255,255,.18);}
-.emp-counter{font-size:11px;font-weight:700;color:var(--text-muted);margin-top:5px;min-height:14px;transition:color .2s;}
-.emp-card.selected .emp-counter{color:rgba(255,255,255,.85);}
-.emp-counter.loaded{color:var(--accent);}
-.emp-card.selected .emp-counter.loaded{color:#fff;}
-.emp-counter.zero{color:var(--text-muted);opacity:.6;}
+
 .emp-icon{width:38px;height:38px;border-radius:50%;background:var(--white);margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:18px;transition:background .15s;border:1px solid var(--border);}
 .emp-name{font-size:14px;font-weight:800;}
 .emp-card:active{transform:scale(.96);}
@@ -606,58 +602,9 @@ function renderEmployees(){
     <div class="emp-card" data-name="${emp.key}" onclick="pickEmp(this)">
       <div class="emp-icon">👤</div>
       <div class="emp-name">${emp.label}</div>
-      <div class="emp-counter" id="counter-${emp.key}">···</div>
     </div>`).join('');
-  loadEmployeeCounters();
 }
 
-// Jala del servidor cuántos carros hizo cada empleado hoy y esta semana
-async function loadEmployeeCounters(){
-  try{
-    const res=await fetch(SHEETS_URL+'?action=history');
-    const data=await res.json();
-    const recs=data.records||[];
-    const now=new Date();
-    const todayKey=now.toLocaleDateString('en-US');
-
-    // Calcular lunes de esta semana
-    const d=new Date(now);
-    const diff=d.getDay()===0?6:d.getDay()-1;
-    const monday=new Date(d.getFullYear(),d.getMonth(),d.getDate()-diff,0,0,0,0);
-
-    // Contar por empleado
-    const counts={};
-    recs.forEach(r=>{
-      const emp=r.employee||'';
-      if(!counts[emp])counts[emp]={today:0,week:0};
-      const rd=new Date(r.timestamp);
-      if(isNaN(rd))return;
-      if(rd.toLocaleDateString('en-US')===todayKey)counts[emp].today++;
-      if(rd>=monday)counts[emp].week++;
-    });
-
-    EMPLOYEES.forEach(emp=>{
-      const el=document.getElementById('counter-'+emp.key);
-      if(!el)return;
-      const c=counts[emp.key]||{today:0,week:0};
-      if(c.today>0){
-        el.textContent=`${c.today} hoy · ${c.week} esta semana`;
-        el.className='emp-counter loaded';
-      } else if(c.week>0){
-        el.textContent=`0 hoy · ${c.week} esta semana`;
-        el.className='emp-counter';
-      } else {
-        el.textContent='0 hoy';
-        el.className='emp-counter zero';
-      }
-    });
-  }catch(e){
-    EMPLOYEES.forEach(emp=>{
-      const el=document.getElementById('counter-'+emp.key);
-      if(el)el.textContent='';
-    });
-  }
-}
 
 const HISTORY_PASSWORD='shiny2026'; // ⚠️ cámbiala antes de subir el archivo
 
