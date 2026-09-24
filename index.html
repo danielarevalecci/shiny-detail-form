@@ -109,9 +109,9 @@ select option{background:var(--white);}
 .svc-body{flex:1;}
 .svc-name{font-size:14px;font-weight:800;}
 .svc-desc{font-size:11px;color:var(--muted);font-weight:600;margin-top:1px;}
-.svc-price{font-size:15px;font-weight:900;color:var(--accent);flex-shrink:0;}
+.svc-price{display:none;}
 .svc-item:active{transform:scale(.98);}
-.total-bar{background:var(--accent);border-radius:var(--radius-sm);padding:14px 18px;display:flex;justify-content:space-between;align-items:center;margin-top:12px;}
+.total-bar{display:none;}
 .total-bar-label{font-size:13px;font-weight:700;color:rgba(255,255,255,.75);}
 .total-bar-val{font-size:24px;font-weight:900;color:#fff;}
 .review-block{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;margin-bottom:12px;}
@@ -428,7 +428,7 @@ const I18N = {
     dataExtracted: "¡Datos extraídos! Edita si es necesario.",
     notReadWell: "⚠️ No se leyó muy bien — revisa los datos abajo o", retakePhotos: "vuelve a tomar las fotos",
     enterManually: "Ingresar manualmente",
-    step3of4: "Paso 3 de 4", servicesTitle: "Servicios", servicesDesc: "Selecciona uno o más — el total se actualiza automático 💰",
+    step3of4: "Paso 3 de 4", servicesTitle: "Servicios", servicesDesc: "Selecciona uno o más",
     selectServices: "Selecciona servicios (toca para agregar)",
     priceNoteDefault: "⚠️ Los precios dependen de tu región. Selecciona tu región en el Paso 1.",
     total: "Total", greatWorkToday: "¡Buen trabajo hoy!", keepShining: "Que siga brillando.",
@@ -459,7 +459,7 @@ const I18N = {
     goBackSelectRegion: "Regresa y selecciona tu región primero", selectOneService: "Selecciona al menos un servicio",
     didntReadWell: "⚠️ No se leyó muy bien", dataExtractedShort: "✦ ¡Datos extraídos!",
     couldNotAnalyze: "No se pudo analizar — ingresa manualmente",
-    regionSelectedNote: (label,price)=>`✅ Región "${label}" seleccionada — Detallado Completo: $${price}`,
+    regionSelectedNote: (label,price)=>`✅ Región "${label}" seleccionada — Detallado Completo`,
     localeCode: "es-MX"
   },
   en: {
@@ -488,7 +488,7 @@ const I18N = {
     dataExtracted: "Data extracted! Edit if needed.",
     notReadWell: "⚠️ Didn't read well — check the data below or", retakePhotos: "retake the photos",
     enterManually: "Enter manually",
-    step3of4: "Step 3 of 4", servicesTitle: "Services", servicesDesc: "Select one or more — total updates automatically 💰",
+    step3of4: "Step 3 of 4", servicesTitle: "Services", servicesDesc: "Select one or more",
     selectServices: "Select services (tap to add)",
     priceNoteDefault: "⚠️ Prices depend on your region. Select your region in Step 1.",
     total: "Total", greatWorkToday: "Great work today!", keepShining: "Keep it shining.",
@@ -519,7 +519,7 @@ const I18N = {
     goBackSelectRegion: "Go back and select your region first", selectOneService: "Select at least one service",
     didntReadWell: "⚠️ Didn't read well", dataExtractedShort: "✦ Data extracted!",
     couldNotAnalyze: "Couldn't analyze — enter manually",
-    regionSelectedNote: (label,price)=>`✅ Region "${label}" selected — Full Detail: $${price}`,
+    regionSelectedNote: (label,price)=>`✅ Region "${label}" selected — Full Detail`,
     localeCode: "en-US"
   }
 };
@@ -685,9 +685,9 @@ function renderHistory(filterEmp){
     const items=groups[day];
     const dayTotal=items.reduce((s,r)=>s+(parseFloat(r.total)||0),0);
     const carWord=items.length===1?t('carSingular'):t('carPlural');
-    html+=`<div class="card"><div class="card-title">${day} — ${items.length} ${carWord} · $${dayTotal}</div>`;
+    html+=`<div class="card"><div class="card-title">${day} — ${items.length} ${carWord}</div>`;
     items.forEach(r=>{
-      html+=`<div class="rv-row"><span class="rv-k">${r.folio?`#${r.folio} · `:''}${t('carNumShort')} ${r.carNumber||'—'} · ${r.plate||'—'} · ${r.model||''}</span><span class="rv-v">${r.employee||''} · $${r.total||0}</span></div>`;
+      html+=`<div class="rv-row"><span class="rv-k">${r.folio?`#${r.folio} · `:''}${t('carNumShort')} ${r.carNumber||'—'} · ${r.plate||'—'} · ${r.model||''}</span><span class="rv-v">${r.employee||''}</span></div>`;
     });
     html+='</div>';
   });
@@ -706,7 +706,7 @@ function renderRegions(){
   grid.innerHTML=REGIONS.map(r=>`
     <div class="r-chip" data-key="${r.key}" onclick="pickRegion(this)">
       <div class="r-chip-label">${r.label}</div>
-      <div class="r-chip-sub">${r.sub} $${r.price}</div>
+      <div class="r-chip-sub">${r.sub}</div>
     </div>`).join('');
 }
 
@@ -1005,7 +1005,7 @@ function buildReview(){
   const blocks=[
     {s:t('rvEmployeeSection'),rows:[[t('rvName'),document.getElementById('fEmployee').value],[t('rvManager'),document.getElementById('fManager').value],[t('rvBranch'),document.getElementById('fBranch').value],[t('rvRegion'),getEffectiveRegionForSave()]]},
     {s:t('rvVehicleSection'),rows:[[t('rvCarNumber'),carNumber],[t('rvPlate'),plate],[t('rvVin'),vin],[t('rvModel'),model]]},
-    {s:t('rvServiceSection'),rows:[[t('rvServices'),svcs],[t('rvTotal'),total]]},
+    {s:t('rvServiceSection'),rows:[[t('rvServices'),svcs]]},
   ];
   document.getElementById('rvContent').innerHTML=blocks.map(b=>`
     <div class="review-block">
@@ -1070,7 +1070,7 @@ function buildSuccess(p,pending){
       <div class="rv-row"><span class="rv-k">${t('rvPlate')}</span><span class="rv-v">${p.plate||'—'}</span></div>
       <div class="rv-row"><span class="rv-k">${t('rvModel')}</span><span class="rv-v">${p.model||'—'}</span></div>
       <div class="rv-row"><span class="rv-k">${t('rvServices')}</span><span class="rv-v">${p.serviceType||'—'}</span></div>
-      <div class="rv-row"><span class="rv-k">${t('rvTotal')}</span><span class="rv-v">$${p.total||'0'}</span></div>
+  
     </div>`;
 }
 
