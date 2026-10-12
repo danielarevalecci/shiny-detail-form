@@ -145,6 +145,13 @@ main{max-width:760px;margin:0 auto;padding:20px;}
 .live-feed-what{color:var(--muted);font-weight:600;}
 .live-feed-time{color:var(--muted);font-size:10px;font-weight:800;white-space:nowrap;margin-left:8px;text-align:right;}
 .live-feed-exact{color:var(--muted);font-size:9px;font-weight:600;white-space:nowrap;opacity:.75;margin-top:1px;}
+.hrs-tbl{width:100%;border-collapse:collapse;font-size:12px;}
+.hrs-tbl th{font-size:10px;color:var(--muted);font-weight:800;text-align:right;padding:4px 6px;text-transform:uppercase;}
+.hrs-tbl th:first-child,.hrs-tbl td:first-child{text-align:left;}
+.hrs-tbl td{padding:7px 6px;text-align:right;font-weight:800;border-top:1px solid var(--border);}
+.hrs-big{font-size:16px;font-weight:900;}
+.hrs-note{font-size:10px;color:var(--muted);font-weight:600;margin-top:6px;line-height:1.4;}
+.hrs-tog{cursor:pointer;font-size:11px;font-weight:700;color:var(--muted);padding:8px 0 4px;margin-top:6px;border-top:1px solid var(--border);}
 </style>
 </head>
 <body>
@@ -256,6 +263,9 @@ main{max-width:760px;margin:0 auto;padding:20px;}
 <div class="section-title">Por empleado <span id="empPeriodLabel"></span></div>
 <div id="empCards"><div class="empty-state">Cargando...</div></div>
 
+<div class="section-title">⏱️ Horas trabajadas <span style="font-weight:600;color:var(--muted);font-size:10px;">(hora Dallas)</span></div>
+<div id="hoursBox"><div class="empty-state">Cargando...</div></div>
+
 <div class="section-title">🏆 Ranking por $ generado <span id="rankPeriodLabel"></span></div>
 <div id="rankList"></div>
 
@@ -347,6 +357,7 @@ renderPulse(records);
 renderInactivityBanner(records);
 renderTrend(records);
 renderGoalHistory(records);
+loadHours(records);
 if(calYear===undefined){
 const now=new Date();
 calYear=now.getFullYear();
@@ -552,6 +563,88 @@ return `<div class="gh-col">
 <div class="gh-label">${fmt(w.start)}</div>
 </div>`;
 }).join('');
+}
+
+
+// ── Horas trabajadas: reales (Entrada/Salida) cuando existen; si no, estimado 1er→último carro (hora Dallas) ──
+async function loadHours(records){
+let shifts=[];
+try{
+const r=await fetch(SHEETS_URL+'?action=attendance');
+const d=await r.json();
+shifts=d.shifts||[];
+}catch(e){ /* backend sin Asistencia todavía: se usa solo el estimado */ }
+renderHours(records,shifts);
+}
+function renderHours(records,shifts){
+shifts=shifts||[];
+const TZ='America/Chicago';
+const dayOf=d=>d.toLocaleDateString('en-CA',{timeZone:TZ});
+const days={}; // emp -> dayKey -> {first,last,n,real,hasReal,open,stale}
+const slot=(e,k,d)=>{days[e]=days[e]||{};return days[e][k]||(days[e][k]={first:d,last:d,n:0,real:0,hasReal:false,open:false,stale:false,inT:null,outT:null});};
+records.forEach(r=>{
+const d=new Date(r.timestamp); if(isNaN(d))return;
+const x=slot(r.employee||'Sin nombre',dayOf(d),d);
+if(d<x.first)x.first=d; if(d>x.last)x.last=d; x.n++;
+});
+const nowD=new Date();
+shifts.forEach(sh=>{
+const din=new Date(sh.in); if(isNaN(din))return;
+const x=slot(sh.employee,dayOf(din),din);
+x.hasReal=true;
+if(!x.inT||din<x.inT)x.inT=din;
+if(sh.out){
+const dout=new Date(sh.out);
+x.real+=(dout-din)/3600000;
+if(!x.outT||dout>x.outT)x.outT=dout;
+}else{
+const h=(nowD-din)/3600000;
+x.open=true;
+if(h>16){x.stale=true;if(x.real===0)x.hasReal=false;}else{x.real+=h;}
+}
+});
+const todayK=dayOf(nowD);
+const monthPrefix=todayK.slice(0,7);
+const [yy,mm,dd]=todayK.split('-').map(Number);
+const t=new Date(Date.UTC(yy,mm-1,dd)); const wd=(t.getUTCDay()+6)%7;
+const mon=new Date(t.getTime()-wd*86400000).toISOString().slice(0,10);
+const hrs=x=>x.hasReal?x.real:(x.last-x.first)/3600000;
+const fmt=h=>h<=0?'0h':(Math.floor(h)+'h '+String(Math.round((h%1)*60)).padStart(2,'0')+'m');
+const rows=Object.keys(days).filter(e=>Object.keys(days[e]).some(k=>k.startsWith(monthPrefix))).map(e=>{
+let hoy=0,sem=0,mes=0,dMes=0,open=null,pend=false,est=false;
+Object.entries(days[e]).forEach(([k,x])=>{
+const h=hrs(x);
+if(k.startsWith(monthPrefix)){mes+=h;dMes++;if(!x.hasReal)est=true;}
+if(k>=mon&&k<=todayK)sem+=h;
+if(k===todayK)hoy+=h;
+if(x.open){if(x.stale)pend=true;else open=x;}
+});
+return {e,hoy,sem,mes,dMes,open,pend,est};
+}).sort((a,b)=>b.mes-a.mes);
+const box=document.getElementById('hoursBox');
+if(!rows.length){box.innerHTML='<div class="empty-state">Sin actividad este mes.</div>';return;}
+const mesName=nowD.toLocaleDateString('es-MX',{month:'long',timeZone:TZ});
+const badge=r=>r.pend?' <span style="color:#b45309;font-size:10px;">⚠️ salida pendiente</span>':(r.open?' <span style="color:#16a34a;font-size:10px;">🟢 en turno</span>':'');
+let h=`<table class="hrs-tbl"><tr><th>Empleado</th><th>Hoy</th><th>Semana</th><th>${mesName}</th><th>Días</th></tr>`+
+rows.map(r=>`<tr><td>${r.e}${badge(r)}</td><td>${fmt(r.hoy)}</td><td>${fmt(r.sem)}</td><td class="hrs-big">${fmt(r.mes)}${r.est?'*':''}</td><td>${r.dMes}</td></tr>`).join('')+'</table>';
+const allDays=[...new Set(rows.flatMap(r=>Object.keys(days[r.e]).filter(k=>k.startsWith(monthPrefix))))].sort().reverse();
+const hm=d=>d.toLocaleTimeString('es-MX',{timeZone:TZ,hour:'numeric',minute:'2-digit'});
+const det=allDays.map(k=>{
+const [y,m,d2]=k.split('-').map(Number);
+const lab=new Date(Date.UTC(y,m-1,d2,12)).toLocaleDateString('es-MX',{weekday:'short',day:'numeric',month:'short',timeZone:'UTC'});
+const parts=rows.filter(r=>days[r.e][k]).map(r=>{
+const x=days[r.e][k];
+if(x.hasReal){
+const rng=hm(x.inT)+'–'+(x.open?(x.stale?'⚠️ sin salida':'en turno'):hm(x.outT));
+return `<div class="emp-detail-row"><span>${r.e} · ${rng}</span>${fmt(x.real)} · ${x.n} carro${x.n===1?'':'s'}</div>`;
+}
+return `<div class="emp-detail-row"><span>${r.e} · ${hm(x.first)}–${hm(x.last)} <i>(est.)</i></span>~${fmt(hrs(x))} · ${x.n} carro${x.n===1?'':'s'}</div>`;
+}).join('');
+return `<div style="font-size:11px;font-weight:800;padding:8px 0 2px;">${lab}</div>${parts}`;
+}).join('');
+h+=`<div class="hrs-tog" onclick="const d=document.getElementById('hrsDet');const o=d.style.display==='none';d.style.display=o?'block':'none';this.textContent=o?'▲ Ocultar detalle diario':'▼ Ver detalle diario de ${mesName}';">▼ Ver detalle diario de ${mesName}</div><div id="hrsDet" style="display:none;">${det}</div>`;
+h+='<div class="hrs-note">Los días con Entrada/Salida son horas reales. Los días marcados (est.) o con * son estimados (1er → último carro; un día con un solo carro cuenta 0h). ⚠️ salida pendiente = turno abierto por más de 16 h: corrígelo en la pestaña Asistencia del Sheet.</div>';
+box.innerHTML=h;
 }
 
 function timeAgo(date){
