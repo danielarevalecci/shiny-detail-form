@@ -382,6 +382,19 @@ select option{background:var(--white);}
   <div class="nav-back" id="navBack" onclick="goPrev()" style="display:none;">←</div>
   <button class="nav-fwd" id="navFwd" onclick="goNext()"><span data-i18n="continue">Continuar →</span></button>
 </div>
+<div id="pinOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#fff;border-radius:16px;padding:22px 20px;width:100%;max-width:300px;text-align:center;">
+    <div style="font-size:30px;margin-bottom:6px;">🔒</div>
+    <div id="pinWho" style="font-size:16px;font-weight:800;margin-bottom:4px;"></div>
+    <div id="pinMsg" style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:12px;">Escribe tu PIN de 4 dígitos</div>
+    <input id="pinInput" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" style="width:100%;text-align:center;font-size:26px;letter-spacing:10px;padding:10px;border:2px solid var(--border);border-radius:10px;font-family:inherit;"/>
+    <div id="pinErr" style="min-height:16px;font-size:12px;font-weight:700;color:#dc2626;margin-top:8px;"></div>
+    <div style="display:flex;gap:8px;margin-top:10px;">
+      <button type="button" onclick="closePin()" style="flex:1;padding:11px;border:2px solid var(--border);background:#fff;border-radius:10px;font-weight:800;font-family:inherit;cursor:pointer;">Cancelar</button>
+      <button type="button" id="pinOk" onclick="submitPin()" style="flex:1;padding:11px;border:none;background:var(--accent);color:#fff;border-radius:10px;font-weight:800;font-family:inherit;cursor:pointer;">Entrar</button>
+    </div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -864,11 +877,69 @@ function validate(n){
   return true;
 }
 
+// ── PIN por empleado ──
+// Solo se recuerda el PIN del último empleado desbloqueado, y solo en memoria
+// (se borra al cerrar la app). Si eliges otro nombre, se pide su PIN.
+var UNLOCKED={name:null,pin:null}, pinTarget=null, pinBusy=false;
 function pickEmp(el){
+  var name=el.dataset.name;
+  if(UNLOCKED.name===name){applyEmp(el);return;}
+  openPin(el);
+}
+function applyEmp(el){
   document.querySelectorAll('.emp-card').forEach(c=>c.classList.remove('selected'));
   el.classList.add('selected');
   document.getElementById('fEmployee').value=el.dataset.name;
   refreshClock();
+}
+function openPin(el){
+  pinTarget=el;
+  document.getElementById('pinWho').textContent=el.dataset.name;
+  document.getElementById('pinMsg').textContent='Escribe tu PIN de 4 dígitos';
+  document.getElementById('pinErr').textContent='';
+  var inp=document.getElementById('pinInput');inp.value='';
+  document.getElementById('pinOverlay').style.display='flex';
+  setTimeout(function(){inp.focus();},50);
+}
+function closePin(){
+  document.getElementById('pinOverlay').style.display='none';
+  pinTarget=null;
+}
+async function submitPin(){
+  if(pinBusy||!pinTarget)return;
+  var name=pinTarget.dataset.name, pin=document.getElementById('pinInput').value.trim();
+  if(pin.length<4){document.getElementById('pinErr').textContent='Son 4 dígitos';return;}
+  pinBusy=true;
+  var ok=document.getElementById('pinOk');ok.disabled=true;ok.style.opacity=.5;
+  try{
+    var res=await fetch(SHEETS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({type:'verifypin',employee:name,pin:pin})});
+    var d=await res.json();
+    if(d.success){
+      UNLOCKED={name:name,pin:d.required===false?'':pin};
+      var el=pinTarget;closePin();applyEmp(el);
+    }else if(d.error==='PIN_LOCKED'){
+      document.getElementById('pinErr').textContent='Demasiados intentos. Espera 10 minutos.';
+    }else{
+      document.getElementById('pinErr').textContent='PIN incorrecto';
+      document.getElementById('pinInput').value='';
+    }
+  }catch(e){
+    document.getElementById('pinErr').textContent='Sin conexión — intenta de nuevo';
+  }finally{
+    pinBusy=false;ok.disabled=false;ok.style.opacity=1;
+  }
+}
+document.addEventListener('keydown',function(e){
+  if(e.key==='Enter'&&document.getElementById('pinOverlay').style.display==='flex')submitPin();
+});
+function pinFor(name){return UNLOCKED.name===name?UNLOCKED.pin:'';}
+function lockOut(msg){
+  UNLOCKED={name:null,pin:null};
+  document.getElementById('fEmployee').value='';
+  document.querySelectorAll('.emp-card').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('clockBox').style.display='none';
+  toast(msg||'Vuelve a escribir tu PIN');
+  goTo(0);
 }
 
 // ── Entrada / Salida ──
@@ -907,8 +978,9 @@ async function doClock(){
   var btn=document.getElementById('clockBtn');
   clockBusy=true;btn.disabled=true;btn.style.opacity=.5;
   try{
-    var res=await fetch(SHEETS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({type:'clock',action:clockOpen?'out':'in',employee:emp})});
+    var res=await fetch(SHEETS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({type:'clock',action:clockOpen?'out':'in',employee:emp,pin:pinFor(emp)})});
     var d=await res.json();
+    if(!d.success&&(d.error==='PIN_INVALID'||d.error==='PIN_LOCKED')){clockBusy=false;lockOut('Vuelve a escribir tu PIN');return;}
     if(!d.success)throw new Error(d.error||'error');
     if(d.action==='out'){
       paintClock(false,null,'⚪ Salida registrada ✓');
@@ -1130,6 +1202,7 @@ async function submitData(){
   const payload={
     timestamp:new Date().toISOString(),
     employee:document.getElementById('fEmployee').value,
+    pin:pinFor(document.getElementById('fEmployee').value),
     branch:document.getElementById('fBranch').value,
     manager:document.getElementById('fManager').value,
     region:getEffectiveRegionForSave(),
@@ -1150,6 +1223,13 @@ async function submitData(){
     const res=await fetch(SHEETS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload),signal:controller.signal});
     clearTimeout(timer);
     const data=await res.json();
+    if(!data.success&&(data.error==='PIN_INVALID'||data.error==='PIN_LOCKED')){
+      btn.disabled=false;
+      document.getElementById('submitTxt').innerHTML=`✅  <span>${t('confirmSave')}</span>`;
+      note.textContent='';
+      lockOut(data.error==='PIN_LOCKED'?'Demasiados intentos. Espera 10 minutos.':'PIN incorrecto — vuelve a escribirlo');
+      return;
+    }
     if(!data.success){ throw new Error(data.error||'El servidor no pudo guardar el registro.'); }
     payload.folio=data.folio;
     buildSuccess(payload,false);goTo(4);
@@ -1204,6 +1284,7 @@ async function syncPending(){
         item.timestamp=new Date().toISOString(); // hora real del reintento, universal
         const res=await fetch(SHEETS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(item)});
         const data=await res.json();
+        if(!data.success&&(data.error==='PIN_INVALID'||data.error==='PIN_LOCKED')){const qq=getQueue();qq.push(qq.shift());localStorage.setItem(QUEUE_KEY,JSON.stringify(qq));break;}
         if(!data.success)throw new Error('fail');
         // Éxito confirmado — lo quitamos de la cola AHORA MISMO, antes de
         // intentar el siguiente. Así, si otro reintento arranca en paralelo,
