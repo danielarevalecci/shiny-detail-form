@@ -189,6 +189,10 @@ select option{background:var(--white);}
     <div class="card-title"><span data-i18n="selectYourName">Selecciona tu nombre</span> <span class="req">*</span></div>
     <div class="emp-grid" id="empGrid"></div>
     <input type="hidden" id="fEmployee"/>
+    <div id="clockBox" style="display:none;margin-top:12px;padding:12px;border:2px dashed var(--border);border-radius:var(--radius-sm);align-items:center;justify-content:space-between;gap:10px;">
+      <div id="clockStatus" style="font-size:12px;font-weight:700;color:var(--text-muted);">···</div>
+      <button type="button" id="clockBtn" onclick="doClock()" style="border:none;border-radius:10px;padding:10px 16px;font-weight:800;font-size:13px;color:#fff;background:#16a34a;cursor:pointer;white-space:nowrap;">Entrada</button>
+    </div>
   </div>
   <div class="card">
     <div class="card-title"><span data-i18n="region">Región</span> <span class="req">*</span></div>
@@ -864,6 +868,59 @@ function pickEmp(el){
   document.querySelectorAll('.emp-card').forEach(c=>c.classList.remove('selected'));
   el.classList.add('selected');
   document.getElementById('fEmployee').value=el.dataset.name;
+  refreshClock();
+}
+
+// ── Entrada / Salida ──
+var clockOpen=false, clockBusy=false;
+function fmtClockTime(iso){
+  try{return new Date(iso).toLocaleTimeString('es-MX',{timeZone:'America/Chicago',hour:'numeric',minute:'2-digit'})+' (Dallas)';}catch(e){return '';}
+}
+function paintClock(open,since,msg){
+  clockOpen=open;
+  var box=document.getElementById('clockBox'),st=document.getElementById('clockStatus'),btn=document.getElementById('clockBtn');
+  box.style.display='flex';
+  st.textContent=msg||(open?('🟢 En turno desde '+fmtClockTime(since)):'⚪ Sin turno abierto');
+  btn.textContent=open?'Salida':'Entrada';
+  btn.style.background=open?'#dc2626':'#16a34a';
+  btn.disabled=false;btn.style.opacity=1;
+}
+async function refreshClock(){
+  var emp=document.getElementById('fEmployee').value;
+  if(!emp)return;
+  var box=document.getElementById('clockBox');
+  box.style.display='flex';
+  document.getElementById('clockStatus').textContent='···';
+  try{
+    var res=await fetch(SHEETS_URL+'?action=clockstatus&employee='+encodeURIComponent(emp));
+    var d=await res.json();
+    if(document.getElementById('fEmployee').value!==emp)return;
+    paintClock(!!d.open,d.since);
+  }catch(e){
+    document.getElementById('clockStatus').textContent='No se pudo consultar el turno';
+  }
+}
+async function doClock(){
+  if(clockBusy)return;
+  var emp=document.getElementById('fEmployee').value;
+  if(!emp)return;
+  var btn=document.getElementById('clockBtn');
+  clockBusy=true;btn.disabled=true;btn.style.opacity=.5;
+  try{
+    var res=await fetch(SHEETS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({type:'clock',action:clockOpen?'out':'in',employee:emp})});
+    var d=await res.json();
+    if(!d.success)throw new Error(d.error||'error');
+    if(d.action==='out'){
+      paintClock(false,null,'⚪ Turno cerrado — '+d.hours.toFixed(1)+' h');
+      toast('Salida registrada · '+d.hours.toFixed(1)+' h',true);
+    }else{
+      paintClock(true,d.since||d.at);
+      toast(d.already?'Ya tenías un turno abierto':'Entrada registrada',true);
+    }
+  }catch(e){
+    toast('No se pudo registrar — intenta de nuevo');
+    btn.disabled=false;btn.style.opacity=1;
+  }finally{clockBusy=false;}
 }
 function pickRegion(el){
   document.querySelectorAll('.r-chip').forEach(c=>c.classList.remove('selected'));
