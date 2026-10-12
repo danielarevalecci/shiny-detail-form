@@ -974,14 +974,23 @@ async function refreshClock(){
 async function doClock(){
   if(clockBusy)return;
   var emp=document.getElementById('fEmployee').value;
-  if(!emp)return;
-  var btn=document.getElementById('clockBtn');
+  if(!emp){toast('Toca tu nombre primero');return;}
+  var btn=document.getElementById('clockBtn'), st=document.getElementById('clockStatus');
+  var wasOpen=clockOpen, label=btn.textContent;
   clockBusy=true;btn.disabled=true;btn.style.opacity=.5;
+  btn.textContent='···';
+  st.textContent=wasOpen?'⏳ Registrando salida…':'⏳ Registrando entrada…';
+  var timer=null;
   try{
-    var res=await fetch(SHEETS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({type:'clock',action:clockOpen?'out':'in',employee:emp,pin:pinFor(emp)})});
+    var controller=new AbortController();
+    timer=setTimeout(function(){controller.abort();},25000);
+    var res=await fetch(SHEETS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},signal:controller.signal,body:JSON.stringify({type:'clock',action:wasOpen?'out':'in',employee:emp,pin:pinFor(emp)})});
     var d=await res.json();
-    if(!d.success&&(d.error==='PIN_INVALID'||d.error==='PIN_LOCKED')){clockBusy=false;lockOut('Vuelve a escribir tu PIN');return;}
-    if(!d.success)throw new Error(d.error||'error');
+    if(!d.success&&(d.error==='PIN_INVALID'||d.error==='PIN_LOCKED')){lockOut('Vuelve a escribir tu PIN');return;}
+    if(!d.success){
+      if(d.error==='No hay una entrada abierta.'){paintClock(false,null);toast('No tenías una entrada abierta');return;}
+      throw new Error(d.error||'error');
+    }
     if(d.action==='out'){
       paintClock(false,null,'⚪ Salida registrada ✓');
       toast('Salida registrada',true);
@@ -990,9 +999,12 @@ async function doClock(){
       toast(d.already?'Ya tenías un turno abierto':'Entrada registrada',true);
     }
   }catch(e){
-    toast('No se pudo registrar — intenta de nuevo');
-    btn.disabled=false;btn.style.opacity=1;
-  }finally{clockBusy=false;}
+    toast(e&&e.name==='AbortError'?'Tardó demasiado — revisa tu internet e intenta de nuevo':'No se pudo registrar — intenta de nuevo');
+    refreshClock(); // vuelve a consultar el estado real del turno
+  }finally{
+    if(timer)clearTimeout(timer);
+    clockBusy=false;btn.style.opacity=1;btn.disabled=false;
+  }
 }
 function pickRegion(el){
   document.querySelectorAll('.r-chip').forEach(c=>c.classList.remove('selected'));
