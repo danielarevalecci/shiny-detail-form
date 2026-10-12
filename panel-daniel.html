@@ -609,7 +609,7 @@ const [yy,mm,dd]=todayK.split('-').map(Number);
 const t=new Date(Date.UTC(yy,mm-1,dd)); const wd=(t.getUTCDay()+6)%7;
 const mon=new Date(t.getTime()-wd*86400000).toISOString().slice(0,10);
 const hrs=x=>x.hasReal?x.real:(x.last-x.first)/3600000;
-const fmt=h=>h<=0?'0h':(Math.floor(h)+'h '+String(Math.round((h%1)*60)).padStart(2,'0')+'m');
+const fmt=h=>{if(h<=0)return '0h';const tm=Math.round(h*60);return Math.floor(tm/60)+'h '+String(tm%60).padStart(2,'0')+'m';};
 const rows=Object.keys(days).filter(e=>Object.keys(days[e]).some(k=>k.startsWith(monthPrefix))).map(e=>{
 let hoy=0,sem=0,mes=0,dMes=0,open=null,pend=false,est=false;
 Object.entries(days[e]).forEach(([k,x])=>{
@@ -627,23 +627,41 @@ const mesName=nowD.toLocaleDateString('es-MX',{month:'long',timeZone:TZ});
 const badge=r=>r.pend?' <span style="color:#b45309;font-size:10px;">⚠️ salida pendiente</span>':(r.open?' <span style="color:#16a34a;font-size:10px;">🟢 en turno</span>':'');
 let h=`<table class="hrs-tbl"><tr><th>Empleado</th><th>Hoy</th><th>Semana</th><th>${mesName}</th><th>Días</th></tr>`+
 rows.map(r=>`<tr><td>${r.e}${badge(r)}</td><td>${fmt(r.hoy)}</td><td>${fmt(r.sem)}</td><td class="hrs-big">${fmt(r.mes)}${r.est?'*':''}</td><td>${r.dMes}</td></tr>`).join('')+'</table>';
+// ── Desglose semanal (lunes a domingo) ──
+const monOf=k=>{const [y,m,d]=k.split('-').map(Number);const t=new Date(Date.UTC(y,m-1,d));const w=(t.getUTCDay()+6)%7;return new Date(t.getTime()-w*86400000).toISOString().slice(0,10);};
+const weeks={};
+rows.forEach(r=>{Object.entries(days[r.e]).forEach(([k,x])=>{
+if(!k.startsWith(monthPrefix))return;
+const mk=monOf(k);
+weeks[mk]=weeks[mk]||{};
+weeks[mk][r.e]=(weeks[mk][r.e]||0)+hrs(x);
+});});
+const wLab=mk=>{const [y,m,d]=mk.split('-').map(Number);const a=new Date(Date.UTC(y,m-1,d,12)),b=new Date(a.getTime()+6*86400000);const f=z=>z.toLocaleDateString('es-MX',{day:'numeric',month:'short',timeZone:'UTC'});return f(a)+' – '+f(b)+(mk<monthPrefix+'-01'?' (parcial)':'');};
+const wKeys=Object.keys(weeks).sort().reverse();
+h+=`<div style="font-size:12px;font-weight:800;padding:14px 0 4px;">Por semana (lunes a domingo)</div>
+<table class="hrs-tbl"><tr><th>Semana</th>${rows.map(r=>`<th>${r.e}</th>`).join('')}</tr>`+
+wKeys.map(mk=>`<tr><td>${wLab(mk)}${mk===mon?' <span style="color:#16a34a;font-size:10px;">en curso</span>':''}</td>${rows.map(r=>`<td>${fmt(weeks[mk][r.e]||0)}</td>`).join('')}</tr>`).join('')+'</table>';
 const allDays=[...new Set(rows.flatMap(r=>Object.keys(days[r.e]).filter(k=>k.startsWith(monthPrefix))))].sort().reverse();
 const hm=d=>d.toLocaleTimeString('es-MX',{timeZone:TZ,hour:'numeric',minute:'2-digit'});
 const det=allDays.map(k=>{
 const [y,m,d2]=k.split('-').map(Number);
-const lab=new Date(Date.UTC(y,m-1,d2,12)).toLocaleDateString('es-MX',{weekday:'short',day:'numeric',month:'short',timeZone:'UTC'});
-const parts=rows.filter(r=>days[r.e][k]).map(r=>{
+const lab=new Date(Date.UTC(y,m-1,d2,12)).toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'short',timeZone:'UTC'});
+const trs=rows.filter(r=>days[r.e][k]).map(r=>{
 const x=days[r.e][k];
+const carH=(x.last-x.first)/3600000;
+let shift='<span style="color:var(--muted);font-weight:600;">—</span>';
 if(x.hasReal){
-const rng=hm(x.inT)+'–'+(x.open?(x.stale?'⚠️ sin salida':'en turno'):hm(x.outT));
-return `<div class="emp-detail-row"><span>${r.e} · ${rng}</span>${fmt(x.real)} · ${x.n} carro${x.n===1?'':'s'}</div>`;
+shift=hm(x.inT)+'–'+(x.open?'<span style="color:#16a34a;">en turno</span>':hm(x.outT))+'<div style="font-size:10px;color:var(--muted);">'+fmt(x.real)+'</div>';
+}else if(x.stale){
+shift='<span style="color:#b45309;">⚠️ sin salida</span>';
 }
-return `<div class="emp-detail-row"><span>${r.e} · ${hm(x.first)}–${hm(x.last)} <i>(est.)</i></span>~${fmt(hrs(x))} · ${x.n} carro${x.n===1?'':'s'}</div>`;
+return `<tr><td>${r.e}</td><td>${hm(x.first)}</td><td>${hm(x.last)}</td><td class="hrs-big">${fmt(carH)}</td><td>${shift}</td><td>${x.n}</td></tr>`;
 }).join('');
-return `<div style="font-size:11px;font-weight:800;padding:8px 0 2px;">${lab}</div>${parts}`;
+return `<div style="font-size:12px;font-weight:800;padding:12px 0 4px;text-transform:capitalize;">${lab}</div>
+<table class="hrs-tbl"><tr><th>Empleado</th><th>1er carro</th><th>Último</th><th>Horas</th><th>Turno (Ent–Sal)</th><th>Carros</th></tr>${trs}</table>`;
 }).join('');
-h+=`<div class="hrs-tog" onclick="const d=document.getElementById('hrsDet');const o=d.style.display==='none';d.style.display=o?'block':'none';this.textContent=o?'▲ Ocultar detalle diario':'▼ Ver detalle diario de ${mesName}';">▼ Ver detalle diario de ${mesName}</div><div id="hrsDet" style="display:none;">${det}</div>`;
-h+='<div class="hrs-note">Los días con Entrada/Salida son horas reales. Los días marcados (est.) o con * son estimados (1er → último carro; un día con un solo carro cuenta 0h). ⚠️ salida pendiente = turno abierto por más de 16 h: corrígelo en la pestaña Asistencia del Sheet.</div>';
+h+=`<div class="hrs-tog" onclick="const d=document.getElementById('hrsDet');const o=d.style.display==='none';d.style.display=o?'block':'none';this.textContent=o?'▲ Ocultar resumen diario':'▼ Ver resumen diario de ${mesName}';">▲ Ocultar resumen diario</div><div id="hrsDet" style="display:block;">${det}</div>`;
+h+='<div class="hrs-note"><b>Horas</b> = del primer carro al último carro del día. <b>Turno</b> = Entrada/Salida marcadas en la app (solo desde que se activó). Un día con un solo carro cuenta 0h. ⚠️ sin salida = turno abierto por más de 16 h: corrígelo en la pestaña Asistencia del Sheet.</div>';
 box.innerHTML=h;
 }
 
