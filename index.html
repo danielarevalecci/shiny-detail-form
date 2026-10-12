@@ -880,7 +880,7 @@ function paintClock(open,since,msg){
   clockOpen=open;
   var box=document.getElementById('clockBox'),st=document.getElementById('clockStatus'),btn=document.getElementById('clockBtn');
   box.style.display='flex';
-  st.textContent=msg||(open?('🟢 En turno desde '+fmtClockTime(since)):'⚪ Sin turno abierto');
+  st.textContent=msg||(open?'🟢 Entrada registrada — turno abierto':'⚪ Sin turno abierto');
   btn.textContent=open?'Salida':'Entrada';
   btn.style.background=open?'#dc2626':'#16a34a';
   btn.disabled=false;btn.style.opacity=1;
@@ -911,8 +911,8 @@ async function doClock(){
     var d=await res.json();
     if(!d.success)throw new Error(d.error||'error');
     if(d.action==='out'){
-      paintClock(false,null,'⚪ Turno cerrado — '+d.hours.toFixed(1)+' h');
-      toast('Salida registrada · '+d.hours.toFixed(1)+' h',true);
+      paintClock(false,null,'⚪ Salida registrada ✓');
+      toast('Salida registrada',true);
     }else{
       paintClock(true,d.since||d.at);
       toast(d.already?'Ya tenías un turno abierto':'Entrada registrada',true);
