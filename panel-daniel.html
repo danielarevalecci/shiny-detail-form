@@ -644,8 +644,13 @@ const mon=monOf(todayK);
 // ── Alerta: días sin registrar carros (usa todos los empleados de Config) ──
 const diffDays=(a,b)=>Math.round((Date.UTC(...b.split('-').map((v,i)=>i==1?v-1:+v))-Date.UTC(...a.split('-').map((v,i)=>i==1?v-1:+v)))/86400000);
 const cfgEmps=(cachedEmployees||[]).map(e=>e.key);
-const allEmpNames=[...new Set([...cfgEmps,...Object.keys(days)])];
 const lastKeyOf=e=>days[e]?Object.keys(days[e]).sort().slice(-1)[0]:null;
+const OMIT_EMPS=['daniel','carlos'];
+const allEmpNames=cfgEmps.filter(e=>{
+if(OMIT_EMPS.includes(String(e).trim().toLowerCase()))return false;
+const lk=lastKeyOf(e);
+return lk&&diffDays(lk,todayK)<=31;
+});
 const idleInfo=e=>{
 const lk=lastKeyOf(e);
 if(!lk)return {n:null,txt:'Nunca ha registrado carros',lvl:'red'};
@@ -656,7 +661,7 @@ return {n,txt:`Sin carros registrados hace ${n} días (último: ${labDay(lk,{wee
 const idleBadge=e=>{const i=idleInfo(e);return i?`<div class="idle-${i.lvl}">⚠️ ${i.txt}</div>`:'';};
 
 // ── Resumen por empleado: Hoy / Semana / Mes ──
-const rows=allEmpNames.filter(e=>cfgEmps.includes(e)||(days[e]&&Object.keys(days[e]).some(k=>k.startsWith(monthPrefix)))).map(e=>{
+const rows=allEmpNames.map(e=>{
 const r={e,hoy:0,sem:0,mes:0,cHoy:0,cSem:0,cMes:0,dMes:0,rngHoy:''};
 Object.entries(days[e]||{}).forEach(([k,x])=>{
 const h=hrs(x);
@@ -677,7 +682,7 @@ rows.map(r=>`<tr><td>${r.e}${idleBadge(r.e)}</td><td>${cell(r.hoy,r.cHoy?r.rngHo
 // ── Reporte semanal por empleado (lunes a domingo, con navegación) ──
 const wkStart=addDays(mon,hrsWeekOff*7), wkEnd=addDays(wkStart,6);
 const wkKeys=[0,1,2,3,4,5,6].map(i=>addDays(wkStart,i));
-const empWk=allEmpNames.filter(e=>cfgEmps.includes(e)||days[e]).map(e=>{
+const empWk=allEmpNames.map(e=>{
 const ds=wkKeys.map(k=>(days[e]&&days[e][k])||null);
 const act=ds.filter(Boolean);
 if(!act.length)return {e,ds,tot:0,cars:0,nd:0,empty:true};
