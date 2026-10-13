@@ -152,6 +152,47 @@ main{max-width:760px;margin:0 auto;padding:20px;}
 .hrs-big{font-size:16px;font-weight:900;}
 .hrs-note{font-size:10px;color:var(--muted);font-weight:600;margin-top:6px;line-height:1.4;}
 .hrs-tog{cursor:pointer;font-size:11px;font-weight:700;color:var(--muted);padding:8px 0 4px;margin-top:6px;border-top:1px solid var(--border);}
+.hrs-big2{font-size:14px;font-weight:900;white-space:nowrap;}
+.hrs-sub{font-size:10px;font-weight:700;color:var(--muted);margin-top:1px;white-space:nowrap;}
+.hrs-tbl td,.hrs-tbl th{padding-left:4px;padding-right:4px;}
+.hrs-legend{font-size:11px;color:var(--muted);font-weight:600;line-height:1.4;margin-bottom:8px;}
+.tl-day{margin-top:14px;}
+.tl-daylab{font-size:12px;font-weight:800;text-transform:capitalize;margin-bottom:6px;}
+.tl-row{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin-bottom:8px;}
+.tl-head{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;}
+.tl-tot{font-size:13px;font-weight:900;}
+.tl-tot i{font-size:10px;font-weight:700;color:var(--muted);font-style:normal;}
+.tl-bar{position:relative;height:14px;background:var(--bg);border-radius:7px;margin:8px 0 6px;overflow:hidden;}
+.tl-seg{position:absolute;top:0;bottom:0;border-radius:4px;}
+.tl-load{background:#f0a500;}
+.tl-wash{background:#22c55e;}
+.tl-close{background:#c9c6bf;}
+.tl-times{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:11px;font-weight:700;color:var(--muted);}
+.tl-time i{font-style:normal;margin-right:3px;}
+.tl-time b{color:var(--text);margin-left:4px;}
+.tl-chips{font-size:11px;font-weight:600;color:var(--muted);margin-top:6px;}
+.tl-chips b{color:var(--text);}
+.tl-legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:10px;font-weight:700;color:var(--muted);margin:6px 0 0;}
+.tl-dot{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:4px;vertical-align:middle;}
+.wk-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:18px 0 8px;}
+.wk-nav button{background:var(--white);border:1px solid var(--border);border-radius:8px;width:34px;height:34px;font-size:18px;cursor:pointer;font-family:inherit;}
+.wk-nav button:disabled{opacity:.35;cursor:default;}
+.wk-title{font-size:13px;font-weight:800;text-align:center;flex:1;}
+.wk-now{color:#16a34a;font-size:10px;font-weight:800;margin-left:4px;}
+.wk-card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:14px 14px 10px;margin-bottom:10px;box-shadow:var(--shadow);}
+.wk-head{display:flex;justify-content:space-between;align-items:baseline;}
+.wk-head b{font-size:16px;font-weight:800;}
+.wk-tot{font-size:26px;font-weight:900;}
+.wk-kpis{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:11px;font-weight:600;color:var(--muted);margin:6px 0 10px;}
+.wk-kpis b{color:var(--text);font-weight:800;}
+.wk-tbl{width:100%;border-collapse:collapse;font-size:12px;}
+.wk-tbl th{font-size:10px;color:var(--muted);font-weight:800;text-align:right;padding:4px 4px;text-transform:uppercase;}
+.wk-tbl th:first-child,.wk-tbl td:first-child{text-align:left;}
+.wk-tbl td{padding:6px 4px;text-align:right;font-weight:700;border-top:1px solid var(--border);white-space:nowrap;}
+.wk-tbl td:first-child{text-transform:capitalize;color:var(--muted);}
+.wk-h{font-weight:900;}
+.wk-off td{color:var(--muted);font-weight:600;}
+.wk-off td[colspan]{text-align:center;}
 </style>
 </head>
 <body>
@@ -263,7 +304,7 @@ main{max-width:760px;margin:0 auto;padding:20px;}
 <div class="section-title">Por empleado <span id="empPeriodLabel"></span></div>
 <div id="empCards"><div class="empty-state">Cargando...</div></div>
 
-<div class="section-title">⏱️ Horas trabajadas <span style="font-weight:600;color:var(--muted);font-size:10px;">(hora Dallas)</span></div>
+<div class="section-title">⏱️ Horas trabajadas <span style="font-weight:600;color:var(--muted);font-size:10px;">(1er carro → último carro)</span></div>
 <div id="hoursBox"><div class="empty-state">Cargando...</div></div>
 
 <div class="section-title">🏆 Ranking por $ generado <span id="rankPeriodLabel"></span></div>
@@ -566,102 +607,111 @@ return `<div class="gh-col">
 }
 
 
-// ── Horas trabajadas: reales (Entrada/Salida) cuando existen; si no, estimado 1er→último carro (hora Dallas) ──
-async function loadHours(records){
-let shifts=[];
-try{
-const r=await fetch(SHEETS_URL+'?action=attendance');
-const d=await r.json();
-shifts=d.shifts||[];
-}catch(e){ /* backend sin Asistencia todavía: se usa solo el estimado */ }
-renderHours(records,shifts);
+// ── Horas trabajadas = del 1er carro al último carro de cada día (hora Dallas) ──
+let hrsWeekOff=0; // 0 = semana en curso, -1 = anterior, etc.
+function loadHours(records){ renderHours(records); }
+function setHoursWeek(delta){
+hrsWeekOff=Math.min(0,hrsWeekOff+delta);
+renderHours(allRecordsCache);
 }
-function renderHours(records,shifts){
-shifts=shifts||[];
+function renderHours(records){
 const TZ='America/Chicago';
 const dayOf=d=>d.toLocaleDateString('en-CA',{timeZone:TZ});
-const days={}; // emp -> dayKey -> {first,last,n,real,hasReal,open,stale}
-const slot=(e,k,d)=>{days[e]=days[e]||{};return days[e][k]||(days[e][k]={first:d,last:d,n:0,real:0,hasReal:false,open:false,stale:false,inT:null,outT:null});};
+const days={}; // emp -> dayKey -> {first,last,n}
 records.forEach(r=>{
 const d=new Date(r.timestamp); if(isNaN(d))return;
-const x=slot(r.employee||'Sin nombre',dayOf(d),d);
+const e=r.employee||'Sin nombre', k=dayOf(d);
+days[e]=days[e]||{};
+const x=days[e][k]||(days[e][k]={first:d,last:d,n:0});
 if(d<x.first)x.first=d; if(d>x.last)x.last=d; x.n++;
 });
 const nowD=new Date();
-shifts.forEach(sh=>{
-const din=new Date(sh.in); if(isNaN(din))return;
-const x=slot(sh.employee,dayOf(din),din);
-x.hasReal=true;
-if(!x.inT||din<x.inT)x.inT=din;
-if(sh.out){
-const dout=new Date(sh.out);
-x.real+=(dout-din)/3600000;
-if(!x.outT||dout>x.outT)x.outT=dout;
-}else{
-const h=(nowD-din)/3600000;
-x.open=true;
-if(h>16){x.stale=true;if(x.real===0)x.hasReal=false;}else{x.real+=h;}
-}
-});
 const todayK=dayOf(nowD);
 const monthPrefix=todayK.slice(0,7);
-const [yy,mm,dd]=todayK.split('-').map(Number);
-const t=new Date(Date.UTC(yy,mm-1,dd)); const wd=(t.getUTCDay()+6)%7;
-const mon=new Date(t.getTime()-wd*86400000).toISOString().slice(0,10);
-const hrs=x=>x.hasReal?x.real:(x.last-x.first)/3600000;
+const hrs=x=>(x.last-x.first)/3600000;
 const fmt=h=>{if(h<=0)return '0h';const tm=Math.round(h*60);return Math.floor(tm/60)+'h '+String(tm%60).padStart(2,'0')+'m';};
+const hm=d=>d.toLocaleTimeString('es-MX',{timeZone:TZ,hour:'numeric',minute:'2-digit'});
+const minsOfDay=d=>{const p=new Intl.DateTimeFormat('en-US',{timeZone:TZ,hour:'numeric',minute:'numeric',hourCycle:'h23'}).formatToParts(d);let h=0,m=0;p.forEach(q=>{if(q.type==='hour')h=+q.value;if(q.type==='minute')m=+q.value;});return h*60+m;};
+const fmtMin=mn=>{const h=Math.floor(mn/60),m=Math.round(mn%60);const hh=((h+11)%12)+1;return hh+':'+String(m).padStart(2,'0')+' '+(h<12?'a. m.':'p. m.');};
+const addDays=(k,n)=>{const [y,m,d]=k.split('-').map(Number);return new Date(Date.UTC(y,m-1,d+n)).toISOString().slice(0,10);};
+const monOf=k=>{const [y,m,d]=k.split('-').map(Number);const w=(new Date(Date.UTC(y,m-1,d)).getUTCDay()+6)%7;return addDays(k,-w);};
+const labDay=(k,opt)=>{const [y,m,d]=k.split('-').map(Number);return new Date(Date.UTC(y,m-1,d,12)).toLocaleDateString('es-MX',Object.assign({timeZone:'UTC'},opt));};
+const mon=monOf(todayK);
+
+// ── Resumen por empleado: Hoy / Semana / Mes ──
 const rows=Object.keys(days).filter(e=>Object.keys(days[e]).some(k=>k.startsWith(monthPrefix))).map(e=>{
-let hoy=0,sem=0,mes=0,dMes=0,open=null,pend=false,est=false;
+const r={e,hoy:0,sem:0,mes:0,cHoy:0,cSem:0,cMes:0,dMes:0,rngHoy:''};
 Object.entries(days[e]).forEach(([k,x])=>{
 const h=hrs(x);
-if(k.startsWith(monthPrefix)){mes+=h;dMes++;if(!x.hasReal)est=true;}
-if(k>=mon&&k<=todayK)sem+=h;
-if(k===todayK)hoy+=h;
-if(x.open){if(x.stale)pend=true;else open=x;}
+if(k.startsWith(monthPrefix)){r.mes+=h;r.cMes+=x.n;r.dMes++;}
+if(k>=mon&&k<=todayK){r.sem+=h;r.cSem+=x.n;}
+if(k===todayK){r.hoy+=h;r.cHoy+=x.n;r.rngHoy=hm(x.first)+' – '+hm(x.last);}
 });
-return {e,hoy,sem,mes,dMes,open,pend,est};
+return r;
 }).sort((a,b)=>b.mes-a.mes);
 const box=document.getElementById('hoursBox');
 if(!rows.length){box.innerHTML='<div class="empty-state">Sin actividad este mes.</div>';return;}
 const mesName=nowD.toLocaleDateString('es-MX',{month:'long',timeZone:TZ});
-const badge=r=>r.pend?' <span style="color:#b45309;font-size:10px;">⚠️ salida pendiente</span>':(r.open?' <span style="color:#16a34a;font-size:10px;">🟢 en turno</span>':'');
-let h=`<table class="hrs-tbl"><tr><th>Empleado</th><th>Hoy</th><th>Semana</th><th>${mesName}</th><th>Días</th></tr>`+
-rows.map(r=>`<tr><td>${r.e}${badge(r)}</td><td>${fmt(r.hoy)}</td><td>${fmt(r.sem)}</td><td class="hrs-big">${fmt(r.mes)}${r.est?'*':''}</td><td>${r.dMes}</td></tr>`).join('')+'</table>';
-// ── Desglose semanal (lunes a domingo) ──
-const monOf=k=>{const [y,m,d]=k.split('-').map(Number);const t=new Date(Date.UTC(y,m-1,d));const w=(t.getUTCDay()+6)%7;return new Date(t.getTime()-w*86400000).toISOString().slice(0,10);};
-const weeks={};
-rows.forEach(r=>{Object.entries(days[r.e]).forEach(([k,x])=>{
-if(!k.startsWith(monthPrefix))return;
-const mk=monOf(k);
-weeks[mk]=weeks[mk]||{};
-weeks[mk][r.e]=(weeks[mk][r.e]||0)+hrs(x);
-});});
-const wLab=mk=>{const [y,m,d]=mk.split('-').map(Number);const a=new Date(Date.UTC(y,m-1,d,12)),b=new Date(a.getTime()+6*86400000);const f=z=>z.toLocaleDateString('es-MX',{day:'numeric',month:'short',timeZone:'UTC'});return f(a)+' – '+f(b)+(mk<monthPrefix+'-01'?' (parcial)':'');};
-const wKeys=Object.keys(weeks).sort().reverse();
-h+=`<div style="font-size:12px;font-weight:800;padding:14px 0 4px;">Por semana (lunes a domingo)</div>
-<table class="hrs-tbl"><tr><th>Semana</th>${rows.map(r=>`<th>${r.e}</th>`).join('')}</tr>`+
-wKeys.map(mk=>`<tr><td>${wLab(mk)}${mk===mon?' <span style="color:#16a34a;font-size:10px;">en curso</span>':''}</td>${rows.map(r=>`<td>${fmt(weeks[mk][r.e]||0)}</td>`).join('')}</tr>`).join('')+'</table>';
-const allDays=[...new Set(rows.flatMap(r=>Object.keys(days[r.e]).filter(k=>k.startsWith(monthPrefix))))].sort().reverse();
-const hm=d=>d.toLocaleTimeString('es-MX',{timeZone:TZ,hour:'numeric',minute:'2-digit'});
-const det=allDays.map(k=>{
-const [y,m,d2]=k.split('-').map(Number);
-const lab=new Date(Date.UTC(y,m-1,d2,12)).toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'short',timeZone:'UTC'});
-const trs=rows.filter(r=>days[r.e][k]).map(r=>{
-const x=days[r.e][k];
-const carH=(x.last-x.first)/3600000;
-let shift='<span style="color:var(--muted);font-weight:600;">—</span>';
-if(x.hasReal){
-shift=hm(x.inT)+'–'+(x.open?'<span style="color:#16a34a;">en turno</span>':hm(x.outT))+'<div style="font-size:10px;color:var(--muted);">'+fmt(x.real)+'</div>';
-}else if(x.stale){
-shift='<span style="color:#b45309;">⚠️ sin salida</span>';
+const cell=(h,sub)=>`<div class="hrs-big2">${fmt(h)}</div><div class="hrs-sub">${sub}</div>`;
+let h=`<div class="hrs-legend"><b>Horas</b> = de que lavan el <b>primer carro</b> a que terminan el <b>último</b> del día (hora Dallas). Un día con un solo carro cuenta 0h.</div>
+<table class="hrs-tbl"><tr><th>Empleado</th><th>Hoy</th><th>Semana</th><th>${mesName}</th><th>Días</th></tr>`+
+rows.map(r=>`<tr><td>${r.e}</td><td>${cell(r.hoy,r.cHoy?r.rngHoy:'—')}</td><td>${cell(r.sem,r.cSem+' carros')}</td><td>${cell(r.mes,r.cMes+' carros')}</td><td>${r.dMes}</td></tr>`).join('')+'</table>';
+
+// ── Reporte semanal por empleado (lunes a domingo, con navegación) ──
+const wkStart=addDays(mon,hrsWeekOff*7), wkEnd=addDays(wkStart,6);
+const wkKeys=[0,1,2,3,4,5,6].map(i=>addDays(wkStart,i));
+const empWk=Object.keys(days).map(e=>{
+const ds=wkKeys.map(k=>days[e][k]||null);
+const act=ds.filter(Boolean);
+if(!act.length)return null;
+const tot=act.reduce((a,x)=>a+hrs(x),0);
+const cars=act.reduce((a,x)=>a+x.n,0);
+const withSpan=act.filter(x=>x.n>1);
+const avgFirst=act.reduce((a,x)=>a+minsOfDay(x.first),0)/act.length;
+const avgLast=act.reduce((a,x)=>a+minsOfDay(x.last),0)/act.length;
+return {e,ds,tot,cars,nd:act.length,avgFirst,avgLast,avgH:withSpan.length?withSpan.reduce((a,x)=>a+hrs(x),0)/withSpan.length:0};
+}).filter(Boolean).sort((a,b)=>b.tot-a.tot);
+const wkTitle=labDay(wkStart,{day:'numeric',month:'short'})+' – '+labDay(wkEnd,{day:'numeric',month:'short'});
+h+=`<div class="wk-nav"><button onclick="setHoursWeek(-1)">‹</button><div class="wk-title">Reporte semanal · ${wkTitle}${hrsWeekOff===0?' <span class="wk-now">en curso</span>':''}</div><button onclick="setHoursWeek(1)" ${hrsWeekOff===0?'disabled':''}>›</button></div>`;
+if(!empWk.length){
+h+='<div class="empty-state" style="padding:14px 0;">Sin carros esta semana.</div>';
+}else{
+h+=empWk.map(w=>{
+const dayRows=wkKeys.map((k,i)=>{
+const x=w.ds[i];
+const lab=labDay(k,{weekday:'short',day:'numeric'});
+if(!x)return `<tr class="wk-off"><td>${lab}</td><td colspan="4">—</td></tr>`;
+return `<tr><td>${lab}</td><td>${hm(x.first)}</td><td>${hm(x.last)}</td><td class="wk-h">${fmt(hrs(x))}</td><td>${x.n}</td></tr>`;
+}).join('');
+return `<div class="wk-card">
+<div class="wk-head"><b>${w.e}</b><span class="wk-tot">${fmt(w.tot)}</span></div>
+<div class="wk-kpis"><span><b>${w.nd}</b> días</span><span><b>${w.cars}</b> carros</span><span><b>${fmt(w.avgH)}</b> prom./día</span><span>Arranca ~<b>${fmtMin(w.avgFirst)}</b></span><span>Termina ~<b>${fmtMin(w.avgLast)}</b></span></div>
+<table class="wk-tbl"><tr><th>Día</th><th>1er carro</th><th>Último</th><th>Horas</th><th>Carros</th></tr>${dayRows}</table>
+</div>`;
+}).join('');
 }
-return `<tr><td>${r.e}</td><td>${hm(x.first)}</td><td>${hm(x.last)}</td><td class="hrs-big">${fmt(carH)}</td><td>${shift}</td><td>${x.n}</td></tr>`;
+
+// ── Resumen diario del mes con barra de tiempo ──
+const allDays=[...new Set(rows.flatMap(r=>Object.keys(days[r.e]).filter(k=>k.startsWith(monthPrefix))))].sort().reverse();
+const det=allDays.map(k=>{
+const lab=labDay(k,{weekday:'long',day:'numeric',month:'short'});
+const present=rows.filter(r=>days[r.e][k]);
+let lo=Infinity,hi=-Infinity;
+present.forEach(r=>{const x=days[r.e][k];lo=Math.min(lo,x.first.getTime());hi=Math.max(hi,x.last.getTime());});
+const pad=Math.max(10*60000,(hi-lo)*0.03);lo-=pad;hi+=pad;
+const pos=ms=>Math.max(0,Math.min(100,(ms-lo)/(hi-lo)*100));
+const rowsHtml=present.map(r=>{
+const x=days[r.e][k];
+const l=pos(x.first.getTime()),w=Math.max(0.8,pos(x.last.getTime())-l);
+return `<div class="tl-row"><div class="tl-head"><b>${r.e}</b><span class="tl-tot">${fmt(hrs(x))}</span></div>
+<div class="tl-bar"><div class="tl-seg tl-wash" style="left:${l}%;width:${w}%;"></div></div>
+<div class="tl-times"><span class="tl-time"><i>🟢</i>1er carro<b>${hm(x.first)}</b></span><span class="tl-time"><i>🏁</i>Último<b>${hm(x.last)}</b></span></div>
+<div class="tl-chips">${x.n} carro${x.n===1?'':'s'}</div></div>`;
 }).join('');
-return `<div style="font-size:12px;font-weight:800;padding:12px 0 4px;text-transform:capitalize;">${lab}</div>
-<table class="hrs-tbl"><tr><th>Empleado</th><th>1er carro</th><th>Último</th><th>Horas</th><th>Turno (Ent–Sal)</th><th>Carros</th></tr>${trs}</table>`;
+return `<div class="tl-day"><div class="tl-daylab">${lab}</div>${rowsHtml}</div>`;
 }).join('');
-h+=`<div class="hrs-tog" onclick="const d=document.getElementById('hrsDet');const o=d.style.display==='none';d.style.display=o?'block':'none';this.textContent=o?'▲ Ocultar resumen diario':'▼ Ver resumen diario de ${mesName}';">▲ Ocultar resumen diario</div><div id="hrsDet" style="display:block;">${det}</div>`;
-h+='<div class="hrs-note"><b>Horas</b> = del primer carro al último carro del día. <b>Turno</b> = Entrada/Salida marcadas en la app (solo desde que se activó). Un día con un solo carro cuenta 0h. ⚠️ sin salida = turno abierto por más de 16 h: corrígelo en la pestaña Asistencia del Sheet.</div>';
+h+=`<div class="hrs-tog" onclick="const d=document.getElementById('hrsDet');const o=d.style.display==='none';d.style.display=o?'block':'none';this.textContent=o?'▲ Ocultar resumen diario de ${mesName}':'▼ Ver resumen diario de ${mesName}';">▼ Ver resumen diario de ${mesName}</div>
+<div id="hrsDet" style="display:none;">${det}</div>`;
 box.innerHTML=h;
 }
 
