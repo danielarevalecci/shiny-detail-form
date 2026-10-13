@@ -193,6 +193,9 @@ main{max-width:760px;margin:0 auto;padding:20px;}
 .wk-h{font-weight:900;}
 .wk-off td{color:var(--muted);font-weight:600;}
 .wk-off td[colspan]{text-align:center;}
+.idle-amber,.idle-red{display:block;font-size:11px;font-weight:800;margin-top:4px;padding:4px 8px;border-radius:8px;}
+.idle-amber{background:#fff3cd;color:#7c3d00;}
+.idle-red{background:#fcebeb;color:#a32d2d;}
 </style>
 </head>
 <body>
@@ -638,10 +641,24 @@ const monOf=k=>{const [y,m,d]=k.split('-').map(Number);const w=(new Date(Date.UT
 const labDay=(k,opt)=>{const [y,m,d]=k.split('-').map(Number);return new Date(Date.UTC(y,m-1,d,12)).toLocaleDateString('es-MX',Object.assign({timeZone:'UTC'},opt));};
 const mon=monOf(todayK);
 
+// ── Alerta: días sin registrar carros (usa todos los empleados de Config) ──
+const diffDays=(a,b)=>Math.round((Date.UTC(...b.split('-').map((v,i)=>i==1?v-1:+v))-Date.UTC(...a.split('-').map((v,i)=>i==1?v-1:+v)))/86400000);
+const cfgEmps=(cachedEmployees||[]).map(e=>e.key);
+const allEmpNames=[...new Set([...cfgEmps,...Object.keys(days)])];
+const lastKeyOf=e=>days[e]?Object.keys(days[e]).sort().slice(-1)[0]:null;
+const idleInfo=e=>{
+const lk=lastKeyOf(e);
+if(!lk)return {n:null,txt:'Nunca ha registrado carros',lvl:'red'};
+const n=diffDays(lk,todayK);
+if(n<2)return null;
+return {n,txt:`Sin carros registrados hace ${n} días (último: ${labDay(lk,{weekday:'short',day:'numeric',month:'short'})})`,lvl:n>=4?'red':'amber'};
+};
+const idleBadge=e=>{const i=idleInfo(e);return i?`<div class="idle-${i.lvl}">⚠️ ${i.txt}</div>`:'';};
+
 // ── Resumen por empleado: Hoy / Semana / Mes ──
-const rows=Object.keys(days).filter(e=>Object.keys(days[e]).some(k=>k.startsWith(monthPrefix))).map(e=>{
+const rows=allEmpNames.filter(e=>cfgEmps.includes(e)||(days[e]&&Object.keys(days[e]).some(k=>k.startsWith(monthPrefix)))).map(e=>{
 const r={e,hoy:0,sem:0,mes:0,cHoy:0,cSem:0,cMes:0,dMes:0,rngHoy:''};
-Object.entries(days[e]).forEach(([k,x])=>{
+Object.entries(days[e]||{}).forEach(([k,x])=>{
 const h=hrs(x);
 if(k.startsWith(monthPrefix)){r.mes+=h;r.cMes+=x.n;r.dMes++;}
 if(k>=mon&&k<=todayK){r.sem+=h;r.cSem+=x.n;}
@@ -655,28 +672,31 @@ const mesName=nowD.toLocaleDateString('es-MX',{month:'long',timeZone:TZ});
 const cell=(h,sub)=>`<div class="hrs-big2">${fmt(h)}</div><div class="hrs-sub">${sub}</div>`;
 let h=`<div class="hrs-legend"><b>Horas</b> = de que lavan el <b>primer carro</b> a que terminan el <b>último</b> del día (hora Dallas). Un día con un solo carro cuenta 0h.</div>
 <table class="hrs-tbl"><tr><th>Empleado</th><th>Hoy</th><th>Semana</th><th>${mesName}</th><th>Días</th></tr>`+
-rows.map(r=>`<tr><td>${r.e}</td><td>${cell(r.hoy,r.cHoy?r.rngHoy:'—')}</td><td>${cell(r.sem,r.cSem+' carros')}</td><td>${cell(r.mes,r.cMes+' carros')}</td><td>${r.dMes}</td></tr>`).join('')+'</table>';
+rows.map(r=>`<tr><td>${r.e}${idleBadge(r.e)}</td><td>${cell(r.hoy,r.cHoy?r.rngHoy:'—')}</td><td>${cell(r.sem,r.cSem+' carros')}</td><td>${cell(r.mes,r.cMes+' carros')}</td><td>${r.dMes}</td></tr>`).join('')+'</table>';
 
 // ── Reporte semanal por empleado (lunes a domingo, con navegación) ──
 const wkStart=addDays(mon,hrsWeekOff*7), wkEnd=addDays(wkStart,6);
 const wkKeys=[0,1,2,3,4,5,6].map(i=>addDays(wkStart,i));
-const empWk=Object.keys(days).map(e=>{
-const ds=wkKeys.map(k=>days[e][k]||null);
+const empWk=allEmpNames.filter(e=>cfgEmps.includes(e)||days[e]).map(e=>{
+const ds=wkKeys.map(k=>(days[e]&&days[e][k])||null);
 const act=ds.filter(Boolean);
-if(!act.length)return null;
+if(!act.length)return {e,ds,tot:0,cars:0,nd:0,empty:true};
 const tot=act.reduce((a,x)=>a+hrs(x),0);
 const cars=act.reduce((a,x)=>a+x.n,0);
 const withSpan=act.filter(x=>x.n>1);
 const avgFirst=act.reduce((a,x)=>a+minsOfDay(x.first),0)/act.length;
 const avgLast=act.reduce((a,x)=>a+minsOfDay(x.last),0)/act.length;
 return {e,ds,tot,cars,nd:act.length,avgFirst,avgLast,avgH:withSpan.length?withSpan.reduce((a,x)=>a+hrs(x),0)/withSpan.length:0};
-}).filter(Boolean).sort((a,b)=>b.tot-a.tot);
+}).sort((a,b)=>b.tot-a.tot);
 const wkTitle=labDay(wkStart,{day:'numeric',month:'short'})+' – '+labDay(wkEnd,{day:'numeric',month:'short'});
 h+=`<div class="wk-nav"><button onclick="setHoursWeek(-1)">‹</button><div class="wk-title">Reporte semanal · ${wkTitle}${hrsWeekOff===0?' <span class="wk-now">en curso</span>':''}</div><button onclick="setHoursWeek(1)" ${hrsWeekOff===0?'disabled':''}>›</button></div>`;
 if(!empWk.length){
-h+='<div class="empty-state" style="padding:14px 0;">Sin carros esta semana.</div>';
+h+='<div class="empty-state" style="padding:14px 0;">Sin empleados.</div>';
 }else{
 h+=empWk.map(w=>{
+if(w.empty){
+return `<div class="wk-card"><div class="wk-head"><b>${w.e}</b><span class="wk-tot" style="color:var(--muted);">0h</span></div><div class="wk-kpis"><span>Sin carros esta semana</span></div>${idleBadge(w.e)||''}</div>`;
+}
 const dayRows=wkKeys.map((k,i)=>{
 const x=w.ds[i];
 const lab=labDay(k,{weekday:'short',day:'numeric'});
@@ -685,6 +705,7 @@ return `<tr><td>${lab}</td><td>${hm(x.first)}</td><td>${hm(x.last)}</td><td clas
 }).join('');
 return `<div class="wk-card">
 <div class="wk-head"><b>${w.e}</b><span class="wk-tot">${fmt(w.tot)}</span></div>
+${idleBadge(w.e)}
 <div class="wk-kpis"><span><b>${w.nd}</b> días</span><span><b>${w.cars}</b> carros</span><span><b>${fmt(w.avgH)}</b> prom./día</span><span>Arranca ~<b>${fmtMin(w.avgFirst)}</b></span><span>Termina ~<b>${fmtMin(w.avgLast)}</b></span></div>
 <table class="wk-tbl"><tr><th>Día</th><th>1er carro</th><th>Último</th><th>Horas</th><th>Carros</th></tr>${dayRows}</table>
 </div>`;
@@ -692,10 +713,10 @@ return `<div class="wk-card">
 }
 
 // ── Resumen diario del mes con barra de tiempo ──
-const allDays=[...new Set(rows.flatMap(r=>Object.keys(days[r.e]).filter(k=>k.startsWith(monthPrefix))))].sort().reverse();
+const allDays=[...new Set(rows.flatMap(r=>Object.keys(days[r.e]||{}).filter(k=>k.startsWith(monthPrefix))))].sort().reverse();
 const det=allDays.map(k=>{
 const lab=labDay(k,{weekday:'long',day:'numeric',month:'short'});
-const present=rows.filter(r=>days[r.e][k]);
+const present=rows.filter(r=>days[r.e]&&days[r.e][k]);
 let lo=Infinity,hi=-Infinity;
 present.forEach(r=>{const x=days[r.e][k];lo=Math.min(lo,x.first.getTime());hi=Math.max(hi,x.last.getTime());});
 const pad=Math.max(10*60000,(hi-lo)*0.03);lo-=pad;hi+=pad;
