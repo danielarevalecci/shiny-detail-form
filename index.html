@@ -881,6 +881,12 @@ function validate(n){
 // Solo se recuerda el PIN del último empleado desbloqueado, y solo en memoria
 // (se borra al cerrar la app). Si eliges otro nombre, se pide su PIN.
 var UNLOCKED={name:null,pin:null}, pinTarget=null, pinBusy=false;
+// Recordar el PIN en este teléfono por 12 h (el navegador a veces recarga la página
+// al abrir la cámara y se perdía el PIN). Si otro empleado elige su nombre, se pide su PIN.
+var PIN_KEEP_MS=12*3600*1000;
+function saveUnlocked(){try{localStorage.setItem('shinyUnlocked',JSON.stringify({name:UNLOCKED.name,pin:UNLOCKED.pin,t:Date.now()}));}catch(e){}}
+function clearUnlocked(){try{localStorage.removeItem('shinyUnlocked');}catch(e){}}
+try{var _u=JSON.parse(localStorage.getItem('shinyUnlocked')||'null');if(_u&&_u.name&&(Date.now()-_u.t)<PIN_KEEP_MS)UNLOCKED={name:_u.name,pin:_u.pin};else if(_u)clearUnlocked();}catch(e){}
 function pickEmp(el){
   var name=el.dataset.name;
   if(UNLOCKED.name===name){applyEmp(el);return;}
@@ -915,7 +921,7 @@ async function submitPin(){
     var res=await fetch(SHEETS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({type:'verifypin',employee:name,pin:pin})});
     var d=await res.json();
     if(d.success){
-      UNLOCKED={name:name,pin:d.required===false?'':pin};
+      UNLOCKED={name:name,pin:d.required===false?'':pin};saveUnlocked();
       var el=pinTarget;closePin();applyEmp(el);
     }else if(d.error==='PIN_LOCKED'){
       document.getElementById('pinErr').textContent='Demasiados intentos. Espera 10 minutos.';
@@ -934,7 +940,7 @@ document.addEventListener('keydown',function(e){
 });
 function pinFor(name){return UNLOCKED.name===name?UNLOCKED.pin:'';}
 function lockOut(msg){
-  UNLOCKED={name:null,pin:null};
+  UNLOCKED={name:null,pin:null};clearUnlocked();
   document.getElementById('fEmployee').value='';
   document.querySelectorAll('.emp-card').forEach(c=>c.classList.remove('selected'));
   document.getElementById('clockBox').style.display='none';
