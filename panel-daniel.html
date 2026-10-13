@@ -307,7 +307,7 @@ main{max-width:760px;margin:0 auto;padding:20px;}
 <div class="section-title">Por empleado <span id="empPeriodLabel"></span></div>
 <div id="empCards"><div class="empty-state">Cargando...</div></div>
 
-<div class="section-title">⏱️ Horas trabajadas <span style="font-weight:600;color:var(--muted);font-size:10px;">(1er carro → último carro)</span></div>
+<div class="section-title">⏱️ Horas trabajadas <span style="font-weight:600;color:var(--muted);font-size:10px;">(1er carro → último carro)</span><button class="rpt-btn" onclick="openReport()">📄 Descargar reporte</button></div>
 <div id="hoursBox"><div class="empty-state">Cargando...</div></div>
 
 <div class="section-title">🏆 Ranking por $ generado <span id="rankPeriodLabel"></span></div>
@@ -1120,5 +1120,374 @@ ${rows}
 </div>`;
 }
 </script>
+<!-- ═══════════ Reportes descargables (PDF / Excel) ═══════════ -->
+<style>
+.rpt-btn{float:right;background:var(--accent);color:#fff;border:0;border-radius:8px;padding:6px 11px;font:800 11px 'Nunito',sans-serif;text-transform:none;letter-spacing:0;cursor:pointer;margin-top:-4px;}
+#rptOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:flex-end;justify-content:center;}
+#rptOverlay.on{display:flex;}
+.rpt-card{background:var(--white);width:100%;max-width:560px;max-height:92vh;overflow:auto;border-radius:20px 20px 0 0;padding:20px 18px 24px;}
+@media(min-width:600px){#rptOverlay{align-items:center}.rpt-card{border-radius:20px;}}
+.rpt-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+.rpt-h b{font-size:17px;font-weight:900;}
+.rpt-x{background:none;border:0;font-size:22px;cursor:pointer;color:var(--muted);}
+.rpt-sub{font-size:12px;color:var(--muted);font-weight:600;margin-bottom:6px;}
+.rpt-lab{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 7px;}
+.rpt-chips{display:flex;flex-wrap:wrap;gap:7px;}
+.rpt-chip{border:1.5px solid var(--border);background:#fff;border-radius:999px;padding:7px 12px;font:700 13px 'Nunito',sans-serif;cursor:pointer;color:var(--text);}
+.rpt-chip.on{background:var(--accent);color:#fff;border-color:var(--accent);}
+.rpt-chk{display:flex;gap:9px;align-items:flex-start;padding:7px 0;font-size:14px;font-weight:700;cursor:pointer;}
+.rpt-chk input{margin-top:3px;width:17px;height:17px;}
+.rpt-chk small{display:block;font-weight:600;color:var(--muted);font-size:11px;}
+.rpt-dates{display:none;gap:8px;margin-top:9px;}
+.rpt-dates.on{display:flex;}
+.rpt-dates input,.rpt-rate input{border:1.5px solid var(--border);border-radius:9px;padding:8px 10px;font:700 14px 'Nunito',sans-serif;width:100%;}
+.rpt-rates{display:none;margin-top:6px;background:#faf9f6;border:1px solid var(--border);border-radius:12px;padding:10px 12px;}
+.rpt-rates.on{display:block;}
+.rpt-rate{display:flex;align-items:center;gap:10px;margin:6px 0;font-size:13px;font-weight:800;}
+.rpt-rate span{flex:1;}.rpt-rate input{width:110px;}
+.rpt-go{display:flex;gap:10px;margin-top:20px;}
+.rpt-go button{flex:1;border:0;border-radius:12px;padding:14px;font:900 14px 'Nunito',sans-serif;cursor:pointer;background:var(--accent);color:#fff;}
+.rpt-go button.alt{background:#fff;color:var(--text);border:1.5px solid var(--text);}
+.rpt-go button:disabled{opacity:.5;}
+#rptMsg{font-size:12px;font-weight:700;margin-top:10px;min-height:16px;color:var(--muted);}
+</style>
+<div id="rptOverlay" onclick="if(event.target===this)closeReport()">
+<div class="rpt-card">
+<div class="rpt-h"><b>📄 Descargar reporte</b><button class="rpt-x" onclick="closeReport()">×</button></div>
+<div class="rpt-sub">Elige periodo, empleados y qué incluir. Se descarga en formato ejecutivo.</div>
+<div class="rpt-lab">Periodo (semanas Lun–Dom)</div>
+<div class="rpt-chips" id="rptPer"></div>
+<div class="rpt-dates" id="rptDates"><input type="date" id="rptFrom"><input type="date" id="rptTo"></div>
+<div class="rpt-lab">Empleados</div>
+<div class="rpt-chips" id="rptEmps"></div>
+<div class="rpt-lab">Qué incluir</div>
+<div id="rptOpts"></div>
+<div class="rpt-rates" id="rptRates"></div>
+<div class="rpt-go"><button id="rptPdf" onclick="runReport('pdf')">⬇ PDF</button><button class="alt" id="rptXls" onclick="runReport('xlsx')">⬇ Excel</button></div>
+<div id="rptMsg"></div>
+</div></div>
+<script>
+(function(){
+const TZ='America/Chicago';
+const OMIT=['daniel','carlos'];
+const OPTS=[
+ ['res','Resumen por empleado','horas, días trabajados, carros, promedios',true],
+ ['hor','Horarios diarios','1er carro → último carro de cada día',true],
+ ['asi','Asistencia (Entrada / Salida)','registros reales de la app',false],
+ ['car','Detalle de carros','cada carro: fecha, placa, modelo, servicio, total',false],
+ ['sue','Sueldo estimado','horas × tarifa por hora que tú captures',false]
+];
+const PER=[['sem','Esta semana'],['semant','Semana pasada'],['mes','Este mes'],['mesant','Mes pasado'],['custom','Personalizado']];
+const st={per:'sem',emps:{},opts:{res:true,hor:true,asi:false,car:false,sue:false}};
+const $=id=>document.getElementById(id);
+const dayOf=d=>d.toLocaleDateString('en-CA',{timeZone:TZ});
+const addDays=(k,n)=>{const [y,m,d]=k.split('-').map(Number);return new Date(Date.UTC(y,m-1,d+n)).toISOString().slice(0,10);};
+const monOf=k=>{const [y,m,d]=k.split('-').map(Number);const w=(new Date(Date.UTC(y,m-1,d)).getUTCDay()+6)%7;return addDays(k,-w);};
+const lab=(k,o)=>{const [y,m,d]=k.split('-').map(Number);return new Date(Date.UTC(y,m-1,d,12)).toLocaleDateString('es-MX',Object.assign({timeZone:'UTC'},o));};
+const hm=d=>d.toLocaleTimeString('es-MX',{timeZone:TZ,hour:'numeric',minute:'2-digit',hour12:true}).replace(/\./g,'').replace(/\s/g,' ');
+const fmtH=h=>{if(!(h>0))return '0h';const t=Math.round(h*60);return Math.floor(t/60)+'h '+String(t%60).padStart(2,'0')+'m';};
+const money=n=>'$'+(Math.round(n*100)/100).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const minsOf=d=>{const p=new Intl.DateTimeFormat('en-US',{timeZone:TZ,hour:'numeric',minute:'numeric',hourCycle:'h23'}).formatToParts(d);let h=0,m=0;p.forEach(q=>{if(q.type==='hour')h=+q.value;if(q.type==='minute')m=+q.value;});return h*60+m;};
+const clock=mn=>{const h=Math.floor(mn/60),m=Math.round(mn%60);return (((h+11)%12)+1)+':'+String(m).padStart(2,'0')+(h<12?' a. m.':' p. m.');};
+const store={get(){try{return JSON.parse(localStorage.getItem('rptRates')||'{}');}catch(e){return {};}},set(v){try{localStorage.setItem('rptRates',JSON.stringify(v));}catch(e){}}};
+
+function range(){
+ const today=dayOf(new Date());
+ if(st.per==='sem'){const a=monOf(today);return [a,addDays(a,6)];}
+ if(st.per==='semant'){const a=addDays(monOf(today),-7);return [a,addDays(a,6)];}
+ if(st.per==='mes'){return [today.slice(0,8)+'01',today];}
+ if(st.per==='mesant'){const [y,m]=today.split('-').map(Number);const f=new Date(Date.UTC(y,m-2,1)).toISOString().slice(0,10);const l=new Date(Date.UTC(y,m-1,0)).toISOString().slice(0,10);return [f,l];}
+ return [$('rptFrom').value||today,$('rptTo').value||today];
+}
+function roster(){
+ const cfg=(cachedEmployees||[]).map(e=>e.key);
+ const last={};
+ allRecordsCache.forEach(r=>{const d=new Date(r.timestamp);if(isNaN(d))return;const k=dayOf(d);if(!last[r.employee]||k>last[r.employee])last[r.employee]=k;});
+ const today=dayOf(new Date()), lim=addDays(today,-31);
+ return cfg.map(e=>({e,active:!OMIT.includes(String(e).trim().toLowerCase())&&!!last[e]&&last[e]>=lim}));
+}
+function paint(){
+ $('rptPer').innerHTML=PER.map(p=>`<button class="rpt-chip ${st.per===p[0]?'on':''}" data-p="${p[0]}">${p[1]}</button>`).join('');
+ $('rptDates').classList.toggle('on',st.per==='custom');
+ const ros=roster();
+ $('rptEmps').innerHTML=`<button class="rpt-chip ${ros.every(r=>st.emps[r.e])?'on':''}" data-e="*">Todos</button>`+ros.map(r=>`<button class="rpt-chip ${st.emps[r.e]?'on':''}" data-e="${r.e}">${r.e}</button>`).join('');
+ $('rptOpts').innerHTML=OPTS.map(o=>`<label class="rpt-chk"><input type="checkbox" data-o="${o[0]}" ${st.opts[o[0]]?'checked':''}><span>${o[1]}<small>${o[2]}</small></span></label>`).join('');
+ const rates=store.get(), sel=ros.filter(r=>st.emps[r.e]);
+ const rb=$('rptRates');rb.classList.toggle('on',!!st.opts.sue);
+ rb.innerHTML=st.opts.sue?'<div class="rpt-sub" style="margin:0 0 4px">Tarifa por hora (USD) — se guarda solo en este navegador</div>'+sel.map(r=>`<div class="rpt-rate"><span>${r.e}</span><input type="number" min="0" step="0.5" inputmode="decimal" placeholder="0.00" data-r="${r.e}" value="${rates[r.e]||''}"></div>`).join(''):'';
+}
+window.openReport=function(){
+ const today=dayOf(new Date());
+ if(!$('rptFrom').value){$('rptFrom').value=monOf(today);$('rptTo').value=today;}
+ roster().forEach(r=>{if(!(r.e in st.emps))st.emps[r.e]=r.active;});
+ $('rptMsg').textContent='';paint();$('rptOverlay').classList.add('on');
+};
+window.closeReport=function(){$('rptOverlay').classList.remove('on');};
+$('rptOverlay').addEventListener('click',ev=>{
+ const t=ev.target.closest('[data-p],[data-e]');
+ if(t&&t.dataset.p){st.per=t.dataset.p;paint();}
+ else if(t&&t.dataset.e){const ros=roster();if(t.dataset.e==='*'){const all=ros.every(r=>st.emps[r.e]);ros.forEach(r=>st.emps[r.e]=!all);}else st.emps[t.dataset.e]=!st.emps[t.dataset.e];paint();}
+});
+$('rptOverlay').addEventListener('change',ev=>{
+ const o=ev.target.dataset&&ev.target.dataset.o;
+ if(o){st.opts[o]=ev.target.checked;paint();}
+});
+$('rptOverlay').addEventListener('input',ev=>{
+ const r=ev.target.dataset&&ev.target.dataset.r;
+ if(r){const v=store.get();v[r]=ev.target.value;store.set(v);}
+});
+
+// ── cálculo ──
+function compute(from,to,emps){
+ const days={},recs=[];
+ allRecordsCache.forEach(r=>{
+  const d=new Date(r.timestamp);if(isNaN(d))return;
+  const k=dayOf(d);if(k<from||k>to||!emps.includes(r.employee))return;
+  recs.push({r,d,k});
+  const D=days[r.employee]=days[r.employee]||{};
+  const x=D[k]||(D[k]={first:d,last:d,n:0,total:0});
+  if(d<x.first)x.first=d;if(d>x.last)x.last=d;x.n++;x.total+=Number(r.total)||0;
+ });
+ recs.sort((a,b)=>a.d-b.d);
+ const rows=emps.map(e=>{
+  const D=days[e]||{},ks=Object.keys(D).sort();
+  let h=0,n=0,v=0,s=0,f=0;
+  ks.forEach(k=>{const x=D[k];h+=(x.last-x.first)/3600000;n+=x.n;v+=x.total;s+=minsOf(x.first);f+=minsOf(x.last);});
+  return {e,ks,D,dias:ks.length,h,n,v,avg:ks.length?h/ks.length:0,ini:ks.length?s/ks.length:null,fin:ks.length?f/ks.length:null};
+ });
+ return {rows,recs};
+}
+async function getShifts(from,to,emps){
+ const res=await fetch(SHEETS_URL+'?action=attendance&_='+Date.now());
+ const j=await res.json();
+ return (j.shifts||[]).map(s=>({e:s.employee,i:new Date(s.in),o:s.out?new Date(s.out):null,h:Number(s.hours)||0}))
+  .filter(s=>!isNaN(s.i)&&emps.includes(s.e)&&dayOf(s.i)>=from&&dayOf(s.i)<=to).sort((a,b)=>a.i-b.i);
+}
+const libs={};
+function loadJs(src){return libs[src]||(libs[src]=new Promise((ok,ko)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=()=>{delete libs[src];ko(new Error('No se pudo cargar '+src));};document.head.appendChild(s);}));}
+const CDN='https://cdnjs.cloudflare.com/ajax/libs/';
+
+window.runReport=async function(fmt){
+ const msg=$('rptMsg'),b1=$('rptPdf'),b2=$('rptXls');
+ const [from,to]=range();
+ const ros=roster().map(r=>r.e);
+ const emps=ros.filter(e=>st.emps[e]);
+ const o=st.opts;
+ if(from>to){msg.textContent='La fecha inicial es posterior a la final.';return;}
+ if(!emps.length){msg.textContent='Selecciona al menos un empleado.';return;}
+ if(!Object.values(o).some(Boolean)){msg.textContent='Selecciona qué incluir en el reporte.';return;}
+ b1.disabled=b2.disabled=true;msg.textContent='Generando reporte…';
+ try{
+  const data=compute(from,to,emps);
+  let shifts=[];
+  if(o.asi){try{shifts=await getShifts(from,to,emps);}catch(e){shifts=null;}}
+  const rates=store.get();
+  const ctx={from,to,emps,o,data,shifts,rates};
+  if(fmt==='pdf'){await loadJs(CDN+'jspdf/2.5.1/jspdf.umd.min.js');await loadJs(CDN+'jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js');makePdf(ctx);}
+  else{await loadJs(CDN+'exceljs/4.4.0/exceljs.min.js');await makeXlsx(ctx);}
+  msg.textContent='✓ Reporte descargado';
+ }catch(e){console.error(e);msg.textContent='No se pudo generar: '+e.message;}
+ b1.disabled=b2.disabled=false;
+};
+const fname=(from,to,ext)=>`Reporte_ShinyDetail_${from}_a_${to}.${ext}`;
+const periodTxt=(from,to)=>from===to?lab(from,{weekday:'long',day:'numeric',month:'long',year:'numeric'}):lab(from,{day:'numeric',month:'long'})+' – '+lab(to,{day:'numeric',month:'long',year:'numeric'});
+const genTxt=()=>new Date().toLocaleString('es-MX',{timeZone:TZ,day:'numeric',month:'short',year:'numeric',hour:'numeric',minute:'2-digit'})+' (hora Dallas)';
+const empList=c=>c.emps.length===c.rows0Len?'Todos los empleados':c.emps.join(', ');
+const totals=rows=>({h:rows.reduce((a,r)=>a+r.h,0),n:rows.reduce((a,r)=>a+r.n,0),v:rows.reduce((a,r)=>a+r.v,0),d:rows.reduce((a,r)=>a+r.dias,0)});
+const NOTE='Horas = tiempo entre el primer y el último carro lavado de cada día (hora Dallas). Un día con un solo carro cuenta 0 h. Semanas de lunes a domingo.';
+
+// ── PDF ──
+function makePdf(c){
+ const {jsPDF}=window.jspdf;
+ const doc=new jsPDF({unit:'pt',format:'letter'});
+ const W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight(),M=40;
+ const DARK=[26,26,26],GOLD=[240,165,0],GRAY=[110,106,100],ZEB=[247,246,243],LINE=[226,224,219];
+ const t=totals(c.data.rows);
+ // encabezado
+ doc.setFillColor(...DARK);doc.rect(0,0,W,92,'F');
+ doc.setFillColor(...GOLD);doc.rect(0,92,W,3,'F');
+ doc.setTextColor(255);doc.setFont('helvetica','bold');doc.setFontSize(21);doc.text('Shiny Detail',M,42);
+ doc.setFontSize(11);doc.setFont('helvetica','normal');doc.text('Reporte de operación',M,60);
+ doc.setFontSize(9);doc.setTextColor(210);doc.text(periodTxt(c.from,c.to),M,77);
+ doc.text('Generado: '+genTxt(),W-M,77,{align:'right'});
+ // contexto
+ let y=118;
+ doc.setTextColor(...GRAY);doc.setFontSize(9);doc.setFont('helvetica','bold');doc.text('EMPLEADOS',M,y);
+ doc.setFont('helvetica','normal');doc.setTextColor(30);
+ const el=doc.splitTextToSize(c.emps.join(', '),W-2*M-70);doc.text(el,M+70,y);y+=Math.max(14,el.length*11)+10;
+ // KPIs
+ const kp=[['Carros lavados',String(t.n)],['Horas trabajadas',fmtH(t.h)],['Días con actividad',String(t.d)],['Ventas',money(t.v)]];
+ const bw=(W-2*M-3*10)/4;
+ kp.forEach((k,i)=>{const x=M+i*(bw+10);doc.setFillColor(...ZEB);doc.setDrawColor(...LINE);doc.roundedRect(x,y,bw,52,6,6,'FD');
+  doc.setTextColor(...GRAY);doc.setFontSize(8);doc.setFont('helvetica','bold');doc.text(k[0].toUpperCase(),x+10,y+17);
+  doc.setTextColor(...DARK);doc.setFontSize(17);doc.text(k[1],x+10,y+40);});
+ y+=52+22;
+ const section=(title)=>{
+  const need=(doc.lastAutoTable&&doc.lastAutoTable.finalY?0:0);
+  if(y>H-120){doc.addPage();y=50;}
+  doc.setFillColor(...GOLD);doc.rect(M,y-9,3,13,'F');
+  doc.setTextColor(...DARK);doc.setFont('helvetica','bold');doc.setFontSize(12);doc.text(title,M+9,y+1);y+=10;
+ };
+ const tbl=(head,body,opt={})=>{
+  doc.autoTable(Object.assign({
+   startY:y,head:[head],body,margin:{left:M,right:M,bottom:50},theme:'plain',
+   styles:{font:'helvetica',fontSize:9,cellPadding:{top:5,bottom:5,left:6,right:6},textColor:[30,30,30],lineColor:LINE,lineWidth:{bottom:0.5}},
+   headStyles:{fillColor:DARK,textColor:255,fontStyle:'bold',fontSize:8.5,lineWidth:0},
+   alternateRowStyles:{fillColor:ZEB}
+  },opt));
+  y=doc.lastAutoTable.finalY+24;
+ };
+ const rows=c.data.rows;
+ const note=txt=>{doc.setFont('helvetica','italic');doc.setFontSize(8);doc.setTextColor(...GRAY);const l=doc.splitTextToSize(txt,W-2*M);doc.text(l,M,y-12);y+=l.length*9-2;};
+ if(c.o.res){
+  section('Resumen por empleado');
+  const body=rows.map(r=>[r.e,r.dias,r.n,fmtH(r.h),fmtH(r.avg),r.ini==null?'—':clock(r.ini),r.fin==null?'—':clock(r.fin)]);
+  body.push(['TOTAL',t.d,t.n,fmtH(t.h),'','','']);
+  tbl(['Empleado','Días','Carros','Horas','Prom./día','Arranca (prom.)','Termina (prom.)'],body,{
+   columnStyles:{1:{halign:'right'},2:{halign:'right'},3:{halign:'right',fontStyle:'bold'},4:{halign:'right'},5:{halign:'right'},6:{halign:'right'}},
+   didParseCell:d=>{if(d.section==='body'&&d.row.index===body.length-1){d.cell.styles.fontStyle='bold';d.cell.styles.fillColor=[232,230,224];}
+    if(d.section==='head'&&d.column.index>0)d.cell.styles.halign='right';}
+  });
+  note(NOTE);
+ }
+ if(c.o.hor){
+  section('Horarios diarios (1er carro a último carro)');
+  const body=[],meta=[];
+  rows.forEach(r=>{
+   if(!r.ks.length){body.push([r.e,'Sin carros en el periodo','','','','']);meta.push('empty');return;}
+   r.ks.forEach((k,i)=>{const x=r.D[k];body.push([i?'':r.e,lab(k,{weekday:'short',day:'numeric',month:'short'}),hm(x.first),hm(x.last),fmtH((x.last-x.first)/3600000),x.n]);meta.push('row');});
+   body.push(['','Total '+r.e,'','',fmtH(r.h),r.n]);meta.push('tot');
+  });
+  tbl(['Empleado','Día','1er carro','Último carro','Horas','Carros'],body,{
+   columnStyles:{2:{halign:'right'},3:{halign:'right'},4:{halign:'right',fontStyle:'bold'},5:{halign:'right'}},
+   didParseCell:d=>{if(d.section==='body'){const m=meta[d.row.index];if(m==='tot'){d.cell.styles.fontStyle='bold';d.cell.styles.fillColor=[232,230,224];}else if(m==='row'){d.cell.styles.fillColor=[255,255,255];}if(d.column.index===0)d.cell.styles.fontStyle='bold';}
+    if(d.section==='head'&&d.column.index>1)d.cell.styles.halign='right';}
+  });
+  note(NOTE);
+ }
+ if(c.o.asi){
+  section('Asistencia (Entrada / Salida registradas en la app)');
+  if(c.shifts===null){tbl(['Aviso'],[['No se pudo leer la asistencia en este momento. Intenta de nuevo.']]);}
+  else if(!c.shifts.length){tbl(['Aviso'],[['No hay entradas/salidas registradas en este periodo.']]);}
+  else{
+   const body=c.shifts.map(s=>[s.e,lab(dayOf(s.i),{weekday:'short',day:'numeric',month:'short'}),hm(s.i),s.o?hm(s.o):'Turno abierto',s.o?fmtH(s.h):'—']);
+   tbl(['Empleado','Día','Entrada','Salida','Horas'],body,{columnStyles:{2:{halign:'right'},3:{halign:'right'},4:{halign:'right',fontStyle:'bold'}},didParseCell:d=>{if(d.section==='head'&&d.column.index>1)d.cell.styles.halign='right';}});
+  }
+ }
+ if(c.o.sue){
+  section('Sueldo estimado');
+  const body=rows.map(r=>{const rt=parseFloat(c.rates[r.e]);return [r.e,fmtH(r.h),isNaN(rt)||!rt?'—':money(rt)+' /h',isNaN(rt)||!rt?'—':money(r.h*rt)];});
+  const tot=rows.reduce((a,r)=>{const rt=parseFloat(c.rates[r.e]);return a+((isNaN(rt)?0:rt)*r.h);},0);
+  body.push(['TOTAL',fmtH(t.h),'',money(tot)]);
+  tbl(['Empleado','Horas','Tarifa','Importe estimado'],body,{
+   columnStyles:{1:{halign:'right'},2:{halign:'right'},3:{halign:'right',fontStyle:'bold'}},
+   didParseCell:d=>{if(d.section==='body'&&d.row.index===body.length-1){d.cell.styles.fontStyle='bold';d.cell.styles.fillColor=[232,230,224];}if(d.section==='head'&&d.column.index>0)d.cell.styles.halign='right';}
+  });
+  note('Estimación informativa: horas (1er a último carro) × tarifa capturada. No sustituye la nómina.');
+ }
+ if(c.o.car){
+  section('Detalle de carros ('+c.data.recs.length+')');
+  const body=c.data.recs.map(x=>[lab(x.k,{day:'numeric',month:'short'}),hm(x.d),x.r.employee,x.r.branch||'',x.r.plate||'',x.r.model||'',x.r.service||'',x.r.total!==''&&x.r.total!=null?money(Number(x.r.total)||0):'']);
+  body.push(['TOTAL','','','','','','',money(t.v)]);
+  tbl(['Fecha','Hora','Empleado','Sucursal','Placa','Modelo','Servicio','Total'],body,{
+   styles:{fontSize:8,cellPadding:{top:4,bottom:4,left:4,right:4},lineColor:LINE,lineWidth:{bottom:0.5}},
+   columnStyles:{7:{halign:'right',fontStyle:'bold'}},
+   didParseCell:d=>{if(d.section==='body'&&d.row.index===body.length-1){d.cell.styles.fontStyle='bold';d.cell.styles.fillColor=[232,230,224];}if(d.section==='head'&&d.column.index===7)d.cell.styles.halign='right';}
+  });
+ }
+ // pie de página
+ const n=doc.getNumberOfPages();
+ for(let i=1;i<=n;i++){doc.setPage(i);doc.setDrawColor(...LINE);doc.line(M,H-34,W-M,H-34);
+  doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(...GRAY);
+  doc.text('Shiny Detail · Reporte de operación · '+periodTxt(c.from,c.to),M,H-22);
+  doc.text('Página '+i+' de '+n,W-M,H-22,{align:'right'});}
+ doc.save(fname(c.from,c.to,'pdf'));
+}
+
+// ── Excel ──
+async function makeXlsx(c){
+ const wb=new ExcelJS.Workbook();wb.creator='Shiny Detail';wb.created=new Date();
+ const DARK='FF1A1A1A',ZEB='FFF7F6F3',TOT='FFE8E6E0',GOLD='FFF0A500';
+ const t=totals(c.data.rows),rows=c.data.rows;
+ const bd={bottom:{style:'thin',color:{argb:'FFE2E0DB'}}};
+ const mk=(name,widths,title)=>{
+  const ws=wb.addWorksheet(name,{views:[{showGridLines:false,state:'frozen',ySplit:4}],pageSetup:{orientation:'landscape',fitToPage:true,fitToWidth:1,fitToHeight:0}});
+  ws.columns=widths.map(w=>({width:w}));
+  const n=widths.length;
+  ws.mergeCells(1,1,1,n);const a=ws.getCell(1,1);
+  a.value='Shiny Detail — '+title;a.font={bold:true,size:16,color:{argb:'FFFFFFFF'}};
+  a.fill={type:'pattern',pattern:'solid',fgColor:{argb:DARK}};a.alignment={vertical:'middle',indent:1};ws.getRow(1).height=30;
+  ws.mergeCells(2,1,2,n);const b=ws.getCell(2,1);
+  b.value='Periodo: '+periodTxt(c.from,c.to)+'   ·   Generado: '+genTxt();b.font={size:10,color:{argb:'FF6E6A64'}};b.alignment={indent:1};
+  ws.getRow(3).height=6;
+  return ws;
+ };
+ const head=(ws,labels,aligns)=>{
+  const r=ws.getRow(4);r.height=22;
+  labels.forEach((l,i)=>{const c=r.getCell(i+1);c.value=l;c.font={bold:true,color:{argb:'FFFFFFFF'},size:10};c.fill={type:'pattern',pattern:'solid',fgColor:{argb:DARK}};c.alignment={vertical:'middle',horizontal:aligns[i]||'left',indent:aligns[i]==='right'?0:1};});
+ };
+ const add=(ws,vals,aligns,o={})=>{
+  const r=ws.addRow(vals);r.height=18;
+  r.eachCell({includeEmpty:true},(c,i)=>{
+   if(i>vals.length)return;
+   c.alignment={vertical:'middle',horizontal:aligns[i-1]||'left',indent:aligns[i-1]==='right'?0:1};
+   c.border=bd;c.font={size:10,bold:!!o.bold};
+   if(o.fill)c.fill={type:'pattern',pattern:'solid',fgColor:{argb:o.fill}};
+   else if(o.zebra)c.fill={type:'pattern',pattern:'solid',fgColor:{argb:ZEB}};
+  });
+  return r;
+ };
+ const H='[h]:mm',hv=h=>Math.max(0,h)/24;
+ const L='left',R='right';
+ // Resumen ejecutivo
+ const rs=mk('Resumen',[26,12,12,14,14,18,18],'Resumen por empleado');
+ rs.getCell('A3').value=null;
+ head(rs,['Empleado','Días','Carros','Horas','Prom./día','Arranca (prom.)','Termina (prom.)'],[L,R,R,R,R,R,R]);
+ if(c.o.res||!c.o.hor){
+  rows.forEach((r,i)=>{const x=add(rs,[r.e,r.dias,r.n,hv(r.h),hv(r.avg),r.ini==null?'—':clock(r.ini),r.fin==null?'—':clock(r.fin)],[L,R,R,R,R,R,R],{zebra:i%2});x.getCell(4).numFmt=H;x.getCell(5).numFmt=H;x.getCell(4).font={size:10,bold:true};});
+  const x=add(rs,['TOTAL',t.d,t.n,hv(t.h),'','',''],[L,R,R,R,R,R,R],{bold:true,fill:TOT});x.getCell(4).numFmt=H;
+  rs.addRow([]);const nr=rs.addRow([NOTE]);nr.getCell(1).font={italic:true,size:9,color:{argb:'FF6E6A64'}};
+  const kr=rs.addRow([]);
+ }
+ if(!c.o.res)wb.removeWorksheet(rs.id);
+ if(c.o.hor){
+  const ws=mk('Horarios diarios',[22,18,14,14,12,10],'Horarios diarios (1er carro → último carro)');
+  head(ws,['Empleado','Día','1er carro','Último carro','Horas','Carros'],[L,L,R,R,R,R]);
+  rows.forEach(r=>{
+   if(!r.ks.length){add(ws,[r.e,'Sin carros en el periodo','','','',''],[L,L,R,R,R,R]);return;}
+   r.ks.forEach((k,i)=>{const x=r.D[k];const row=add(ws,[r.e,lab(k,{weekday:'short',day:'numeric',month:'short'}),hm(x.first),hm(x.last),hv((x.last-x.first)/3600000),x.n],[L,L,R,R,R,R],{zebra:i%2});row.getCell(5).numFmt=H;});
+   const tr=add(ws,[r.e,'Total','','',hv(r.h),r.n],[L,L,R,R,R,R],{bold:true,fill:TOT});tr.getCell(5).numFmt=H;
+  });
+ }
+ if(c.o.asi){
+  const ws=mk('Asistencia',[22,18,14,16,12],'Asistencia (Entrada / Salida)');
+  head(ws,['Empleado','Día','Entrada','Salida','Horas'],[L,L,R,R,R]);
+  if(c.shifts===null)add(ws,['No se pudo leer la asistencia','','','',''],[L]);
+  else if(!c.shifts.length)add(ws,['Sin registros en el periodo','','','',''],[L]);
+  else c.shifts.forEach((s,i)=>{const row=add(ws,[s.e,lab(dayOf(s.i),{weekday:'short',day:'numeric',month:'short'}),hm(s.i),s.o?hm(s.o):'Turno abierto',s.o?hv(s.h):'—'],[L,L,R,R,R],{zebra:i%2});if(s.o)row.getCell(5).numFmt=H;});
+ }
+ if(c.o.sue){
+  const ws=mk('Sueldo estimado',[22,14,14,18],'Sueldo estimado');
+  head(ws,['Empleado','Horas','Tarifa /h','Importe estimado'],[L,R,R,R]);
+  let tot=0;
+  rows.forEach((r,i)=>{const rt=parseFloat(c.rates[r.e]);const ok=!isNaN(rt)&&rt>0;const imp=ok?Math.round(r.h*rt*100)/100:0;tot+=imp;
+   const row=add(ws,[r.e,hv(r.h),ok?rt:'—',ok?imp:'—'],[L,R,R,R],{zebra:i%2});row.getCell(2).numFmt=H;if(ok){row.getCell(3).numFmt='$#,##0.00';row.getCell(4).numFmt='$#,##0.00';}});
+  const tr=add(ws,['TOTAL',hv(t.h),'',tot],[L,R,R,R],{bold:true,fill:TOT});tr.getCell(2).numFmt=H;tr.getCell(4).numFmt='$#,##0.00';
+  ws.addRow([]);const nr=ws.addRow(['Estimación informativa: horas (1er → último carro) × tarifa capturada. No sustituye la nómina.']);nr.getCell(1).font={italic:true,size:9,color:{argb:'FF6E6A64'}};
+ }
+ if(c.o.car){
+  const ws=mk('Detalle de carros',[14,11,16,16,12,26,22,12],'Detalle de carros');
+  head(ws,['Fecha','Hora','Empleado','Sucursal','Placa','Modelo','Servicio','Total'],[L,L,L,L,L,L,L,R]);
+  c.data.recs.forEach((x,i)=>{const row=add(ws,[lab(x.k,{day:'numeric',month:'short',year:'numeric'}),hm(x.d),x.r.employee,x.r.branch||'',x.r.plate||'',x.r.model||'',x.r.service||'',Number(x.r.total)||0],[L,L,L,L,L,L,L,R],{zebra:i%2});row.getCell(8).numFmt='$#,##0.00';});
+  const tr=add(ws,['TOTAL','','','','','','',t.v],[L,L,L,L,L,L,L,R],{bold:true,fill:TOT});tr.getCell(8).numFmt='$#,##0.00';
+ }
+ const buf=await wb.xlsx.writeBuffer();
+ const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+ const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname(c.from,c.to,'xlsx');document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},2000);
+}
+window.__rpt={compute,range};
+})();
+</script>
+
 </body>
 </html>
